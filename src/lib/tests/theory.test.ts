@@ -34,7 +34,7 @@ describe("Note System", () => {
     expect(NoteUtilities.fromString("Db")).toBe(Note.CSharp);
     expect(NoteUtilities.fromString("F#")).toBe(Note.FSharp);
     expect(NoteUtilities.fromString("Gb")).toBe(Note.FSharp);
-    expect(NoteUtilities.fromString("Invalid")).toBeNull();
+    expect(NoteUtilities.fromString("Invalid")).toBeUndefined();
   });
 
   it("should handle MIDI conversions correctly", () => {

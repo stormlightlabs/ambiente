@@ -31,17 +31,17 @@
 - Build component communication patterns
 - Implement undo/redo functionality
 
+### Ambient Music Player
+
+- Composition Creation UI
+- Preset Player
+
 ### Data Persistence
 
 - Design Dexie.js schema for tracks and presets
 - Implement CRUD operations for user compositions
 - Create import/export functionality
 - Build preset management system
-
-### Ambient Music Player
-
-- Composition Creation UI
-- Preset Player
 
 ### Step Sequencer (ToneMatrix inspired!)
 

@@ -1,2 +1,7 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script lang="ts">
+	import { AppStateManager } from '$lib/communication.svelte';
+	import AmbientMusicPlayer from '$lib/components/AmbientMusicPlayer.svelte';
+	const appState = new AppStateManager();
+</script>
+
+<AmbientMusicPlayer {appState} />

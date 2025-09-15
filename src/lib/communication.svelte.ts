@@ -1,4 +1,5 @@
 import type { Observable, Subscription } from "rxjs";
+import { SvelteMap, SvelteSet } from "svelte/reactivity";
 import { InstrumentType } from "./audio";
 import { AudioEngine, type AudioEngineState, type AudioEvent, createAmbientAudioEngine } from "./audio-engine";
 import { Mode, Note } from "./theory";
@@ -15,7 +16,7 @@ type UIState = {
   showSettings: boolean;
 };
 
-class AppStateManager {
+export class AppStateManager {
   private audioEngine: AudioEngine;
   private subscriptions: Subscription[] = [];
 
@@ -34,7 +35,7 @@ class AppStateManager {
     mode: Mode.Ionian,
     currentChord: 0,
     volume: 0.7,
-    instruments: new Set([InstrumentType.Pad, InstrumentType.Atmosphere]),
+    instruments: new SvelteSet([InstrumentType.Pad, InstrumentType.Atmosphere]),
   });
 
   private history = $state<HistoryState<UndoableState>>({ past: [], present: { ...this.audioState }, future: [] });
@@ -162,7 +163,7 @@ class AppStateManager {
     this.audioEngine.setKeyAndMode(state.key, state.mode);
     this.audioEngine.setVolume(state.volume);
 
-    const currentInstruments = new Set(this.audioState.instruments);
+    const currentInstruments = new SvelteSet(this.audioState.instruments);
     for (const instrument of state.instruments) {
       if (!currentInstruments.has(instrument)) {
         this.audioEngine.toggleInstrument(instrument);
@@ -197,9 +198,9 @@ class AppStateManager {
   }
 }
 
-class ComponentCommunicator {
+export class ComponentCommunicator {
   private messages = $state<ComponentMessage[]>([]);
-  private subscribers = new Map<string, Set<(message: ComponentMessage) => void>>();
+  private subscribers = new SvelteMap<string, Set<(message: ComponentMessage) => void>>();
 
   publish(type: string, source: string, data?: unknown): void {
     const message: ComponentMessage = { type, source, data, timestamp: Date.now() };
@@ -210,13 +211,13 @@ class ComponentCommunicator {
       this.messages = this.messages.slice(-100);
     }
 
-    const typeSubscribers = this.subscribers.get(type) || new Set();
+    const typeSubscribers = this.subscribers.get(type) || new SvelteSet();
     for (const callback of typeSubscribers) callback(message);
   }
 
   subscribe(type: string, callback: (message: ComponentMessage) => void): () => void {
     if (!this.subscribers.has(type)) {
-      this.subscribers.set(type, new Set());
+      this.subscribers.set(type, new SvelteSet());
     }
 
     this.subscribers.get(type)!.add(callback);
@@ -231,7 +232,12 @@ class ComponentCommunicator {
   }
 }
 
-export const createParameterBinding = (paramPath: string, instrumentType: InstrumentType, initialValue: number) => {
+export const createParameterBinding = (
+  appState: AppStateManager,
+  paramPath: string,
+  instrumentType: InstrumentType,
+  initialValue: number,
+) => {
   let value = $state(initialValue);
 
   const bind = {
@@ -247,7 +253,10 @@ export const createParameterBinding = (paramPath: string, instrumentType: Instru
   return bind;
 };
 
-export const createDerivedAudioState = <T>(selector: (state: AudioEngineState) => T): { readonly value: T } => {
+export const createDerivedAudioState = <T>(
+  appState: AppStateManager,
+  selector: (state: AudioEngineState) => T,
+): { readonly value: T } => {
   const derivedValue = $derived(selector(appState.audio));
 
   return {
@@ -256,6 +265,3 @@ export const createDerivedAudioState = <T>(selector: (state: AudioEngineState) =
     },
   };
 };
-
-export const appState = new AppStateManager();
-export const componentBus = new ComponentCommunicator();
