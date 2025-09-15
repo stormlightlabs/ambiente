@@ -4,6 +4,17 @@ pnpm-lock.yaml
 yarn.lock
 bun.lock
 bun.lockb
+# Use markdownlint
+*.md
+# NGINX & Docker
+/conf/
+Dockerfile
+.svelte-kit/
+/build/
+quill.*.css
+coverage/
 
-# Miscellaneous
-/static/
+# Using dprint
+**/*.ts
+**/*.js
+**/*.json

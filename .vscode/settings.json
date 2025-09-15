@@ -1,0 +1,52 @@
+{
+  "[css]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "always",
+      "source.organizeImports": "always",
+      "source.sortImports": "always"
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[javascript]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "always",
+      "source.organizeImports": "always",
+      "source.sortImports": "always"
+    },
+    "editor.defaultFormatter": "dprint.dprint",
+    "editor.formatOnSave": true
+  },
+  "[json]": { "editor.defaultFormatter": "dprint.dprint", "editor.formatOnSave": true, "editor.tabSize": 2 },
+  "[jsonc]": { "editor.defaultFormatter": "dprint.dprint", "editor.formatOnSave": true, "editor.tabSize": 2 },
+  "[markdown]": {
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
+    "editor.formatOnSave": true,
+    "editor.rulers": [80, 100]
+  },
+  "[rust]": { "editor.formatOnSave": true },
+  "[svelte]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "always",
+      "source.organizeImports": "always",
+      "source.sortImports": "always"
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "always",
+      "source.organizeImports": "always",
+      "source.sortImports": "always"
+    },
+    "editor.defaultFormatter": "dprint.dprint",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2
+  },
+  "[typescriptreact]": { "editor.defaultFormatter": "dprint.dprint", "editor.formatOnSave": true },
+  "eslint.quiet": true,
+  "markdownlint.config": { "MD013": false, "MD024": false, "MD036": false },
+  "oxc.enable": false,
+  "todo-tree.tree.scanMode": "workspace only"
+}
