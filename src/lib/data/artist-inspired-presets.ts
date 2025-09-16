@@ -315,7 +315,7 @@ const DiscreetMusic: Preset = {
       delay: { wet: 0.2, time: "4n", feedback: 0.3 },
       filter: { type: "lowpass", frequency: 800, Q: 0.7 },
     },
-    structure: { density: 12, randomness: 0.3, layering: "minimal", generativePattern: "random-walk" },
+    structure: { density: 3, randomness: 0.3, layering: "minimal", generativePattern: "random-walk" },
     mix: { width: 0.8, tapeSaturation: 0.2, volume: 0.7 },
     instruments: {
       ambientPad: { volume: 0.55, muted: false, enabled: true, filterFreq: 400, resonance: 1.5 },

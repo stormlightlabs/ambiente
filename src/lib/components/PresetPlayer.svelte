@@ -14,6 +14,7 @@
 		onSetVolume: (volume: number) => void;
 		onToggleInstrument: (instrument: InstrumentType) => void;
 		onApplyPresetTexture?: (texture: any) => void;
+		onApplyPreset?: (preset: Preset) => void;
 	};
 
 	const {
@@ -23,7 +24,8 @@
 		onSetKeyAndMode,
 		onSetVolume,
 		onToggleInstrument,
-		onApplyPresetTexture
+		onApplyPresetTexture,
+		onApplyPreset
 	}: Props = $props();
 	const themes = getThemes();
 
@@ -39,6 +41,13 @@
 		selectedPresetId = preset.id;
 		onSetSelectedPreset(preset.id);
 
+		// Use the new comprehensive preset application if available
+		if (onApplyPreset) {
+			onApplyPreset(preset);
+			return;
+		}
+
+		// Fallback to manual preset loading for backward compatibility
 		if (preset.config.key && preset.config.mode) {
 			onSetKeyAndMode(preset.config.key, preset.config.mode);
 		}

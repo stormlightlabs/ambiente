@@ -14,7 +14,15 @@ vi.mock(
       Atmosphere: "atmosphere",
       Texture: "texture",
     },
-    ambientMixer: { connectSynth: vi.fn(), setMasterVolume: vi.fn(), dispose: vi.fn() },
+    ambientMixer: {
+      connectSynth: vi.fn(),
+      setMasterVolume: vi.fn(),
+      dispose: vi.fn(),
+      setGlobalReverb: vi.fn(),
+      setGlobalDelay: vi.fn(),
+      setGlobalFilter: vi.fn(),
+      setGlobalChorus: vi.fn(),
+    },
   }),
 );
 

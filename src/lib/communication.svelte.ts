@@ -4,6 +4,7 @@ import { AudioEngine, createAmbientAudioEngine } from "./audio-engine";
 import { AMBIENT_PROGRESSIONS, generateProgression, generateScale, Mode, Note } from "./theory";
 import type { AudioEngineState, AudioEvent, RandomizationParams } from "./types/audio";
 import { InstrumentType } from "./types/instruments";
+import type { Preset } from "./types/presets";
 import type { Optional } from "./types/shared";
 
 type ComponentMessage = { type: string; source: string; data?: unknown; timestamp: number };
@@ -135,6 +136,48 @@ export class AppStateManager {
     this.ensureAudioEngine();
     if (this.audioEngine) {
       this.audioEngine.applyPresetTexture(texture);
+    }
+  }
+
+  applyPreset(preset: Preset): void {
+    this.ensureAudioEngine();
+    if (!this.audioEngine) return;
+
+    if (preset.config.key && preset.config.mode) {
+      this.setKeyAndMode(preset.config.key, preset.config.mode);
+    }
+
+    if (preset.config.tempo) {
+      this.setTempo(preset.config.tempo);
+    }
+
+    if (preset.config.volume !== undefined) {
+      this.setVolume(preset.config.volume);
+    }
+
+    if (preset.config.instruments) {
+      const targetInstruments = new SvelteSet(preset.config.instruments);
+      const currentInstruments = new SvelteSet(this.audioState.instruments);
+
+      for (const instrument of currentInstruments) {
+        if (!targetInstruments.has(instrument)) {
+          this.toggleInstrument(instrument);
+        }
+      }
+
+      for (const instrument of targetInstruments) {
+        if (!currentInstruments.has(instrument as InstrumentType)) {
+          this.toggleInstrument(instrument as InstrumentType);
+        }
+      }
+    }
+
+    if (preset.texture) {
+      this.audioEngine.applyPresetTexture(preset.texture);
+    }
+
+    if (preset.config.randomization) {
+      this.setRandomization(preset.config.randomization);
     }
   }
 

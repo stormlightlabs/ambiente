@@ -35,7 +35,8 @@
 		onSetKeyAndMode={appState.setKeyAndMode.bind(appState)}
 		onSetVolume={appState.setVolume.bind(appState)}
 		onToggleInstrument={appState.toggleInstrument.bind(appState)}
-		onApplyPresetTexture={appState.applyPresetTexture.bind(appState)} />
+		onApplyPresetTexture={appState.applyPresetTexture.bind(appState)}
+		onApplyPreset={appState.applyPreset.bind(appState)} />
 </div>
 
 <style>

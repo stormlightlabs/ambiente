@@ -58,6 +58,10 @@ vi.mock(
       setMasterVolume: vi.fn(),
       dispose: vi.fn(),
       getChannel: vi.fn(() => ({ connect: vi.fn(), volume: { value: 0 }, dispose: vi.fn() })),
+      setGlobalReverb: vi.fn(),
+      setGlobalDelay: vi.fn(),
+      setGlobalFilter: vi.fn(),
+      setGlobalChorus: vi.fn(),
     },
     noteToToneString: vi.fn((note: Note, octave = 4) => {
       const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];

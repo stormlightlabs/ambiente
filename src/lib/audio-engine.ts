@@ -10,128 +10,13 @@ import { GranularSynth } from "./instruments/granular-synth";
 import { HarmonicDroneSynth } from "./instruments/harmonic-drone-synth";
 import { MelodicSynth } from "./instruments/melodic-synth";
 import { VocalPadSynth } from "./instruments/vocal-pads";
-import { AMBIENT_PROGRESSIONS, generateProgression, generateScale, Mode, Note } from "./theory";
+import { PatternRandomizer } from "./seed/pattern-randomizer";
+import { AMBIENT_PROGRESSIONS, generateProgression, generateScale, Mode, Note, NoteUtilities } from "./theory";
 import type { AudioEngineState, AudioEvent, InstrumentPattern, PatternStep, RandomizationParams } from "./types/audio";
 import { FieldRecordingSynth } from "./types/field-recording-synth";
 import { EffectType, InstrumentType } from "./types/instruments";
 import { RhythmicPulseSynth } from "./types/rhythmic-pulse-synth";
 import type { Optional } from "./types/shared";
-
-class PatternRandomizer {
-  private static seededRandom(seed: number): number {
-    const x = Math.sin(seed) * 10_000;
-    return x - Math.floor(x);
-  }
-
-  static randomizeRhythm(pattern: InstrumentPattern, variability: number, seed = Math.random()): InstrumentPattern {
-    if (variability === 0) return pattern;
-
-    const randomizedSteps = pattern.steps.map((step, index) => {
-      const stepSeed = seed + index * 0.1;
-      const random = this.seededRandom(stepSeed);
-
-      if (random < variability * 0.3) {
-        return { ...step, enabled: !step.enabled };
-      }
-
-      if (random < variability * 0.5) {
-        const velocityVariation = (random - 0.5) * 0.2 * variability;
-        return { ...step, velocity: Math.max(0.1, Math.min(1, step.velocity + velocityVariation)) };
-      }
-
-      return step;
-    });
-
-    return { ...pattern, steps: randomizedSteps };
-  }
-
-  static randomizeMelody(
-    pattern: InstrumentPattern,
-    scale: Note[],
-    variability: number,
-    seed = Math.random(),
-  ): InstrumentPattern {
-    if (variability === 0 || scale.length === 0) return pattern;
-
-    const randomizedSteps = pattern.steps.map((step, index) => {
-      const stepSeed = seed + index * 0.2;
-      const random = this.seededRandom(stepSeed);
-
-      if (random < variability * 0.4 && step.enabled) {
-        const currentIndex = scale.indexOf(step.note);
-        if (currentIndex !== -1) {
-          const maxJump = Math.ceil(scale.length * 0.3);
-          const direction = random < 0.5 ? -1 : 1;
-          const jump = Math.floor(random * maxJump) + 1;
-          const newIndex = (currentIndex + direction * jump + scale.length) % scale.length;
-
-          return { ...step, note: scale[newIndex] };
-        }
-      }
-
-      return step;
-    });
-
-    return { ...pattern, steps: randomizedSteps };
-  }
-
-  static randomizeProgression(
-    progression: Note[][],
-    scale: Note[],
-    variability: number,
-    constraintStrength = 0.7,
-    seed = Math.random(),
-  ): Note[][] {
-    if (variability === 0 || scale.length === 0) return progression;
-
-    return progression.map((chord, index) => {
-      const chordSeed = seed + index * 0.3;
-      const random = this.seededRandom(chordSeed);
-
-      if (random < variability * 0.3) {
-        const rootIndex = scale.indexOf(chord[0]);
-        if (rootIndex !== -1) {
-          const maxJump = Math.max(1, Math.floor((1 - constraintStrength) * scale.length * 0.5));
-          const direction = random < 0.5 ? -1 : 1;
-          const jump = Math.floor(random * maxJump) + 1;
-          const newRootIndex = (rootIndex + direction * jump + scale.length) % scale.length;
-
-          return chord.map((_, chordIndex) => {
-            const noteOffset = chordIndex * 2;
-            return scale[(newRootIndex + noteOffset) % scale.length];
-          });
-        }
-      }
-
-      return chord;
-    });
-  }
-
-  static evolvePattern(pattern: InstrumentPattern, evolution: number, seed = Math.random()): InstrumentPattern {
-    if (evolution === 0) return pattern;
-
-    const mutatedSteps = pattern.steps.map((step, index) => {
-      const mutationSeed = seed + index * 0.4;
-      const random = this.seededRandom(mutationSeed);
-
-      if (random < evolution * 0.25) {
-        const durations = ["8n", "4n", "2n", "1m"];
-        const currentIndex = durations.indexOf(step.duration);
-        const newIndex = Math.max(0, Math.min(durations.length - 1, currentIndex + (random < 0.5 ? -1 : 1)));
-
-        return { ...step, duration: durations[newIndex] };
-      }
-
-      if (random < evolution * 0.15) {
-        return { ...step, enabled: random < 0.7 };
-      }
-
-      return step;
-    });
-
-    return { ...pattern, steps: mutatedSteps };
-  }
-}
 
 export class AudioEngine {
   private readonly state$: BehaviorSubject<AudioEngineState>;
@@ -660,18 +545,325 @@ export class AudioEngine {
   }
 
   applyPresetTexture(texture: any): void {
-    if (!texture.instruments) {
-      return;
+    // Apply global tempo if specified in texture
+    if (texture.tempo) {
+      this.setTempo(texture.tempo);
     }
 
-    for (const [textureKey, params] of Object.entries(texture.instruments)) {
-      const instrumentType = AMBIENT_TO_ENGINE_MAPPING[textureKey as keyof typeof AMBIENT_TO_ENGINE_MAPPING];
-      if (instrumentType) {
-        const instrument = this.ambientInstruments.get(instrumentType);
-        if (instrument) {
-          // @ts-expect-error params vary by instrument and types are not polymorphic
-          instrument.updateParams(params);
+    // Apply global volume from mix settings
+    if (texture.mix?.volume !== undefined) {
+      let volume = texture.mix.volume;
+      // Convert negative dB values to 0-1 range
+      if (volume < 0) {
+        volume = Math.pow(10, volume / 20); // Convert dB to linear
+      }
+      this.setVolume(Math.max(0, Math.min(1, volume)));
+    }
+
+    // Apply key/mode from scale if specified
+    if (texture.scale && texture.scale.length > 0) {
+      const scaleNotes = this.scaleToNotes(texture.scale);
+      if (scaleNotes.length > 0) {
+        const key = scaleNotes[0];
+        // Use current mode if not specified in texture
+        const currentState = this.state$.value;
+        this.setKeyAndMode(key, currentState.mode);
+      }
+    }
+
+    // Apply individual instrument parameters
+    if (texture.instruments) {
+      for (const [textureKey, params] of Object.entries(texture.instruments)) {
+        const instrumentType = AMBIENT_TO_ENGINE_MAPPING[textureKey as keyof typeof AMBIENT_TO_ENGINE_MAPPING];
+        if (instrumentType && typeof params === "object" && params !== null) {
+          const instrument = this.ambientInstruments.get(instrumentType);
+          if (instrument) {
+            // Convert volume parameters if they're in dB
+            const convertedParams = { ...params } as any;
+            if (convertedParams.volume !== undefined && convertedParams.volume < 0) {
+              convertedParams.volume = Math.pow(10, convertedParams.volume / 20);
+            }
+
+            instrument.updateParams(convertedParams);
+          }
         }
+      }
+    }
+
+    // Apply processing effects to ambient mixer
+    this.applyTextureProcessing(texture);
+
+    // Apply structural layering settings
+    this.applyTextureLayering(texture);
+  }
+
+  private scaleToNotes(scaleNames: string[]): Note[] {
+    return scaleNames.map(name =>
+      NoteUtilities.Map[name.replace(/[♭♯]/, match => match === "♭" ? "b" : "#")] ?? Note.C
+    );
+  }
+
+  private applyTextureProcessing(texture: any): void {
+    if (!texture.processing) return;
+
+    if (texture.processing.reverb) {
+      ambientMixer.setGlobalReverb(texture.processing.reverb);
+    }
+
+    if (texture.processing.delay) {
+      ambientMixer.setGlobalDelay(texture.processing.delay);
+    }
+
+    if (texture.processing.filter) {
+      ambientMixer.setGlobalFilter(texture.processing.filter);
+    }
+
+    if (texture.processing.chorus) {
+      ambientMixer.setGlobalChorus(texture.processing.chorus);
+    }
+
+    // Apply voice-specific synthesis configurations
+    this.applyVoiceConfigurations(texture);
+  }
+
+  private applyVoiceConfigurations(texture: any): void {
+    if (!texture.voices || !Array.isArray(texture.voices)) return;
+
+    const currentState = this.state$.value;
+
+    for (const voice of texture.voices) {
+      const { type, count = 1, envelope, oscillator } = voice;
+
+      // Apply voice configurations to corresponding instrument types
+      for (const instrumentType of currentState.instruments) {
+        if (this.shouldApplyVoiceToInstrument(type, instrumentType)) {
+          this.configureInstrumentVoice(instrumentType, {
+            type,
+            count,
+            envelope: envelope || {},
+            oscillator: oscillator || {},
+          });
+        }
+      }
+    }
+  }
+
+  private shouldApplyVoiceToInstrument(voiceType: string, instrumentType: InstrumentType): boolean {
+    // Map voice types to instrument types
+    switch (voiceType) {
+      case "piano": {
+        return instrumentType === InstrumentType.Melodic || instrumentType === InstrumentType.AmbientPad;
+      }
+      case "drone": {
+        return instrumentType === InstrumentType.HarmonicDrone || instrumentType === InstrumentType.Pad;
+      }
+      case "granular": {
+        return instrumentType === InstrumentType.Granular || instrumentType === InstrumentType.Atmosphere;
+      }
+      case "synth": {
+        return instrumentType === InstrumentType.AmbientPad || instrumentType === InstrumentType.Lead;
+      }
+      default: {
+        return false;
+      }
+    }
+  }
+
+  private configureInstrumentVoice(instrumentType: InstrumentType, voiceConfig: any): void {
+    const synth = this.synthInstances.get(instrumentType);
+    if (!synth) return;
+
+    // Apply envelope settings if provided
+    if (voiceConfig.envelope) {
+      const envelope = voiceConfig.envelope;
+      synth.set({
+        envelope: {
+          attack: envelope.attack,
+          decay: envelope.decay,
+          sustain: envelope.sustain,
+          release: envelope.release,
+        },
+      });
+    }
+
+    // Apply oscillator settings if provided
+    if (voiceConfig.oscillator) {
+      const oscillator = voiceConfig.oscillator;
+
+      if (oscillator.type) {
+        synth.set({ oscillator: { type: oscillator.type } });
+      }
+    }
+
+    // Apply voice character through additional effects based on voice type
+    this.applyVoiceCharacteristics(synth, voiceConfig);
+  }
+
+  private applyVoiceCharacteristics(synth: Tone.PolySynth, voiceConfig: any): void {
+    // Apply voice-specific characteristics to create authentic sounds
+    switch (voiceConfig.type) {
+      case "piano": {
+        // Piano-like characteristics: sharp attack, quick decay
+        synth.set({
+          envelope: {
+            attack: 0.001,
+            decay: voiceConfig.envelope?.decay || 2,
+            sustain: voiceConfig.envelope?.sustain || 0.1,
+            release: voiceConfig.envelope?.release || 3,
+          },
+          oscillator: {
+            type: "triangle", // More piano-like than sine
+          },
+        });
+        break;
+      }
+      case "drone": {
+        // Drone characteristics: very slow attack, long sustain
+        synth.set({
+          envelope: {
+            attack: voiceConfig.envelope?.attack || 8,
+            decay: 0,
+            sustain: 1,
+            release: voiceConfig.envelope?.release || 12,
+          },
+          oscillator: {
+            type: "sawtooth", // Rich harmonic content for drones
+          },
+        });
+        break;
+      }
+      case "granular": {
+        // Granular synthesis simulation with choppy envelope
+        synth.set({
+          envelope: {
+            attack: 0.01,
+            decay: voiceConfig.envelope?.decay || 0.1,
+            sustain: voiceConfig.envelope?.sustain || 0.3,
+            release: voiceConfig.envelope?.release || 0.2,
+          },
+          oscillator: { type: "square" },
+        });
+        break;
+      }
+      default: {
+        synth.set({ oscillator: { type: voiceConfig.oscillator?.type || "sine" } });
+        break;
+      }
+    }
+
+    if (voiceConfig.count > 1 && voiceConfig.oscillator?.detuneRange) {
+      this.applyVoiceDetuning(synth, voiceConfig.count, voiceConfig.oscillator.detuneRange);
+    }
+  }
+
+  private applyVoiceDetuning(synth: Tone.PolySynth, voiceCount: number, detuneRange: number): void {
+    // Create slight pitch variations for richer sound when multiple voices are specified
+    // This simulates the effect of multiple slightly detuned oscillators
+    const currentVolume = synth.volume.value;
+    // Slightly reduce volume to compensate for multiple voices
+    synth.volume.value = currentVolume - 3;
+
+    // Store detune information for potential future use
+    (synth as any)._voiceDetune = detuneRange;
+    (synth as any)._voiceCount = voiceCount;
+  }
+
+  private applyTextureLayering(texture: any): void {
+    if (!texture.structure?.layering) return;
+
+    const layering = texture.structure.layering;
+    const density = texture.structure.density || 1;
+
+    for (const [type, instrument] of this.ambientInstruments.entries()) {
+      if (this.state$.value.instruments.has(type)) {
+        let volumeMultiplier = 1;
+
+        switch (layering) {
+          case "minimal": {
+            volumeMultiplier = 0.8;
+            break;
+          }
+          case "medium": {
+            volumeMultiplier = 0.9;
+            break;
+          }
+          case "dense": {
+            volumeMultiplier = 0.7;
+            break;
+          }
+        }
+
+        const densityMultiplier = Math.max(0.3, 1 - (density * 0.05));
+        const finalMultiplier = volumeMultiplier * densityMultiplier;
+
+        if ("updateParams" in instrument) {
+          // @ts-expect-error Different instrument types have different param structures
+          instrument.updateParams({ volumeMultiplier: finalMultiplier });
+        }
+      }
+    }
+
+    // Apply generative patterns if specified
+    this.applyGenerativePatterns(texture);
+  }
+
+  private applyGenerativePatterns(texture: any): void {
+    if (!texture.structure?.generativePattern) return;
+
+    const patternType = texture.structure.generativePattern as "random-walk" | "euclidean" | "static-drone" | "markov";
+    const density = texture.structure.density || 0.5;
+    const randomness = texture.structure.randomness || 0.3;
+    const currentState = this.state$.value;
+    const scale = this.currentScale$.value;
+    const seed = currentState.randomization.seed || Math.random();
+
+    // Generate new patterns for non-ambient instruments using the specified pattern type
+    const patterns = new Map(this.patterns$.value);
+    let patternsUpdated = false;
+
+    for (const instrumentType of currentState.instruments) {
+      if (!this.isAmbientInstrument(instrumentType)) {
+        const patternLength = this.getPatternLengthForType(instrumentType, patternType);
+        const newPattern = PatternRandomizer.generatePatternByType(
+          patternType,
+          instrumentType,
+          patternLength,
+          scale,
+          density,
+          randomness,
+          seed + Object.values(InstrumentType).indexOf(instrumentType), // Use instrument type as additional seed variation
+        );
+
+        patterns.set(instrumentType, newPattern);
+        patternsUpdated = true;
+      }
+    }
+
+    if (patternsUpdated) {
+      this.patterns$.next(patterns);
+    }
+  }
+
+  private getPatternLengthForType(
+    instrumentType: InstrumentType,
+    patternType: "random-walk" | "euclidean" | "static-drone" | "markov",
+  ): number {
+    // Different pattern types work better with different lengths
+    switch (patternType) {
+      case "static-drone": {
+        return 4;
+      } // Short patterns for sustained drone notes
+      case "euclidean": {
+        return 16;
+      } // Medium length for rhythmic patterns
+      case "random-walk": {
+        return 12;
+      } // Medium length for melodic wandering
+      case "markov": {
+        return 8;
+      } // Shorter for more coherent musical phrases
+      default: {
+        return 16;
       }
     }
   }

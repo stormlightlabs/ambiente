@@ -27,7 +27,18 @@ vi.mock(
 
 vi.mock("$lib/audio", async () => {
   const actual = await vi.importActual("$lib/audio");
-  return { ...actual, ambientMixer: { connectSynth: vi.fn(), setMasterVolume: vi.fn(), dispose: vi.fn() } };
+  return {
+    ...actual,
+    ambientMixer: {
+      connectSynth: vi.fn(),
+      setMasterVolume: vi.fn(),
+      dispose: vi.fn(),
+      setGlobalReverb: vi.fn(),
+      setGlobalDelay: vi.fn(),
+      setGlobalFilter: vi.fn(),
+      setGlobalChorus: vi.fn(),
+    },
+  };
 });
 
 import {

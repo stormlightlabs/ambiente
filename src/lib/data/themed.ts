@@ -659,7 +659,7 @@ const GentleCurrent: Preset = {
       delay: { wet: 0.25, time: "4n", feedback: 0.35 },
       chorus: { wet: 0.35, frequency: 0.25, depth: 0.4 },
     },
-    structure: { density: 14, randomness: 0.4, layering: "medium", generativePattern: "markov" },
+    structure: { density: 6, randomness: 0.4, layering: "medium", generativePattern: "markov" },
     mix: { width: 0.85, tapeSaturation: 0.2, volume: 0.65 },
     instruments: {
       ambientPad: { volume: 0.45, muted: false, enabled: true, filterFreq: 700, resonance: 1.1 },

@@ -1,6 +1,7 @@
 import * as Tone from "tone";
 import { Note, NoteUtilities } from "./theory";
 import { EffectType, InstrumentType, type SynthParams } from "./types/instruments";
+import type { Optional } from "./types/shared";
 
 export const initializeAudio = async (): Promise<void> => {
   if (Tone.getContext().state !== "running") {
@@ -234,6 +235,12 @@ export class AmbientMixer {
   private channels: Map<InstrumentType, Tone.Channel> = new Map();
   private effects: Map<InstrumentType, Tone.ToneAudioNode[]> = new Map();
 
+  private globalReverb: Optional<Tone.Reverb>;
+  private globalDelay: Optional<Tone.PingPongDelay>;
+  private globalFilter: Optional<Tone.AutoFilter>;
+  private globalChorus: Optional<Tone.Chorus>;
+  private globalEffectsChain: Tone.ToneAudioNode[] = [];
+
   constructor() {
     this.masterGain = new Tone.Gain(0.8);
     this.masterGain.toDestination();
@@ -286,26 +293,127 @@ export class AmbientMixer {
     return this.channels.get(type);
   }
 
+  setGlobalReverb(settings: { wet: number; decay: number; preDelay: number }): void {
+    if (this.globalReverb) {
+      this.globalReverb.dispose();
+      this.removeFromGlobalChain(this.globalReverb);
+    }
+
+    this.globalReverb = new Tone.Reverb({ decay: settings.decay, preDelay: settings.preDelay, wet: settings.wet });
+
+    this.addToGlobalChain(this.globalReverb);
+  }
+
+  setGlobalDelay(settings: { wet: number; time: string; feedback: number }): void {
+    if (this.globalDelay) {
+      this.globalDelay.dispose();
+      this.removeFromGlobalChain(this.globalDelay);
+    }
+
+    this.globalDelay = new Tone.PingPongDelay({
+      delayTime: settings.time,
+      feedback: settings.feedback,
+      wet: settings.wet,
+    });
+
+    this.addToGlobalChain(this.globalDelay);
+  }
+
+  setGlobalFilter(settings: { type: string; frequency: number; Q?: number }): void {
+    if (this.globalFilter) {
+      this.globalFilter.dispose();
+      this.removeFromGlobalChain(this.globalFilter);
+    }
+
+    if (settings.type === "lowpass" || settings.type === "highpass" || settings.type === "bandpass") {
+      const filter = new Tone.Filter({ type: settings.type as any, frequency: settings.frequency, Q: settings.Q || 1 });
+      this.globalFilter = filter as any;
+      this.addToGlobalChain(filter);
+    } else {
+      this.globalFilter = new Tone.AutoFilter({
+        frequency: 0.2,
+        baseFrequency: settings.frequency,
+        octaves: 2.5,
+        wet: 0.5,
+      });
+      this.addToGlobalChain(this.globalFilter);
+    }
+  }
+
+  setGlobalChorus(settings: { wet: number; frequency: number; depth: number }): void {
+    if (this.globalChorus) {
+      this.globalChorus.dispose();
+      this.removeFromGlobalChain(this.globalChorus);
+    }
+
+    this.globalChorus = new Tone.Chorus({
+      frequency: settings.frequency,
+      delayTime: 3.5,
+      depth: settings.depth,
+      wet: settings.wet,
+    });
+
+    this.addToGlobalChain(this.globalChorus);
+  }
+
+  private addToGlobalChain(effect: Tone.ToneAudioNode): void {
+    this.globalEffectsChain.push(effect);
+    this.rebuildGlobalChain();
+  }
+
+  private removeFromGlobalChain(effect: Tone.ToneAudioNode): void {
+    const index = this.globalEffectsChain.indexOf(effect);
+    if (index !== -1) {
+      this.globalEffectsChain.splice(index, 1);
+      this.rebuildGlobalChain();
+    }
+  }
+
+  private rebuildGlobalChain(): void {
+    for (const [, channel] of this.channels) {
+      channel.disconnect();
+    }
+
+    if (this.globalEffectsChain.length === 0) {
+      for (const [, channel] of this.channels) {
+        channel.connect(this.masterGain);
+      }
+      return;
+    }
+
+    const firstEffect = this.globalEffectsChain[0];
+    for (const [, channel] of this.channels) {
+      channel.connect(firstEffect);
+    }
+
+    for (let index = 0; index < this.globalEffectsChain.length - 1; index++) {
+      this.globalEffectsChain[index].connect(this.globalEffectsChain[index + 1]);
+    }
+
+    const lastEffect = this.globalEffectsChain.at(-1);
+    lastEffect?.connect(this.masterGain);
+  }
+
   dispose(): void {
     for (const [, channel] of this.channels) channel.dispose();
     for (const [, effectsArray] of this.effects) for (const effect of effectsArray) effect.dispose();
+
+    if (this.globalReverb) this.globalReverb.dispose();
+    if (this.globalDelay) this.globalDelay.dispose();
+    if (this.globalFilter) this.globalFilter.dispose();
+    if (this.globalChorus) this.globalChorus.dispose();
+
     this.masterGain.dispose();
   }
 }
 
-export const noteToFrequency = (note: Note, octave: number = 4): number => {
-  const noteString = NoteUtilities.toString(note);
-  return Tone.Frequency(`${noteString}${octave}`).toFrequency();
-};
+export const noteToFrequency = (note: Note, octave: number = 4): number =>
+  Tone.Frequency(`${NoteUtilities.toString(note)}${octave}`).toFrequency();
 
-export const noteToToneString = (note: Note, octave: number = 4): string => {
-  const noteString = NoteUtilities.toString(note);
-  return `${noteString}${octave}`;
-};
+export const noteToToneString = (note: Note, octave: number = 4): string => `${NoteUtilities.toString(note)}${octave}`;
 
-export const chordToToneStrings = (chord: Note[], octave: number = 4): string[] => {
-  return chord.map(note => noteToToneString(note, octave));
-};
+export const chordToToneStrings = (chord: Note[], octave: number = 4): string[] =>
+  chord.map(note => noteToToneString(note, octave));
 
 export const ParameterAutomation = {
   automateParameter<T extends Tone.Param>(

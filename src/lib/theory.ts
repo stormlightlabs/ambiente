@@ -217,29 +217,28 @@ export const NoteUtilities = {
     }
   },
 
-  fromString: (noteString: string): Optional<Note> => {
-    const noteMap: Record<string, Note> = {
-      C: Note.C,
-      "C#": Note.CSharp,
-      Db: Note.CSharp,
-      D: Note.D,
-      "D#": Note.DSharp,
-      Eb: Note.DSharp,
-      E: Note.E,
-      F: Note.F,
-      "F#": Note.FSharp,
-      Gb: Note.FSharp,
-      G: Note.G,
-      "G#": Note.GSharp,
-      Ab: Note.GSharp,
-      A: Note.A,
-      "A#": Note.ASharp,
-      Bb: Note.ASharp,
-      B: Note.B,
-    };
-    return noteMap[noteString] ?? undefined;
+  fromString(noteString: string): Optional<Note> {
+    return this.Map[noteString] ?? undefined;
   },
-
+  Map: {
+    C: Note.C,
+    "C#": Note.CSharp,
+    Db: Note.CSharp,
+    D: Note.D,
+    "D#": Note.DSharp,
+    Eb: Note.DSharp,
+    E: Note.E,
+    F: Note.F,
+    "F#": Note.FSharp,
+    Gb: Note.FSharp,
+    G: Note.G,
+    "G#": Note.GSharp,
+    Ab: Note.GSharp,
+    A: Note.A,
+    "A#": Note.ASharp,
+    Bb: Note.ASharp,
+    B: Note.B,
+  } as Record<string, Note>,
   fromMidi: (midiNote: number): Note => midiNote % 12,
   toMidi: (note: Note, octave: number = 4): number => note + octave * 12 + 12,
 };
