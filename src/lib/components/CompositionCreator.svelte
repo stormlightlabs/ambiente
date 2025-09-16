@@ -110,11 +110,11 @@
 
 <div class="rounded-lg bg-black/5 p-4">
 	<div class="mb-6 flex items-center justify-between">
-		<h2 class="text-2xl font-semibold text-gray-800">Composition Creator</h2>
+		<h2 class="text-2xl font-semibold text-surface-800">Composition Creator</h2>
 		<div class="flex gap-2">
 			<button
 				onclick={resetToDefaults}
-				class="rounded border border-gray-300 bg-white px-4 py-2 text-sm transition-colors hover:bg-gray-50">
+				class="rounded border border-surface-300 bg-white px-4 py-2 text-sm transition-colors hover:bg-surface-50">
 				Reset
 			</button>
 			<button
@@ -127,12 +127,12 @@
 
 	<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 		<!-- Musical Parameters -->
-		<div class="rounded-lg border border-gray-200 bg-white p-4">
-			<h3 class="mb-4 border-b border-gray-100 pb-2 text-lg font-medium text-gray-800">Musical Parameters</h3>
+		<div class="rounded-lg border border-surface-200 bg-white p-4">
+			<h3 class="mb-4 border-b border-surface-100 pb-2 text-lg font-medium text-surface-800">Musical Parameters</h3>
 
 			<div class="space-y-4">
 				<div>
-					<label for="tempo" class="mb-2 block font-medium text-gray-700">Tempo: {customTempo} BPM</label>
+					<label for="tempo" class="mb-2 block font-medium text-surface-700">Tempo: {customTempo} BPM</label>
 					<input
 						id="tempo"
 						type="range"
@@ -141,16 +141,16 @@
 						max="200"
 						step="1"
 						onchange={updateTempo}
-						class="slider h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200" />
+						class="slider h-2 w-full cursor-pointer appearance-none rounded-lg bg-surface-200" />
 				</div>
 
 				<div>
-					<label for="key" class="mb-2 block font-medium text-gray-700">Key:</label>
+					<label for="key" class="mb-2 block font-medium text-surface-700">Key:</label>
 					<select
 						id="key"
 						bind:value={customKey}
 						onchange={updateKey}
-						class="w-full rounded border border-gray-300 bg-white p-2 text-base">
+						class="w-full rounded border border-surface-300 bg-white p-2 text-base">
 						{#each noteNames as noteName, index (noteName)}
 							<option value={index}>{noteName}</option>
 						{/each}
@@ -158,12 +158,12 @@
 				</div>
 
 				<div>
-					<label for="mode" class="mb-2 block font-medium text-gray-700">Mode:</label>
+					<label for="mode" class="mb-2 block font-medium text-surface-700">Mode:</label>
 					<select
 						id="mode"
 						bind:value={customMode}
 						onchange={updateMode}
-						class="w-full rounded border border-gray-300 bg-white p-2 text-base">
+						class="w-full rounded border border-surface-300 bg-white p-2 text-base">
 						{#each modeNames as modeName, index (modeName)}
 							<option value={index}>{modeName}</option>
 						{/each}
@@ -171,7 +171,7 @@
 				</div>
 
 				<div>
-					<label for="volume" class="mb-2 block font-medium text-gray-700"
+					<label for="volume" class="mb-2 block font-medium text-surface-700"
 						>Volume: {Math.round(customVolume * 100)}%</label>
 					<input
 						id="volume"
@@ -181,14 +181,14 @@
 						max="1"
 						step="0.01"
 						onchange={updateVolume}
-						class="slider h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200" />
+						class="slider h-2 w-full cursor-pointer appearance-none rounded-lg bg-surface-200" />
 				</div>
 			</div>
 		</div>
 
 		<!-- Instruments -->
-		<div class="rounded-lg border border-gray-200 bg-white p-4">
-			<h3 class="mb-4 border-b border-gray-100 pb-2 text-lg font-medium text-gray-800">Instruments</h3>
+		<div class="rounded-lg border border-surface-200 bg-white p-4">
+			<h3 class="mb-4 border-b border-surface-100 pb-2 text-lg font-medium text-surface-800">Instruments</h3>
 
 			<div class="grid grid-cols-2 gap-2">
 				{#each instrumentTypes as instrument (instrument)}
@@ -197,7 +197,7 @@
 							instrument
 						)
 							? 'border-blue-600 bg-blue-600 text-white'
-							: 'border-gray-200 bg-white text-gray-700 hover:border-gray-400'}"
+							: 'border-surface-200 bg-white text-surface-700 hover:border-surface-400'}"
 						onclick={() => toggleInstrument(instrument)}>
 						{instrument}
 					</button>
@@ -206,17 +206,17 @@
 		</div>
 
 		<!-- Scale Information -->
-		<div class="rounded-lg border border-gray-200 bg-white p-4">
-			<h3 class="mb-4 border-b border-gray-100 pb-2 text-lg font-medium text-gray-800">Current Scale</h3>
+		<div class="rounded-lg border border-surface-200 bg-white p-4">
+			<h3 class="mb-4 border-b border-surface-100 pb-2 text-lg font-medium text-surface-800">Current Scale</h3>
 
 			<div>
-				<p class="mb-4 text-gray-700">
+				<p class="mb-4 text-surface-700">
 					<strong>Key:</strong>
 					{noteNames[Number(customKey)]}
 					{modeNames[Number(customMode)]}
 				</p>
 				<div class="flex flex-wrap items-center gap-2">
-					<span class="font-medium text-gray-700">Notes:</span>
+					<span class="font-medium text-surface-700">Notes:</span>
 					{#each currentScale as note, index (note)}
 						<span
 							class="inline-block rounded px-2 py-1 text-xs font-medium {index === 0
@@ -230,25 +230,25 @@
 		</div>
 
 		<!-- Live Status -->
-		<div class="rounded-lg border border-gray-200 bg-white p-4">
-			<h3 class="mb-4 border-b border-gray-100 pb-2 text-lg font-medium text-gray-800">Live Status</h3>
+		<div class="rounded-lg border border-surface-200 bg-white p-4">
+			<h3 class="mb-4 border-b border-surface-100 pb-2 text-lg font-medium text-surface-800">Live Status</h3>
 
 			<div class="space-y-3">
 				<div class="flex items-center justify-between">
-					<span class="font-medium text-gray-700">Playing:</span>
-					<span class="font-semibold {audioState.isPlaying ? 'text-green-600' : 'text-gray-600'}">
+					<span class="font-medium text-surface-700">Playing:</span>
+					<span class="font-semibold {audioState.isPlaying ? 'text-green-600' : 'text-surface-600'}">
 						{audioState.isPlaying ? 'Yes' : 'No'}
 					</span>
 				</div>
 
 				<div class="flex items-center justify-between">
-					<span class="font-medium text-gray-700">Current Chord:</span>
-					<span class="font-semibold text-gray-800">{audioState.currentChord + 1}</span>
+					<span class="font-medium text-surface-700">Current Chord:</span>
+					<span class="font-semibold text-surface-800">{audioState.currentChord + 1}</span>
 				</div>
 
 				<div class="flex items-center justify-between">
-					<span class="font-medium text-gray-700">Active Instruments:</span>
-					<span class="font-semibold text-gray-800">{audioState.instruments.size}</span>
+					<span class="font-medium text-surface-700">Active Instruments:</span>
+					<span class="font-semibold text-surface-800">{audioState.instruments.size}</span>
 				</div>
 			</div>
 		</div>

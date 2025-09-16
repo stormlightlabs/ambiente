@@ -17,6 +17,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      tailwind-merge:
+        specifier: ^3.3.1
+        version: 3.3.1
       tone:
         specifier: ^15.1.22
         version: 15.1.22
@@ -1754,6 +1757,9 @@ packages:
     resolution: {integrity: sha512-UY+OhrWK7WI22bCZ00P/M3HtyWgwJPi9IxSRkoAE2MeAy6kl7ZlZWJZ8RaB+X4KD/G+wjis+cGVnVYaoqbzBqg==}
     engines: {node: '>=18'}
 
+  tailwind-merge@3.3.1:
+    resolution: {integrity: sha512-gBXpgUm/3rp1lMZZrM/w7D8GKqshif0zAymAhbCyIt8KMe+0v9DQ7cdYLR4FHH/cKpdTXb+A/tKKU3eolfsI+g==}
+
   tailwindcss@4.1.13:
     resolution: {integrity: sha512-i+zidfmTqtwquj4hMEwdjshYYgMbOrPzb9a0M3ZgNa0JMoZeFC6bxZvO8yr8ozS6ix2SDz0+mvryPeBs2TFE+w==}
 
@@ -3434,6 +3440,8 @@ snapshots:
       locate-character: 3.0.0
       magic-string: 0.30.19
       zimmerframe: 1.1.4
+
+  tailwind-merge@3.3.1: {}
 
   tailwindcss@4.1.13: {}
 

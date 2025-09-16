@@ -112,7 +112,8 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<div class="flex flex-col gap-4 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 p-4 text-white shadow-lg">
+<div
+	class="flex flex-col gap-4 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-600 p-4 text-white shadow-lg">
 	<div class="flex justify-center gap-4">
 		<button
 			class="flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/30 bg-white/10 text-2xl transition-all duration-200 hover:scale-105 hover:border-white/50 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
@@ -335,7 +336,7 @@
 							<div class="flex items-center gap-2">
 								{#each currentChordNotes as note, index (note)}
 									<div
-										class="flex h-6 w-6 animate-pulse items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-purple-500"
+										class="flex h-6 w-6 animate-pulse items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-secondary-500"
 										style="animation-delay: {index * 200}ms">
 									</div>
 									<span class="text-xs font-bold">{noteNames[note] || '?'}</span>

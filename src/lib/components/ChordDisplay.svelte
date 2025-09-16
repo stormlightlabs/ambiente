@@ -25,7 +25,7 @@
 	const progressionChords = $derived(progression.map((chordNotes) => ChordAnalysis.analyzeChord(chordNotes)));
 </script>
 
-<div class="rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 p-4 text-white shadow-lg">
+<div class="rounded-lg bg-gradient-to-br from-blue-500 to-primary-600 p-4 text-white shadow-lg">
 	<div class="mb-3 text-center">
 		<h3 class="text-sm font-medium opacity-80">Current Chord</h3>
 		<div class="text-2xl font-bold">{currentChord.name}</div>

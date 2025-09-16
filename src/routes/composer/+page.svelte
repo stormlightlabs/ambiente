@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { AppStateManager } from '$lib/communication.svelte';
-	import PresetPlayer from '$lib/components/PresetPlayer.svelte';
+	import CompositionCreator from '$lib/components/CompositionCreator.svelte';
 	import PlayerControls from '$lib/components/PlayerControls.svelte';
 	import { type Note } from '$lib/theory';
 
@@ -8,7 +8,7 @@
 	let currentChordNotes = $state<Note[]>([]);
 
 	$effect(() => {
-		appState.setActiveView('player');
+		appState.setActiveView('composer');
 		const subscription = appState.getCurrentChord$().subscribe((notes) => (currentChordNotes = notes));
 		return () => subscription.unsubscribe();
 	});
@@ -28,9 +28,8 @@
 	selectedPreset={appState.ui.selectedPreset} />
 
 <div class="animate-fadeIn">
-	<PresetPlayer
-		currentInstruments={appState.audio.instruments}
-		onSetSelectedPreset={appState.setSelectedPreset.bind(appState)}
+	<CompositionCreator
+		audioState={appState.audio}
 		onSetTempo={appState.setTempo.bind(appState)}
 		onSetKeyAndMode={appState.setKeyAndMode.bind(appState)}
 		onSetVolume={appState.setVolume.bind(appState)}
