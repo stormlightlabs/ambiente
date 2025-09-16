@@ -3,6 +3,7 @@ import { debounceTime, distinctUntilChanged, map, take, takeUntil } from "rxjs/o
 import { SvelteSet } from "svelte/reactivity";
 import * as Tone from "tone";
 import { ambientMixer, createSynth, initializeAudio, noteToToneString, ParameterAutomation } from "./audio";
+import { AMBIENT_TO_ENGINE_MAPPING } from "./data/presets";
 import { AmbientPadSynth } from "./instruments/ambient-pad";
 import { ArpeggiatorSynth } from "./instruments/arpeggiator";
 import { GranularSynth } from "./instruments/granular-synth";
@@ -663,23 +664,13 @@ export class AudioEngine {
       return;
     }
 
-    const instrumentMapping = {
-      ambientPad: InstrumentType.AmbientPad,
-      granular: InstrumentType.Granular,
-      melodic: InstrumentType.Melodic,
-      harmonicDrone: InstrumentType.HarmonicDrone,
-      rhythmicPulse: InstrumentType.RhythmicPulse,
-      fieldRecording: InstrumentType.FieldRecording,
-      vocalPad: InstrumentType.VocalPad,
-      arpeggiator: InstrumentType.Arpeggiator,
-    };
-
     for (const [textureKey, params] of Object.entries(texture.instruments)) {
-      const instrumentType = instrumentMapping[textureKey as keyof typeof instrumentMapping];
+      const instrumentType = AMBIENT_TO_ENGINE_MAPPING[textureKey as keyof typeof AMBIENT_TO_ENGINE_MAPPING];
       if (instrumentType) {
         const instrument = this.ambientInstruments.get(instrumentType);
         if (instrument) {
-          instrument.updateParams(params as any);
+          // @ts-expect-error params vary by instrument and types are not polymorphic
+          instrument.updateParams(params);
         }
       }
     }

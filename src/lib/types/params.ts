@@ -68,3 +68,14 @@ export interface ArpeggiatorParams extends Params {
   probability: number;
   swing: number;
 }
+
+export type AmbientInstrumentConfig = {
+  ambientPad: AmbientPadParams;
+  granular: GranularParams;
+  melodic: MelodicParams;
+  harmonicDrone: HarmonicDroneParams;
+  rhythmicPulse: RhythmicPulseParams;
+  fieldRecording?: FieldRecordingParams;
+  vocalPad?: VocalPadParams;
+  arpeggiator?: ArpeggiatorParams;
+};

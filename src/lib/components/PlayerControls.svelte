@@ -56,7 +56,7 @@
 			// NOTE: User gesture triggered - safe to initialize audio context
 			await onTogglePlayback();
 		} catch (error) {
-			console.error('🎮 Error in PlayerControls togglePlayback:', error);
+			console.error('Error in PlayerControls togglePlayback:', error);
 		}
 	}
 

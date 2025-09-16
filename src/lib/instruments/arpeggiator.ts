@@ -1,10 +1,10 @@
 import { GranularDelayEffect } from "$lib/effects/granular-delay";
 import { ModulatedFiltersEffect } from "$lib/effects/modulated-filters";
 import { ProbabilityOrnamentsEffect } from "$lib/effects/probability-ornaments";
+import { Note, NoteUtilities } from "$lib/theory";
 import type { ArpeggiatorParams } from "$lib/types/params";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
 import * as Tone from "tone";
-import { Note, NoteUtilities } from "../theory";
 
 export class ArpeggiatorSynth {
   private output: Tone.Gain;
@@ -102,7 +102,6 @@ export class ArpeggiatorSynth {
       return;
     }
 
-    // Tick internal effects
     this.granularDelay.tick(time, tickDuration);
     this.probabilityOrnaments.tick(time, tickDuration);
 
@@ -118,7 +117,6 @@ export class ArpeggiatorSynth {
     const note = this.getNextNote();
     if (!note) return;
 
-    // Generate octave variations
     const baseOctave = 4;
     const octaveOffset = Math.floor(Math.random() * params.octaveRange);
     const octave = baseOctave + octaveOffset;
@@ -164,20 +162,17 @@ export class ArpeggiatorSynth {
     const params = this.params$.value;
 
     if (params.pattern === "random") {
-      // Don't advance for random pattern
       return;
     }
 
     this.currentNoteIndex += this.direction;
 
-    // Handle direction changes for upDown pattern
     if (params.pattern === "upDown") {
       const maxIndex = this.currentScale.length - 1;
       if (this.currentNoteIndex >= maxIndex * 2) {
         this.currentNoteIndex = 0;
       }
     } else {
-      // Reset for up/down patterns
       if (this.currentNoteIndex >= this.currentScale.length) {
         this.currentNoteIndex = 0;
       }
@@ -186,9 +181,8 @@ export class ArpeggiatorSynth {
 
   setScale(scale: Note[]): void {
     this.currentScale = [...scale];
-    this.currentNoteIndex = 0; // Reset position when scale changes
+    this.currentNoteIndex = 0;
 
-    // Convert scale to string format for ornaments effect
     const scaleStrings = scale.map(note => `${NoteUtilities.toString(note)}4`);
     this.probabilityOrnaments.setScale(scaleStrings);
   }
@@ -197,15 +191,6 @@ export class ArpeggiatorSynth {
     const currentParams = this.params$.value;
     const updatedParams = { ...currentParams, ...newParams };
     this.params$.next(updatedParams);
-
-    // Restart if tempo changed significantly
-    if (
-      newParams.tempo && Math.abs(newParams.tempo - currentParams.tempo) > 10 && updatedParams.enabled
-      && !updatedParams.muted
-    ) {
-      // The arpeggiator will automatically adjust to the new tempo via the tick method.
-      // No need to restart it manually.
-    }
   }
 
   getParams(): Observable<ArpeggiatorParams> {

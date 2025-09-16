@@ -68,7 +68,7 @@ vi.mock(
 );
 
 vi.mock(
-  "../theory",
+  "$lib/theory",
   () => ({
     Note: { C: 0, CSharp: 1, D: 2, DSharp: 3, E: 4, F: 5, FSharp: 6, G: 7, GSharp: 8, A: 9, ASharp: 10, B: 11 },
     Mode: {
@@ -381,7 +381,7 @@ describe("createAmbientAudioEngine", () => {
 
 describe("createDefaultPattern", () => {
   beforeEach(async () => {
-    const { generateScale } = await import("../theory");
+    const { generateScale } = await import("$lib/theory");
     vi.mocked(generateScale).mockReturnValue([0, 2, 4, 5, 7, 9, 11]);
   });
 

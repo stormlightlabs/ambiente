@@ -94,7 +94,7 @@ export class VocalPadSynth {
     }));
   }
 
-  tick(time: number, tickDuration: number): void {
+  tick(_time: number, _tickDuration: number): void {
     const params = this.params$.value;
     if (!params.enabled || params.muted) return;
 

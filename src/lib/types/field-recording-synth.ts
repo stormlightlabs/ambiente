@@ -37,7 +37,6 @@ export class FieldRecordingSynth {
     this.filter = new Tone.Filter({ frequency: defaultParams.filterFreq, type: "lowpass", Q: 1 });
     this.reverb = new Tone.Reverb({ decay: 4, wet: defaultParams.reverb });
 
-    // Advanced effects for authentic field recording texture
     this.tapeSaturation = new TapeSaturationEffect({
       enabled: true,
       drive: 0.2,
@@ -132,7 +131,6 @@ export class FieldRecordingSynth {
       const currentParams = this.params$.value;
       const interval = (1000 / currentParams.density) * (0.8 + Math.random() * 0.4);
 
-      // Subtle filter modulation for organic texture
       const freqVariation = currentParams.filterFreq * (0.9 + Math.random() * 0.2);
       this.filter.frequency.rampTo(freqVariation, currentParams.fadeTime);
 

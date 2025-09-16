@@ -1,8 +1,8 @@
+import { Note, NoteUtilities } from "$lib/theory";
 import type { MelodicParams } from "$lib/types/params";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
 import { map, takeUntil } from "rxjs/operators";
 import * as Tone from "tone";
-import { Note, NoteUtilities } from "../theory";
 
 export class MelodicSynth {
   private synth: Tone.PolySynth;
@@ -35,7 +35,7 @@ export class MelodicSynth {
     );
   }
 
-  tick(time: number, tickDuration: number): void {
+  tick(time: number, _tickDuration: number): void {
     const params = this.params$.value;
     if (!params.enabled || params.muted || this.currentScale.length === 0) {
       return;

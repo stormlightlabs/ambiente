@@ -27,19 +27,19 @@ export default ts.config(
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       "unicorn/prefer-ternary": "off",
-      "no-console": "warn",
+      "no-console": ["error", { allow: ["warn", "error"] }],
       "unicorn/filename-case": ["warn", {
         cases: { pascalCase: true, kebabCase: true },
         multipleFileExtensions: false,
       }],
       "unicorn/prevent-abbreviations": ["warn", {
-        "replacements": {
-          "props": { properties: false },
-          "params": { parameters: false },
-          "param": { parameter: false },
-          "opts": { options: false },
-          "args": { arguments: false },
-          "fn": { function: false },
+        replacements: {
+          props: { properties: false },
+          params: { parameters: false },
+          param: { parameter: false },
+          opts: { options: false },
+          args: { arguments: false },
+          fn: { function: false },
         },
       }],
     },

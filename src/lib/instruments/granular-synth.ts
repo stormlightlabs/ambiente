@@ -1,8 +1,8 @@
+import { Note, NoteUtilities } from "$lib/theory";
 import type { GranularParams } from "$lib/types/params";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
 import { map, takeUntil } from "rxjs/operators";
 import * as Tone from "tone";
-import { Note, NoteUtilities } from "../theory";
 
 export class GranularSynth {
   private output: Tone.Gain;

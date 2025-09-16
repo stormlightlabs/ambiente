@@ -1,8 +1,8 @@
+import { Note, NoteUtilities } from "$lib/theory";
 import type { HarmonicDroneParams } from "$lib/types/params";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
 import { map, takeUntil } from "rxjs/operators";
 import * as Tone from "tone";
-import { Note, NoteUtilities } from "../theory";
 
 export class HarmonicDroneSynth {
   private synths: Tone.PolySynth[];

@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { AMBIENT_PROGRESSIONS, Mode, Note, generateScale } from '$lib/theory';
+	import { Mode, Note, generateScale } from '$lib/theory';
 	import { InstrumentType } from '$lib/types/instruments';
 
 	const noteNames = Object.keys(Note).filter((key) => Number.isNaN(Number(key)));
 	const modeNames = Object.keys(Mode).filter((key) => Number.isNaN(Number(key)));
 	const instrumentTypes = Object.values(InstrumentType);
-	const progressionNames = Object.keys(AMBIENT_PROGRESSIONS);
 
 	type AudioState = {
 		tempo: number;

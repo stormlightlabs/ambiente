@@ -1,28 +1,8 @@
 import type { AudioEngineState } from "$lib/types/audio";
-import type {
-  AmbientPadParams,
-  ArpeggiatorParams,
-  FieldRecordingParams,
-  GranularParams,
-  HarmonicDroneParams,
-  MelodicParams,
-  RhythmicPulseParams,
-  VocalPadParams,
-} from "$lib/types/params";
+import type { AmbientInstrumentConfig } from "$lib/types/params";
 import type { EffectType, InstrumentType } from "./instruments";
 
-export interface AmbientInstrumentConfig {
-  ambientPad: AmbientPadParams;
-  granular: GranularParams;
-  melodic: MelodicParams;
-  harmonicDrone: HarmonicDroneParams;
-  rhythmicPulse: RhythmicPulseParams;
-  fieldRecording?: FieldRecordingParams;
-  vocalPad?: VocalPadParams;
-  arpeggiator?: ArpeggiatorParams;
-}
-
-type Voice = {
+export type Voice = {
   type: "synth" | "sampler" | "drone" | "granular" | "piano";
   count: number;
   envelope?: { attack: number; decay: number; sustain: number; release: number };
@@ -30,7 +10,7 @@ type Voice = {
   sampleUrls?: string[];
 };
 
-export type AmbientPreset = {
+export type Texture = {
   name: string;
   tempo: number;
   scale: string[];
@@ -51,7 +31,7 @@ export type AmbientPreset = {
   instruments: AmbientInstrumentConfig;
 };
 
-export enum AmbientInstrumentType {
+export enum TextureType {
   AmbientPad = "ambientPad",
   Granular = "granular",
   Melodic = "melodic",
@@ -69,5 +49,5 @@ export type Preset = {
   theme: string;
   config: Partial<AudioEngineState>;
   effects?: Partial<Record<InstrumentType, EffectType[]>>;
-  texture: AmbientPreset;
+  texture: Texture;
 };

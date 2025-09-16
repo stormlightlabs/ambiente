@@ -239,7 +239,6 @@ describe("audio", () => {
       const mockSynth = { connect: vi.fn() };
       const mockEffect = { connect: vi.fn() };
 
-      // Reset the mock to return our specific effect for this test
       (Tone.Reverb as any).mockImplementationOnce(() => mockEffect);
 
       mixer.connectSynth(mockSynth as any, InstrumentType.Pad, [EffectType.Reverb]);
@@ -261,7 +260,6 @@ describe("audio", () => {
       const mixer = new AmbientMixer();
       const mockSynth = { connect: vi.fn() };
 
-      // Test with non-existent instrument type
       mixer.connectSynth(mockSynth as any, "nonexistent" as InstrumentType, []);
 
       expect(mockSynth.connect).not.toHaveBeenCalled();
@@ -401,7 +399,7 @@ describe("audio", () => {
       const scale = ParameterAutomation.createEnvelopeModulation(mockParam, 0.1, 0.2, 0.8, 1.5, 0.4);
 
       expect(Tone.Envelope).toHaveBeenCalledWith(0.1, 0.2, 0.8, 1.5);
-      expect(Tone.ScaleExp).toHaveBeenCalledWith(0.5, 0.9); // value + amount
+      expect(Tone.ScaleExp).toHaveBeenCalledWith(0.5, 0.9);
       expect(mockEnvelope.connect).toHaveBeenCalledWith(mockScale);
       expect(mockScale.connect).toHaveBeenCalledWith(mockParam);
       expect(scale).toBe(mockScale);
