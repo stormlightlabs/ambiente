@@ -14,6 +14,12 @@ export enum InstrumentType {
   Percussion = "percussion",
   Atmosphere = "atmosphere",
   Texture = "texture",
+  // Ambient instruments
+  AmbientPad = "ambientPad",
+  Granular = "granular",
+  Melodic = "melodic",
+  HarmonicDrone = "harmonicDrone",
+  RhythmicPulse = "rhythmicPulse",
 }
 
 export type SynthParams = {
@@ -29,10 +35,10 @@ export type SynthParams = {
 
 export const DEFAULT_SYNTH_PARAMS: Record<InstrumentType, SynthParams> = {
   [InstrumentType.Pad]: {
-    attack: 2.0,
+    attack: 2,
     decay: 0.5,
     sustain: 0.8,
-    release: 4.0,
+    release: 4,
     filterFreq: 800,
     filterQ: 1,
     detune: 0,
@@ -61,7 +67,7 @@ export const DEFAULT_SYNTH_PARAMS: Record<InstrumentType, SynthParams> = {
   [InstrumentType.Percussion]: {
     attack: 0.01,
     decay: 0.1,
-    sustain: 0.0,
+    sustain: 0,
     release: 0.3,
     filterFreq: 2000,
     filterQ: 0.5,
@@ -69,24 +75,75 @@ export const DEFAULT_SYNTH_PARAMS: Record<InstrumentType, SynthParams> = {
     volume: -15,
   },
   [InstrumentType.Atmosphere]: {
-    attack: 4.0,
-    decay: 2.0,
+    attack: 4,
+    decay: 2,
     sustain: 0.9,
-    release: 8.0,
+    release: 8,
     filterFreq: 600,
     filterQ: 0.8,
     detune: 5,
     volume: -20,
   },
   [InstrumentType.Texture]: {
-    attack: 1.0,
-    decay: 1.0,
+    attack: 1,
+    decay: 1,
     sustain: 0.7,
-    release: 3.0,
+    release: 3,
     filterFreq: 1000,
     filterQ: 1.2,
     detune: -3,
     volume: -16,
+  },
+  // Ambient instruments
+  [InstrumentType.AmbientPad]: {
+    attack: 2,
+    decay: 0.5,
+    sustain: 0.8,
+    release: 4,
+    filterFreq: 400,
+    filterQ: 1.5,
+    detune: 0,
+    volume: -10,
+  },
+  [InstrumentType.Granular]: {
+    attack: 0.01,
+    decay: 0.1,
+    sustain: 0.3,
+    release: 0.2,
+    filterFreq: 800,
+    filterQ: 1,
+    detune: 0,
+    volume: -14,
+  },
+  [InstrumentType.Melodic]: {
+    attack: 0.1,
+    decay: 0.3,
+    sustain: 0.6,
+    release: 1.5,
+    filterFreq: 1200,
+    filterQ: 2,
+    detune: 0,
+    volume: -20,
+  },
+  [InstrumentType.HarmonicDrone]: {
+    attack: 8,
+    decay: 0,
+    sustain: 1,
+    release: 10,
+    filterFreq: 400,
+    filterQ: 0.5,
+    detune: 2,
+    volume: -12,
+  },
+  [InstrumentType.RhythmicPulse]: {
+    attack: 0.01,
+    decay: 0.1,
+    sustain: 0,
+    release: 0.3,
+    filterFreq: 2000,
+    filterQ: 0.5,
+    detune: 0,
+    volume: -18,
   },
 };
 
@@ -110,20 +167,27 @@ export const createSynth = (type: InstrumentType, params?: Partial<SynthParams>)
 
 const getSynthWaveform = (type: InstrumentType) => {
   switch (type) {
-    case InstrumentType.Pad:
+    case InstrumentType.Pad: {
       return "sawtooth";
-    case InstrumentType.Lead:
+    }
+    case InstrumentType.Lead: {
       return "square";
-    case InstrumentType.Bass:
+    }
+    case InstrumentType.Bass: {
       return "triangle";
-    case InstrumentType.Percussion:
+    }
+    case InstrumentType.Percussion: {
       return "square";
-    case InstrumentType.Atmosphere:
+    }
+    case InstrumentType.Atmosphere: {
       return "sine";
-    case InstrumentType.Texture:
+    }
+    case InstrumentType.Texture: {
       return "sawtooth";
-    default:
+    }
+    default: {
       return "sine";
+    }
   }
 };
 
@@ -139,26 +203,33 @@ export enum EffectType {
 export const createEffectsChain = (effects: EffectType[]): Tone.ToneAudioNode[] =>
   effects.map(effectType => {
     switch (effectType) {
-      case EffectType.Reverb:
-        return new Tone.Reverb({ decay: 4.0, wet: 0.3 });
+      case EffectType.Reverb: {
+        return new Tone.Reverb({ decay: 4, wet: 0.3 });
+      }
 
-      case EffectType.Delay:
+      case EffectType.Delay: {
         return new Tone.PingPongDelay({ delayTime: "8n", feedback: 0.3, wet: 0.2 });
+      }
 
-      case EffectType.Chorus:
+      case EffectType.Chorus: {
         return new Tone.Chorus({ frequency: 0.5, delayTime: 3.5, depth: 0.7, wet: 0.3 });
+      }
 
-      case EffectType.Filter:
+      case EffectType.Filter: {
         return new Tone.AutoFilter({ frequency: 0.2, baseFrequency: 800, octaves: 2.5, wet: 0.5 });
+      }
 
-      case EffectType.Distortion:
+      case EffectType.Distortion: {
         return new Tone.Distortion({ distortion: 0.1, wet: 0.2 });
+      }
 
-      case EffectType.Compressor:
+      case EffectType.Compressor: {
         return new Tone.Compressor({ threshold: -24, ratio: 4, attack: 0.003, release: 0.1 });
+      }
 
-      default:
+      default: {
         return new Tone.Gain(1);
+      }
     }
   });
 
@@ -171,12 +242,12 @@ export class AmbientMixer {
     this.masterGain = new Tone.Gain(0.8);
     this.masterGain.toDestination();
 
-    Object.values(InstrumentType).forEach(type => {
+    for (const type of Object.values(InstrumentType)) {
       const channel = new Tone.Channel({ volume: DEFAULT_SYNTH_PARAMS[type].volume, pan: 0 });
 
       channel.connect(this.masterGain);
       this.channels.set(type, channel);
-    });
+    }
   }
 
   connectSynth(synth: Tone.PolySynth, type: InstrumentType, effects: EffectType[] = []): void {
@@ -189,10 +260,10 @@ export class AmbientMixer {
     // Chain: synth -> effects -> channel -> master
     let currentNode: Tone.ToneAudioNode = synth;
 
-    effectsChain.forEach(effect => {
+    for (const effect of effectsChain) {
       currentNode.connect(effect);
       currentNode = effect;
-    });
+    }
 
     currentNode.connect(channel);
   }
@@ -220,8 +291,8 @@ export class AmbientMixer {
   }
 
   dispose(): void {
-    this.channels.forEach(channel => channel.dispose());
-    this.effects.forEach(effectsArray => effectsArray.forEach(effect => effect.dispose()));
+    for (const [, channel] of this.channels) channel.dispose();
+    for (const [, effectsArray] of this.effects) for (const effect of effectsArray) effect.dispose();
     this.masterGain.dispose();
   }
 }
@@ -240,8 +311,8 @@ export const chordToToneStrings = (chord: Note[], octave: number = 4): string[] 
   return chord.map(note => noteToToneString(note, octave));
 };
 
-export class ParameterAutomation {
-  static automateParameter<T extends Tone.Param>(
+export const ParameterAutomation = {
+  automateParameter<T extends Tone.Param>(
     param: T,
     targetValue: number,
     duration: string = "1m",
@@ -252,9 +323,9 @@ export class ParameterAutomation {
     } else {
       param.linearRampToValueAtTime(targetValue, `+${duration}`);
     }
-  }
+  },
 
-  static createLFO(
+  createLFO(
     param: Tone.Param,
     frequency: number = 0.1,
     depth: number = 0.5,
@@ -264,14 +335,14 @@ export class ParameterAutomation {
     lfo.type = type;
     lfo.connect(param);
     return lfo;
-  }
+  },
 
-  static createEnvelopeModulation(
+  createEnvelopeModulation(
     param: Tone.Param,
     attack: number = 0.1,
     decay: number = 0.3,
     sustain: number = 0.7,
-    release: number = 1.0,
+    release: number = 1,
     amount: number = 0.5,
   ): Tone.ScaleExp {
     const envelope = new Tone.Envelope(attack, decay, sustain, release);
@@ -281,7 +352,7 @@ export class ParameterAutomation {
     scale.connect(param);
 
     return scale;
-  }
-}
+  },
+};
 
 export const ambientMixer = new AmbientMixer();

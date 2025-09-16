@@ -17,6 +17,10 @@ vi.mock(
     start: vi.fn(),
     getContext: vi.fn(() => ({ state: "suspended" })),
     PolySynth: vi.fn(),
+    Synth: vi.fn(),
+    Gain: vi.fn(() => ({ toDestination: vi.fn(), gain: { value: 0 }, dispose: vi.fn(), connect: vi.fn() })),
+    Filter: vi.fn(() => ({ frequency: { value: 0 }, Q: { value: 0 }, dispose: vi.fn(), connect: vi.fn() })),
+    Frequency: vi.fn(() => ({ toFrequency: vi.fn(() => 440) })),
     getTransport: vi.fn(() => mockTransport),
     now: vi.fn(() => 0),
   }),
@@ -26,7 +30,12 @@ vi.mock(
   "../audio",
   () => ({
     initializeAudio: vi.fn(),
-    createSynth: vi.fn(() => ({ dispose: vi.fn(), triggerAttackRelease: vi.fn(), get: vi.fn(() => ({})) })),
+    createSynth: vi.fn(() => ({
+      dispose: vi.fn(),
+      triggerAttackRelease: vi.fn(),
+      get: vi.fn(() => ({})),
+      releaseAll: vi.fn(),
+    })),
     InstrumentType: {
       Pad: "pad",
       Lead: "lead",
@@ -34,6 +43,11 @@ vi.mock(
       Percussion: "percussion",
       Atmosphere: "atmosphere",
       Texture: "texture",
+      AmbientPad: "ambientPad",
+      Granular: "granular",
+      Melodic: "melodic",
+      HarmonicDrone: "harmonicDrone",
+      RhythmicPulse: "rhythmicPulse",
     },
     EffectType: {
       Reverb: "reverb",
@@ -43,7 +57,12 @@ vi.mock(
       Distortion: "distortion",
       Compressor: "compressor",
     },
-    ambientMixer: { connectSynth: vi.fn(), setMasterVolume: vi.fn(), dispose: vi.fn() },
+    ambientMixer: {
+      connectSynth: vi.fn(),
+      setMasterVolume: vi.fn(),
+      dispose: vi.fn(),
+      getChannel: vi.fn(() => ({ connect: vi.fn(), volume: { value: 0 }, dispose: vi.fn() })),
+    },
     noteToToneString: vi.fn((note: Note, octave = 4) => {
       const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
       return `${noteNames[note]}${octave}`;
@@ -68,6 +87,20 @@ vi.mock(
     generateScale: vi.fn(() => [0, 2, 4, 5, 7, 9, 11]),
     generateProgression: vi.fn(() => [[0, 4, 7], [5, 9, 0], [7, 11, 2]]),
     AMBIENT_PROGRESSIONS: { emotional: [0, 5, 6, 4] },
+    NoteUtilities: {
+      toString: vi.fn((note: number) => ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"][note]),
+    },
+  }),
+);
+
+vi.mock(
+  "../instruments",
+  () => ({
+    GranularSynth: vi.fn(() => ({ setScale: vi.fn(), updateParams: vi.fn(), connect: vi.fn(), dispose: vi.fn() })),
+    AmbientPadSynth: vi.fn(() => ({ setChord: vi.fn(), updateParams: vi.fn(), connect: vi.fn(), dispose: vi.fn() })),
+    MelodicSynth: vi.fn(() => ({ setScale: vi.fn(), updateParams: vi.fn(), connect: vi.fn(), dispose: vi.fn() })),
+    HarmonicDroneSynth: vi.fn(() => ({ setChord: vi.fn(), updateParams: vi.fn(), connect: vi.fn(), dispose: vi.fn() })),
+    RhythmicPulseSynth: vi.fn(() => ({ setScale: vi.fn(), updateParams: vi.fn(), connect: vi.fn(), dispose: vi.fn() })),
   }),
 );
 
@@ -116,31 +149,31 @@ describe("AudioEngine", () => {
   });
 
   describe("playback control", () => {
-    it("should toggle playback state", () => {
+    it("should toggle playback state", async () => {
       const engine = new AudioEngine();
       const states: AudioEngineState[] = [];
 
       engine.getState$().subscribe(state => states.push(state));
       expect(states[0].isPlaying).toBe(false);
 
-      engine.togglePlayback();
+      await engine.togglePlayback();
       expect(states[1].isPlaying).toBe(true);
 
-      engine.togglePlayback();
+      await engine.togglePlayback();
       expect(states[2].isPlaying).toBe(false);
     });
 
-    it("should emit play/pause events", () => {
+    it("should emit play/pause events", async () => {
       const engine = new AudioEngine();
       const events: any[] = [];
 
       engine.getEvents$().subscribe(event => events.push(event));
 
-      engine.togglePlayback();
+      await engine.togglePlayback();
       expect(events[0]).toEqual({ type: "play", timestamp: 0 });
 
-      engine.togglePlayback();
-      expect(events[1]).toEqual({ type: "pause", timestamp: 0 });
+      await engine.togglePlayback();
+      expect(events[1]).toEqual({ type: "stop", timestamp: 0 });
     });
 
     it("should stop playback and emit stop event", () => {
@@ -334,9 +367,7 @@ describe("createAmbientAudioEngine", () => {
     expect(states[0].key).toBe(Note.C);
     expect(states[0].mode).toBe(Mode.Aeolian);
     expect(states[0].volume).toBe(0.6);
-    expect(states[0].instruments).toEqual(
-      new Set([InstrumentType.Pad, InstrumentType.Atmosphere, InstrumentType.Texture]),
-    );
+    expect(states[0].instruments).toEqual(new Set([InstrumentType.AmbientPad, InstrumentType.Granular]));
   });
 
   it("should merge custom initial state", () => {

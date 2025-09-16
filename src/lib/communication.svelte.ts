@@ -3,6 +3,7 @@ import { SvelteMap, SvelteSet } from "svelte/reactivity";
 import { InstrumentType } from "./audio";
 import { AudioEngine, type AudioEngineState, type AudioEvent, createAmbientAudioEngine } from "./audio-engine";
 import { Mode, Note } from "./theory";
+import type { Optional } from "./types";
 
 type ComponentMessage = { type: string; source: string; data?: unknown; timestamp: number };
 type HistoryState<T> = { past: T[]; present: T; future: T[] };
@@ -17,7 +18,7 @@ type UIState = {
 };
 
 export class AppStateManager {
-  private audioEngine: AudioEngine;
+  private audioEngine: Optional<AudioEngine>;
   private subscriptions: Subscription[] = [];
 
   private uiState = $state<UIState>({
@@ -42,11 +43,18 @@ export class AppStateManager {
   private events = $state<AudioEvent[]>([]);
 
   constructor() {
-    this.audioEngine = createAmbientAudioEngine();
-    this.initializeStateSync();
+  }
+
+  private ensureAudioEngine(): void {
+    if (!this.audioEngine) {
+      this.audioEngine = createAmbientAudioEngine();
+      this.initializeStateSync();
+    }
   }
 
   private initializeStateSync(): void {
+    if (!this.audioEngine) return;
+
     this.subscriptions.push(
       this.audioEngine.getState$().subscribe((state: AudioEngineState) => {
         Object.assign(this.audioState, state);
@@ -109,24 +117,29 @@ export class AppStateManager {
     this.uiState.showSettings = !this.uiState.showSettings;
   }
 
-  togglePlayback(): void {
-    this.audioEngine.togglePlayback();
+  async togglePlayback(): Promise<void> {
+    this.ensureAudioEngine();
+    await this.audioEngine!.togglePlayback();
   }
 
   setTempo(tempo: number): void {
-    this.audioEngine.setTempo(tempo);
+    this.ensureAudioEngine();
+    this.audioEngine!.setTempo(tempo);
   }
 
   setKeyAndMode(key: Note, mode: Mode): void {
-    this.audioEngine.setKeyAndMode(key, mode);
+    this.ensureAudioEngine();
+    this.audioEngine!.setKeyAndMode(key, mode);
   }
 
   setVolume(volume: number): void {
-    this.audioEngine.setVolume(volume);
+    this.ensureAudioEngine();
+    this.audioEngine!.setVolume(volume);
   }
 
   toggleInstrument(instrument: InstrumentType): void {
-    this.audioEngine.toggleInstrument(instrument);
+    this.ensureAudioEngine();
+    this.audioEngine!.toggleInstrument(instrument);
   }
 
   automateParameter(
@@ -135,7 +148,8 @@ export class AppStateManager {
     targetValue: number,
     duration: string = "4m",
   ): void {
-    this.audioEngine.automateParameter(instrumentType, paramPath, targetValue, duration);
+    this.ensureAudioEngine();
+    this.audioEngine!.automateParameter(instrumentType, paramPath, targetValue, duration);
   }
 
   undo(): void {
@@ -159,42 +173,47 @@ export class AppStateManager {
   }
 
   private applyHistoryState(state: UndoableState): void {
-    this.audioEngine.setTempo(state.tempo);
-    this.audioEngine.setKeyAndMode(state.key, state.mode);
-    this.audioEngine.setVolume(state.volume);
+    this.ensureAudioEngine();
+    this.audioEngine!.setTempo(state.tempo);
+    this.audioEngine!.setKeyAndMode(state.key, state.mode);
+    this.audioEngine!.setVolume(state.volume);
 
     const currentInstruments = new SvelteSet(this.audioState.instruments);
     for (const instrument of state.instruments) {
       if (!currentInstruments.has(instrument)) {
-        this.audioEngine.toggleInstrument(instrument);
+        this.audioEngine!.toggleInstrument(instrument);
       }
     }
 
     for (const instrument of currentInstruments) {
       if (!state.instruments.has(instrument)) {
-        this.audioEngine.toggleInstrument(instrument);
+        this.audioEngine!.toggleInstrument(instrument);
       }
     }
   }
 
   getAudioState$(): Observable<AudioEngineState> {
-    return this.audioEngine.getState$();
+    this.ensureAudioEngine();
+    return this.audioEngine!.getState$();
   }
 
   getAudioEvents$(): Observable<AudioEvent> {
-    return this.audioEngine.getEvents$();
+    this.ensureAudioEngine();
+    return this.audioEngine!.getEvents$();
   }
 
   getCurrentChord$(): Observable<Note[]> {
-    return this.audioEngine.getCurrentChord$();
+    this.ensureAudioEngine();
+    return this.audioEngine!.getCurrentChord$();
   }
 
   dispose(): void {
-    // Clean up RxJS subscriptions to prevent memory leaks
     for (const sub of this.subscriptions) sub.unsubscribe();
     this.subscriptions = [];
 
-    this.audioEngine.dispose();
+    if (this.audioEngine) {
+      this.audioEngine.dispose();
+    }
   }
 }
 
@@ -205,7 +224,6 @@ export class ComponentCommunicator {
   publish(type: string, source: string, data?: unknown): void {
     const message: ComponentMessage = { type, source, data, timestamp: Date.now() };
 
-    // Use runes for reactive message list
     this.messages.push(message);
     if (this.messages.length > 100) {
       this.messages = this.messages.slice(-100);

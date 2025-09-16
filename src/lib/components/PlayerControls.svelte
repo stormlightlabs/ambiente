@@ -16,34 +16,30 @@
 		audioState: AudioState;
 		canUndo: boolean;
 		canRedo: boolean;
-		onTogglePlayback: () => void;
+		onTogglePlayback: () => Promise<void>;
 		onSetVolume: (volume: number) => void;
 		onSetTempo: (tempo: number) => void;
 		onUndo: () => void;
 		onRedo: () => void;
 	};
 
-	let {
-		audioState,
-		canUndo,
-		canRedo,
-		onTogglePlayback,
-		onSetVolume,
-		onSetTempo,
-		onUndo,
-		onRedo
-	}: Props = $props();
+	let { audioState, canUndo, canRedo, onTogglePlayback, onSetVolume, onSetTempo, onUndo, onRedo }: Props = $props();
 
 	const noteNames = Object.keys(Note).filter((key) => Number.isNaN(Number(key)));
 	const modeNames = Object.keys(Mode).filter((key) => Number.isNaN(Number(key)));
 
-	function togglePlayback() {
-		onTogglePlayback();
+	async function togglePlayback() {
+		try {
+			await onTogglePlayback();
+		} catch (error) {
+			console.error('🎮 Error in PlayerControls togglePlayback:', error);
+			// Still update UI state even if there was an error
+		}
 	}
 
-	function stopPlayback() {
+	async function stopPlayback() {
 		if (audioState.isPlaying) {
-			onTogglePlayback();
+			await onTogglePlayback();
 		}
 	}
 
@@ -57,7 +53,7 @@
 		onSetTempo(newTempo);
 	}
 
-	function handleKeydown(event: KeyboardEvent) {
+	async function handleKeydown(event: KeyboardEvent) {
 		if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) {
 			return;
 		}
@@ -65,7 +61,7 @@
 		switch (event.code) {
 			case 'Space': {
 				event.preventDefault();
-				togglePlayback();
+				await togglePlayback();
 				break;
 			}
 			case 'ArrowUp': {
@@ -94,19 +90,16 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<div
-	class="flex flex-col gap-4 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 p-4 text-white shadow-lg"
->
+<div class="flex flex-col gap-4 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 p-4 text-white shadow-lg">
 	<div class="flex justify-center gap-4">
 		<button
 			class="flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/30 bg-white/10 text-2xl transition-all duration-200 hover:scale-105 hover:border-white/50 hover:bg-white/20"
 			onclick={togglePlayback}
-			aria-label={audioState.isPlaying ? 'Pause' : 'Play'}
-		>
+			aria-label={audioState.isPlaying ? 'Pause' : 'Play'}>
 			{#if audioState.isPlaying}
-				⏸️
+				⏸
 			{:else}
-				▶️
+				▶
 			{/if}
 		</button>
 
@@ -114,9 +107,8 @@
 			class="flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/30 bg-white/10 text-2xl transition-all duration-200 hover:scale-105 hover:border-white/50 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
 			onclick={stopPlayback}
 			disabled={!audioState.isPlaying}
-			aria-label="Stop"
-		>
-			⏹️
+			aria-label="Stop">
+			⏹
 		</button>
 	</div>
 
@@ -143,41 +135,39 @@
 	<div class="flex flex-col items-center justify-around gap-4 md:flex-row">
 		<div class="flex flex-col items-center gap-2">
 			<span class="text-xs opacity-80">Volume</span>
-			<div class="flex gap-1">
-				<button
-					class="flex h-10 w-10 items-center justify-center rounded border border-white/30 bg-white/10 text-lg transition-all duration-200 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
-					onclick={() => adjustVolume(-0.1)}
-					disabled={audioState.volume <= 0}
-				>
-					🔉
-				</button>
-				<button
-					class="flex h-10 w-10 items-center justify-center rounded border border-white/30 bg-white/10 text-lg transition-all duration-200 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
-					onclick={() => adjustVolume(0.1)}
-					disabled={audioState.volume >= 1}
-				>
-					🔊
-				</button>
+			<div class="flex items-center gap-2">
+				<span class="text-xs opacity-60">0%</span>
+				<input
+					type="range"
+					min="0"
+					max="1"
+					step="0.01"
+					value={audioState.volume}
+					oninput={(e) => onSetVolume(Number(e.currentTarget.value))}
+					class="h-2 w-24 cursor-pointer appearance-none rounded-lg bg-white/20 accent-white"
+					style="background: linear-gradient(to right, white 0%, white {audioState.volume *
+						100}%, rgba(255,255,255,0.2) {audioState.volume * 100}%, rgba(255,255,255,0.2) 100%)"
+					aria-label="Volume slider" />
+				<span class="text-xs opacity-60">100%</span>
 			</div>
 		</div>
 
 		<div class="flex flex-col items-center gap-2">
 			<span class="text-xs opacity-80">Tempo</span>
-			<div class="flex gap-1">
-				<button
-					class="flex h-10 w-10 items-center justify-center rounded border border-white/30 bg-white/10 text-lg transition-all duration-200 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
-					onclick={() => adjustTempo(-10)}
-					disabled={audioState.tempo <= 40}
-				>
-					⏪
-				</button>
-				<button
-					class="flex h-10 w-10 items-center justify-center rounded border border-white/30 bg-white/10 text-lg transition-all duration-200 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
-					onclick={() => adjustTempo(10)}
-					disabled={audioState.tempo >= 200}
-				>
-					⏩
-				</button>
+			<div class="flex items-center gap-2">
+				<span class="text-xs opacity-60">40</span>
+				<input
+					type="range"
+					min="40"
+					max="200"
+					step="1"
+					value={audioState.tempo}
+					oninput={(e) => onSetTempo(Number(e.currentTarget.value))}
+					class="h-2 w-24 cursor-pointer appearance-none rounded-lg bg-white/20 accent-white"
+					style="background: linear-gradient(to right, white 0%, white {((audioState.tempo - 40) / (200 - 40)) *
+						100}%, rgba(255,255,255,0.2) {((audioState.tempo - 40) / (200 - 40)) * 100}%, rgba(255,255,255,0.2) 100%)"
+					aria-label="Tempo slider" />
+				<span class="text-xs opacity-60">200</span>
 			</div>
 		</div>
 
@@ -188,16 +178,14 @@
 					class="flex h-10 w-10 items-center justify-center rounded border border-white/30 bg-white/10 text-lg transition-all duration-200 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
 					onclick={onUndo}
 					disabled={!canUndo}
-					title="Undo (Ctrl+Z)"
-				>
+					title="Undo (Ctrl+Z)">
 					↶
 				</button>
 				<button
 					class="flex h-10 w-10 items-center justify-center rounded border border-white/30 bg-white/10 text-lg transition-all duration-200 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
 					onclick={onRedo}
 					disabled={!canRedo}
-					title="Redo (Ctrl+Y)"
-				>
+					title="Redo (Ctrl+Y)">
 					↷
 				</button>
 			</div>
@@ -210,11 +198,9 @@
 			<div class="relative h-5 w-24 overflow-hidden rounded-full bg-white/20">
 				<div
 					class="h-full rounded-full bg-gradient-to-r from-green-400 to-green-300 transition-all duration-300"
-					style="width: {((audioState.currentChord + 1) / 4) * 100}%"
-				></div>
-				<span
-					class="absolute inset-0 flex items-center justify-center text-xs font-semibold text-black/80"
-				>
+					style="width: {((audioState.currentChord + 1) / 4) * 100}%">
+				</div>
+				<span class="absolute inset-0 flex items-center justify-center text-xs font-semibold text-black/80">
 					{audioState.currentChord + 1}/4
 				</span>
 			</div>

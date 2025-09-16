@@ -1,2 +1,21 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
+@plugin '@egoist/tailwindcss-icons';
+
+@theme {
+	--font-display: 'Work Sans Variable', sans-serif;
+	--font-sans: 'Public Sans Variable', sans-serif;
+}
+
+body {
+	@apply font-sans;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	@apply font-display leading-tight tracking-wide;
+}

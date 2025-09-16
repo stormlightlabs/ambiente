@@ -66,6 +66,8 @@ describe("Communication Module", () => {
   describe("AppStateManager Integration", () => {
     it("should handle audio engine state changes", async () => {
       const appState = new AppStateManager();
+      // Need to trigger audio engine creation first
+      await appState.togglePlayback();
       expect(appState.ui.isInitialized).toBe(true);
       expect(appState.audio.isPlaying).toBe(false);
       expect(appState.audio.tempo).toBe(80);

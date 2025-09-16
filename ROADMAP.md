@@ -24,6 +24,20 @@
 - Build audio effect processing chains
 - Implement real-time parameter automation
 
+### Ambient Texture System
+
+- Continuous Texture Generation
+    - Replace step-sequencer patterns with organic, evolving ambient textures
+- Five Core Instruments:
+    - `ambientPad`: Sustained harmonic layers with filter automation
+    - `granular`: Textural grains with density/size/pitch modulation
+    - `melodic`: Sparse melodic elements based on scale relationships
+    - `harmonicDrone`: Static harmonic foundation with voice leading
+    - `rhythmicPulse`: Subtle probability-based rhythmic textures
+- Preset Templates: Load complete ambient configurations (Eno-style generative music)
+    - All texture parameters automatable through reactive streams
+    - Instruments respect current key/mode for harmonic coherence
+
 ### UI State Management
 
 - Design Svelte 5 Runes state architecture
@@ -45,8 +59,7 @@
 
 ### Step Sequencer (ToneMatrix inspired!)
 
-- Create pattern-based sequencing engine
-- Build instrument track management
+- Create pattern-based sequencing instrument on 4x4, 8x8 & 16x16 grids
 - Implement timing and synchronization
 - Add pattern variation algorithms
 
