@@ -179,7 +179,7 @@
 						max="1"
 						step="0.01"
 						value={audioState.volume}
-						oninput={(e) => onSetVolume(Number(e.currentTarget.value))}
+						oninput={(event_) => onSetVolume(Number(event_.currentTarget.value))}
 						class="h-2 w-24 cursor-pointer appearance-none rounded-lg bg-white/20 accent-white"
 						style="background: linear-gradient(to right, white 0%, white {audioState.volume *
 							100}%, rgba(255,255,255,0.2) {audioState.volume * 100}%, rgba(255,255,255,0.2) 100%)"
@@ -199,7 +199,7 @@
 						max="200"
 						step="1"
 						value={audioState.tempo}
-						oninput={(e) => onSetTempo(Number(e.currentTarget.value))}
+						oninput={(event_) => onSetTempo(Number(event_.currentTarget.value))}
 						class="h-2 w-24 cursor-pointer appearance-none rounded-lg bg-white/20 accent-white"
 						style="background: linear-gradient(to right, white 0%, white {((audioState.tempo - 40) / (200 - 40)) *
 							100}%, rgba(255,255,255,0.2) {((audioState.tempo - 40) / (200 - 40)) * 100}%, rgba(255,255,255,0.2) 100%)"
@@ -233,7 +233,7 @@
 								max="1"
 								step="0.1"
 								value={audioState.randomization.rhythmVariability}
-								oninput={(e) => onSetRandomization({ rhythmVariability: Number(e.currentTarget.value) })}
+								oninput={(event_) => onSetRandomization({ rhythmVariability: Number(event_.currentTarget.value) })}
 								class="h-1 w-16 cursor-pointer appearance-none rounded-lg bg-white/20 accent-yellow-300"
 								aria-label="Rhythm variability" />
 						</div>
@@ -245,7 +245,7 @@
 								max="1"
 								step="0.1"
 								value={audioState.randomization.melodicVariability}
-								oninput={(e) => onSetRandomization({ melodicVariability: Number(e.currentTarget.value) })}
+								oninput={(event_) => onSetRandomization({ melodicVariability: Number(event_.currentTarget.value) })}
 								class="h-1 w-16 cursor-pointer appearance-none rounded-lg bg-white/20 accent-yellow-300"
 								aria-label="Melody variability" />
 						</div>
@@ -257,7 +257,7 @@
 								max="1"
 								step="0.05"
 								value={audioState.randomization.chordProgression}
-								oninput={(e) => onSetRandomization({ chordProgression: Number(e.currentTarget.value) })}
+								oninput={(event_) => onSetRandomization({ chordProgression: Number(event_.currentTarget.value) })}
 								class="h-1 w-16 cursor-pointer appearance-none rounded-lg bg-white/20 accent-yellow-300"
 								aria-label="Chord progression variability" />
 						</div>

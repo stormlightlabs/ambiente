@@ -4,9 +4,11 @@ import { SvelteSet } from "svelte/reactivity";
 import * as Tone from "tone";
 import { ambientMixer, createSynth, initializeAudio, noteToToneString, ParameterAutomation } from "./audio";
 import { AmbientPadSynth } from "./instruments/ambient-pad";
+import { ArpeggiatorSynth } from "./instruments/arpeggiator";
 import { GranularSynth } from "./instruments/granular-synth";
 import { HarmonicDroneSynth } from "./instruments/harmonic-drone-synth";
 import { MelodicSynth } from "./instruments/melodic-synth";
+import { VocalPadSynth } from "./instruments/vocal-pads";
 import { AMBIENT_PROGRESSIONS, generateProgression, generateScale, Mode, Note } from "./theory";
 import type { AudioEngineState, AudioEvent, InstrumentPattern, PatternStep, RandomizationParams } from "./types/audio";
 import { FieldRecordingSynth } from "./types/field-recording-synth";
@@ -141,7 +143,14 @@ export class AudioEngine {
 
   private readonly ambientInstruments: Map<
     InstrumentType,
-    GranularSynth | AmbientPadSynth | MelodicSynth | HarmonicDroneSynth | RhythmicPulseSynth | FieldRecordingSynth
+    | GranularSynth
+    | AmbientPadSynth
+    | MelodicSynth
+    | HarmonicDroneSynth
+    | RhythmicPulseSynth
+    | FieldRecordingSynth
+    | VocalPadSynth
+    | ArpeggiatorSynth
   >;
   private readonly currentScale$: BehaviorSubject<Note[]>;
 
@@ -310,12 +319,27 @@ export class AudioEngine {
         if (instrument instanceof GranularSynth) {
           instrument.setScale(scale);
         }
+        if (instrument instanceof MelodicSynth) {
+          instrument.setScale(scale);
+        }
+        if (instrument instanceof RhythmicPulseSynth) {
+          instrument.setScale(scale);
+        }
+        if (instrument instanceof ArpeggiatorSynth) {
+          instrument.setScale(scale);
+        }
       }
     });
 
     this.currentChord$.pipe(takeUntil(this.destroy$)).subscribe(chord => {
       for (const [, instrument] of this.ambientInstruments.entries()) {
         if (instrument instanceof AmbientPadSynth) {
+          instrument.setChord(chord);
+        }
+        if (instrument instanceof HarmonicDroneSynth) {
+          instrument.setChord(chord);
+        }
+        if (instrument instanceof VocalPadSynth) {
           instrument.setChord(chord);
         }
       }
@@ -429,13 +453,22 @@ export class AudioEngine {
       InstrumentType.HarmonicDrone,
       InstrumentType.RhythmicPulse,
       InstrumentType.FieldRecording,
+      InstrumentType.VocalPad,
+      InstrumentType.Arpeggiator,
     ].includes(type);
   }
 
   private createAmbientInstrument(
     type: InstrumentType,
   ): Optional<
-    GranularSynth | AmbientPadSynth | MelodicSynth | HarmonicDroneSynth | RhythmicPulseSynth | FieldRecordingSynth
+    | GranularSynth
+    | AmbientPadSynth
+    | MelodicSynth
+    | HarmonicDroneSynth
+    | RhythmicPulseSynth
+    | FieldRecordingSynth
+    | VocalPadSynth
+    | ArpeggiatorSynth
   > {
     switch (type) {
       case InstrumentType.Granular: {
@@ -456,6 +489,12 @@ export class AudioEngine {
       case InstrumentType.FieldRecording: {
         return new FieldRecordingSynth();
       }
+      case InstrumentType.VocalPad: {
+        return new VocalPadSynth();
+      }
+      case InstrumentType.Arpeggiator: {
+        return new ArpeggiatorSynth();
+      }
       default: {
         return void 0;
       }
@@ -469,7 +508,9 @@ export class AudioEngine {
       | MelodicSynth
       | HarmonicDroneSynth
       | RhythmicPulseSynth
-      | FieldRecordingSynth,
+      | FieldRecordingSynth
+      | VocalPadSynth
+      | ArpeggiatorSynth,
   ): void {
     const currentScale = this.currentScale$.value;
     const currentChord = this.currentChord$.value;
@@ -491,6 +532,14 @@ export class AudioEngine {
     }
 
     if (instrument instanceof RhythmicPulseSynth) {
+      instrument.setScale(currentScale);
+    }
+
+    if (instrument instanceof VocalPadSynth) {
+      instrument.setChord(currentChord);
+    }
+
+    if (instrument instanceof ArpeggiatorSynth) {
       instrument.setScale(currentScale);
     }
   }
@@ -697,6 +746,10 @@ export class AudioEngine {
         instrument.updateParams({ enabled: false });
       } else if (instrument instanceof FieldRecordingSynth) {
         instrument.updateParams({ enabled: false });
+      } else if (instrument instanceof VocalPadSynth) {
+        instrument.updateParams({ enabled: false });
+      } else if (instrument instanceof ArpeggiatorSynth) {
+        instrument.updateParams({ enabled: false });
       }
     }
 
@@ -751,6 +804,8 @@ export const createAmbientAudioEngine = (initialState?: Partial<AudioEngineState
         InstrumentType.HarmonicDrone,
         InstrumentType.RhythmicPulse,
         InstrumentType.FieldRecording,
+        InstrumentType.VocalPad,
+        InstrumentType.Arpeggiator,
       ].includes(instrumentType);
 
       if (!isAmbient) {

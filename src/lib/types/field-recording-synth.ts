@@ -1,3 +1,5 @@
+import { StereoImagingEffect } from "$lib/effects/stereo-imaging";
+import { TapeSaturationEffect } from "$lib/effects/tape-saturation";
 import type { FieldRecordingParams } from "$lib/types/params";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
 import { filter, map, takeUntil } from "rxjs/operators";
@@ -8,6 +10,8 @@ export class FieldRecordingSynth {
   private noiseSource: Tone.Noise;
   private filter: Tone.Filter;
   private reverb: Tone.Reverb;
+  private tapeSaturation: TapeSaturationEffect;
+  private stereoImaging: StereoImagingEffect;
   private params$: BehaviorSubject<FieldRecordingParams>;
   private subscriptions: Subscription[] = [];
   private destroy$ = new BehaviorSubject<void>(undefined);
@@ -33,9 +37,29 @@ export class FieldRecordingSynth {
     this.filter = new Tone.Filter({ frequency: defaultParams.filterFreq, type: "lowpass", Q: 1 });
     this.reverb = new Tone.Reverb({ decay: 4, wet: defaultParams.reverb });
 
+    // Advanced effects for authentic field recording texture
+    this.tapeSaturation = new TapeSaturationEffect({
+      enabled: true,
+      drive: 0.2,
+      warmth: 0.6,
+      hiss: 0.15,
+      flutter: 0.3,
+      wet: 0.7,
+    });
+
+    this.stereoImaging = new StereoImagingEffect({
+      enabled: true,
+      width: 0.8,
+      bassMonoFreq: 100,
+      stereoEnhancement: 0.4,
+    });
+
+    // Enhanced chain: noise -> filter -> reverb -> tape -> stereo -> output
     this.noiseSource.connect(this.filter);
     this.filter.connect(this.reverb);
-    this.reverb.connect(this.output);
+    this.tapeSaturation.connectInput(this.reverb);
+    this.stereoImaging.connectInput(this.tapeSaturation.getOutput());
+    this.stereoImaging.connect(this.output);
 
     this.initializeTextureGeneration();
   }
@@ -153,6 +177,8 @@ export class FieldRecordingSynth {
     this.noiseSource.dispose();
     this.filter.dispose();
     this.reverb.dispose();
+    this.tapeSaturation.dispose();
+    this.stereoImaging.dispose();
     this.output.dispose();
   }
 }

@@ -47,6 +47,11 @@ The engine supports multiple instrument types from `src/lib/audio.ts`:
 
 Each instrument type automatically receives appropriate effect processing through the ambient mixer connection in `ambientMixer.connectSynth()`.
 
+### Ambient Texture Instruments
+
+The engine also manages ambient texture instruments (AmbientPad, Granular, Melodic, HarmonicDrone, RhythmicPulse, FieldRecording, VocalPad, Arpeggiator) through the ambient instrument system. These operate continuously when enabled rather than following step-sequenced patterns.
+See [`docs/tone-instruments.md`](./tone-instruments.md) for detailed ambient instrument documentation.
+
 ## Pattern Generation
 
 The `createDefaultPattern` function generates instrument-specific patterns:

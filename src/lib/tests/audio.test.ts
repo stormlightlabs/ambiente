@@ -119,7 +119,7 @@ describe("audio", () => {
     });
 
     it("should create a PolySynth with default parameters", () => {
-      const synth = createSynth(InstrumentType.Pad);
+      const _synth = createSynth(InstrumentType.Pad);
 
       expect(Tone.PolySynth).toHaveBeenCalledWith(Tone.Synth, {
         envelope: {
@@ -227,7 +227,7 @@ describe("audio", () => {
     });
 
     it("should initialize with master gain and channels for all instrument types", () => {
-      const mixer = new AmbientMixer();
+      const _mixer = new AmbientMixer();
 
       expect(Tone.Gain).toHaveBeenCalledWith(0.8);
       expect(mockGain.toDestination).toHaveBeenCalled();

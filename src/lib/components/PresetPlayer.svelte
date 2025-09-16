@@ -109,7 +109,7 @@
 				onclick={() => loadPreset(preset)}
 				role="button"
 				tabindex="0"
-				onkeydown={(e) => e.key === 'Enter' && loadPreset(preset)}>
+				onkeydown={(event_) => event_.key === 'Enter' && loadPreset(preset)}>
 				<div class="mb-3">
 					<h3 class="mb-2 text-lg font-medium text-gray-800">{preset.name}</h3>
 					<p class="mb-2 text-sm leading-relaxed text-gray-600">{preset.description}</p>

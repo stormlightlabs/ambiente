@@ -1,7 +1,7 @@
 # Ambient Texture Instruments
 
-The ambient texture system provides five specialized instruments for creating evolving, organic soundscapes.
-Unlike traditional step-sequenced instruments, these generate continuous textures through parameter automation and generative algorithms.
+The ambient texture system provides eight specialized instruments for creating evolving, organic soundscapes.
+These generate continuous textures through parameter automation, generative algorithms, and advanced audio effects.
 
 ## Core Philosophy
 
@@ -81,6 +81,49 @@ Subtle rhythmic textures adding gentle temporal organization.
 
 **Synthesis**: Filtered noise bursts with probability-based triggering and polyrhythmic layering.
 
+### FieldRecording
+
+Authentic field recording textures with tape characteristics and spatial processing.
+
+**Parameters:**
+
+- `textureType`: Recording environment ("rain", "forest", "urban", "wind", "ocean")
+- `density`: Texture variation frequency (0.1-2.0)
+- `filterFreq`: Low-pass filter cutoff for environmental character
+- `reverb`: Environmental reverb amount (0-1)
+- `fadeTime`: Texture transition smoothness (1-10 seconds)
+
+**Synthesis**: Pink/brown/white noise through configurable filtering with tape saturation and stereo imaging effects for authentic field recording character.
+
+### VocalPad
+
+Ethereal vocal-like sustained tones with harmonic processing.
+
+**Parameters:**
+
+- `formantFreq`: Vocal formant frequency (200-2000 Hz)
+- `breathiness`: Air/breath character amount (0-1)
+- `vibrato`: Vocal vibrato depth (0-1)
+- `chorusDepth`: Ensemble vocal thickness (0-1)
+- `attack`/`release`: Envelope timing for breath-like articulation
+
+**Synthesis**: Sawtooth oscillators through formant filtering with spectral processing and convolution reverb for supernatural vocal textures.
+
+### Arpeggiator
+
+Flowing melodic patterns with complex texture evolution.
+
+**Parameters:**
+
+- `tempo`: Arpeggio rate (60-200 BPM)
+- `pattern`: Note sequence ("up", "down", "upDown", "random")
+- `octaveRange`: Melodic span in octaves (1-4)
+- `noteDuration`: Individual note length (0.1-1.0 seconds)
+- `probability`: Note triggering likelihood (0-1)
+- `swing`: Rhythmic timing variation (0-0.5)
+
+**Synthesis**: Triangle wave oscillators with granular delay, modulated filters, and probability-based ornaments for evolving melodic textures.
+
 ## Implementation Architecture
 
 ### Continuous Generation
@@ -99,7 +142,7 @@ Scale-aware note selection uses the current scale array with randomized index se
 
 ## Ambient Preset System
 
-The ambient preset system provides complete musical configurations that coordinate all five instruments with coherent parameter relationships and artistic vision.
+The ambient preset system provides complete musical configurations that coordinate all eight instruments with coherent parameter relationships and artistic vision.
 
 ### Preset Architecture
 
@@ -126,12 +169,12 @@ The preset system provides unified ambient configurations that coordinate all mu
 Each preset defines tempo, key/mode, instrument selection, and complete ambient instrument parameters alongside synthesis voice characteristics and generative behavior patterns.
 
 The `AMBIENT_TO_ENGINE_MAPPING` constant bridges ambient instrument types to engine instrument types, enabling seamless integration with the audio engine.
-This unified architecture supports continuous ambient generation with coordinated parameter relationships across all five ambient instruments.
+This unified architecture supports continuous ambient generation with coordinated parameter relationships across all eight ambient instruments.
 
 ### Parameter Coordination
 
 Ambient presets ensure musical coherence through parameter relationships across instruments.
-Volume levels are balanced to create proper mix hierarchy, with pads providing harmonic foundation, granular elements adding texture, melodic instruments providing occasional interest, drones offering stability, and rhythmic pulses (when enabled) adding subtle temporal organization.
+Volume levels are balanced to create proper mix hierarchy, with pads providing harmonic foundation, granular elements adding texture, melodic instruments providing occasional interest, drones offering stability, rhythmic pulses adding subtle temporal organization, field recordings contributing environmental atmosphere, vocal pads creating ethereal harmonic layers, and arpeggiators generating flowing melodic patterns.
 
 Harmonic parameters coordinate through shared scale definitions and voice leading settings.
 Temporal parameters align through density relationships and change intervals that create natural evolution patterns without conflicting rhythmic elements.

@@ -6,20 +6,17 @@ export enum AmbientInstrumentType {
   RhythmicPulse = "rhythmicPulse",
 }
 
-export type GranularParams = {
-  volume: number;
-  muted: boolean;
-  enabled: boolean;
-  density: number;
-  grainSize: number;
-  pitch: number;
-  spread: number;
-};
-
 export interface Params {
   volume: number;
   muted: boolean;
   enabled: boolean;
+}
+
+export interface GranularParams extends Params {
+  density: number;
+  grainSize: number;
+  pitch: number;
+  spread: number;
 }
 
 export interface AmbientPadParams extends Params {
@@ -61,4 +58,13 @@ export interface VocalPadParams extends Params {
   chorusDepth: number;
   attack: number;
   release: number;
+}
+
+export interface ArpeggiatorParams extends Params {
+  tempo: number;
+  pattern: "up" | "down" | "upDown" | "random";
+  octaveRange: number;
+  noteDuration: number;
+  probability: number;
+  swing: number;
 }

@@ -1,19 +1,25 @@
 import type { AudioEngineState } from "$lib/types/audio";
-import type { Params } from "$lib/types/params";
+import type {
+  AmbientPadParams,
+  ArpeggiatorParams,
+  FieldRecordingParams,
+  GranularParams,
+  HarmonicDroneParams,
+  MelodicParams,
+  RhythmicPulseParams,
+  VocalPadParams,
+} from "$lib/types/params";
 import type { EffectType, InstrumentType } from "./instruments";
 
 export interface AmbientInstrumentConfig {
-  ambientPad: Params & { filterFreq: number; resonance: number };
-  granular: Params & { density: number; grainSize: number; pitch: number; spread: number };
-  melodic: Params & { octave: number };
-  harmonicDrone: Params & { changeInterval: number; voiceLeading: number; voiceCount: number; spread: number };
-  rhythmicPulse: Params & {
-    baseTempo: number;
-    accentProb: number;
-    layerCount: number;
-    tempoVar: number;
-    syncopation: number;
-  };
+  ambientPad: AmbientPadParams;
+  granular: GranularParams;
+  melodic: MelodicParams;
+  harmonicDrone: HarmonicDroneParams;
+  rhythmicPulse: RhythmicPulseParams;
+  fieldRecording?: FieldRecordingParams;
+  vocalPad?: VocalPadParams;
+  arpeggiator?: ArpeggiatorParams;
 }
 
 type Voice = {
@@ -51,6 +57,9 @@ export enum AmbientInstrumentType {
   Melodic = "melodic",
   HarmonicDrone = "harmonicDrone",
   RhythmicPulse = "rhythmicPulse",
+  FieldRecording = "fieldRecording",
+  VocalPad = "vocalPad",
+  Arpeggiator = "arpeggiator",
 }
 
 export type Preset = {
