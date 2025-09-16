@@ -1,39 +1,11 @@
 import * as Tone from "tone";
 import { Note, NoteUtilities } from "./theory";
+import { EffectType, InstrumentType, type SynthParams } from "./types/instruments";
 
 export const initializeAudio = async (): Promise<void> => {
   if (Tone.getContext().state !== "running") {
     await Tone.start();
   }
-};
-
-export enum InstrumentType {
-  Pad = "pad",
-  Lead = "lead",
-  Bass = "bass",
-  Percussion = "percussion",
-  Atmosphere = "atmosphere",
-  Texture = "texture",
-  // Ambient instruments
-  AmbientPad = "ambientPad",
-  Granular = "granular",
-  Melodic = "melodic",
-  HarmonicDrone = "harmonicDrone",
-  RhythmicPulse = "rhythmicPulse",
-  FieldRecording = "fieldRecording",
-  VocalPad = "vocalPad",
-  Arpeggiator = "arpeggiator",
-}
-
-export type SynthParams = {
-  attack: number;
-  decay: number;
-  sustain: number;
-  release: number;
-  filterFreq: number;
-  filterQ: number;
-  detune: number;
-  volume: number;
 };
 
 export const DEFAULT_SYNTH_PARAMS: Record<InstrumentType, SynthParams> = {
@@ -148,6 +120,36 @@ export const DEFAULT_SYNTH_PARAMS: Record<InstrumentType, SynthParams> = {
     detune: 0,
     volume: -18,
   },
+  [InstrumentType.FieldRecording]: {
+    attack: 0.5,
+    decay: 1,
+    sustain: 1,
+    release: 2,
+    filterFreq: 800,
+    filterQ: 1,
+    detune: 0,
+    volume: -15,
+  },
+  [InstrumentType.VocalPad]: {
+    attack: 3,
+    decay: 0.5,
+    sustain: 0.9,
+    release: 5,
+    filterFreq: 1200,
+    filterQ: 0.8,
+    detune: 0,
+    volume: -14,
+  },
+  [InstrumentType.Arpeggiator]: {
+    attack: 0.05,
+    decay: 0.4,
+    sustain: 0.3,
+    release: 1,
+    filterFreq: 1500,
+    filterQ: 2,
+    detune: 0,
+    volume: -16,
+  },
 };
 
 export const createSynth = (type: InstrumentType, params?: Partial<SynthParams>): Tone.PolySynth => {
@@ -193,15 +195,6 @@ const getSynthWaveform = (type: InstrumentType) => {
     }
   }
 };
-
-export enum EffectType {
-  Reverb = "reverb",
-  Delay = "delay",
-  Chorus = "chorus",
-  Filter = "filter",
-  Distortion = "distortion",
-  Compressor = "compressor",
-}
 
 export const createEffectsChain = (effects: EffectType[]): Tone.ToneAudioNode[] =>
   effects.map(effectType => {

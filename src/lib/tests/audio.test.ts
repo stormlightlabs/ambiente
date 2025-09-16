@@ -36,13 +36,12 @@ import {
   createEffectsChain,
   createSynth,
   DEFAULT_SYNTH_PARAMS,
-  EffectType,
   initializeAudio,
-  InstrumentType,
   noteToFrequency,
   noteToToneString,
   ParameterAutomation,
 } from "$lib/audio";
+import { EffectType, InstrumentType } from "$lib/types/instruments";
 import * as Tone from "tone";
 
 describe("audio", () => {

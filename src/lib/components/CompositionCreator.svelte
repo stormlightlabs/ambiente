@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { InstrumentType } from '$lib/audio';
 	import { AMBIENT_PROGRESSIONS, Mode, Note, generateScale } from '$lib/theory';
+	import { InstrumentType } from '$lib/types/instruments';
 
 	const noteNames = Object.keys(Note).filter((key) => Number.isNaN(Number(key)));
 	const modeNames = Object.keys(Mode).filter((key) => Number.isNaN(Number(key)));
@@ -114,14 +114,12 @@
 		<div class="flex gap-2">
 			<button
 				onclick={resetToDefaults}
-				class="rounded border border-gray-300 bg-white px-4 py-2 text-sm transition-colors hover:bg-gray-50"
-			>
+				class="rounded border border-gray-300 bg-white px-4 py-2 text-sm transition-colors hover:bg-gray-50">
 				Reset
 			</button>
 			<button
 				onclick={applyAmbientPreset}
-				class="rounded border border-blue-600 bg-blue-100 px-4 py-2 text-sm text-blue-800 transition-colors hover:bg-blue-200"
-			>
+				class="rounded border border-blue-600 bg-blue-100 px-4 py-2 text-sm text-blue-800 transition-colors hover:bg-blue-200">
 				Ambient Preset
 			</button>
 		</div>
@@ -143,8 +141,7 @@
 						max="200"
 						step="1"
 						onchange={updateTempo}
-						class="slider h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
-					/>
+						class="slider h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200" />
 				</div>
 
 				<div>
@@ -153,8 +150,7 @@
 						id="key"
 						bind:value={customKey}
 						onchange={updateKey}
-						class="w-full rounded border border-gray-300 bg-white p-2 text-base"
-					>
+						class="w-full rounded border border-gray-300 bg-white p-2 text-base">
 						{#each noteNames as noteName, index (noteName)}
 							<option value={index}>{noteName}</option>
 						{/each}
@@ -167,8 +163,7 @@
 						id="mode"
 						bind:value={customMode}
 						onchange={updateMode}
-						class="w-full rounded border border-gray-300 bg-white p-2 text-base"
-					>
+						class="w-full rounded border border-gray-300 bg-white p-2 text-base">
 						{#each modeNames as modeName, index (modeName)}
 							<option value={index}>{modeName}</option>
 						{/each}
@@ -177,8 +172,7 @@
 
 				<div>
 					<label for="volume" class="mb-2 block font-medium text-gray-700"
-						>Volume: {Math.round(customVolume * 100)}%</label
-					>
+						>Volume: {Math.round(customVolume * 100)}%</label>
 					<input
 						id="volume"
 						type="range"
@@ -187,8 +181,7 @@
 						max="1"
 						step="0.01"
 						onchange={updateVolume}
-						class="slider h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
-					/>
+						class="slider h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200" />
 				</div>
 			</div>
 		</div>
@@ -205,8 +198,7 @@
 						)
 							? 'border-blue-600 bg-blue-600 text-white'
 							: 'border-gray-200 bg-white text-gray-700 hover:border-gray-400'}"
-						onclick={() => toggleInstrument(instrument)}
-					>
+						onclick={() => toggleInstrument(instrument)}>
 						{instrument}
 					</button>
 				{/each}
@@ -229,8 +221,7 @@
 						<span
 							class="inline-block rounded px-2 py-1 text-xs font-medium {index === 0
 								? 'bg-blue-600 text-white'
-								: 'bg-blue-100 text-blue-800'}"
-						>
+								: 'bg-blue-100 text-blue-800'}">
 							{noteNames[note]}
 						</span>
 					{/each}

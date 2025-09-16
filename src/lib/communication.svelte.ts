@@ -1,15 +1,10 @@
 import { BehaviorSubject, type Observable, type Subscription } from "rxjs";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
-import { InstrumentType } from "./audio";
-import {
-  AudioEngine,
-  type AudioEngineState,
-  type AudioEvent,
-  createAmbientAudioEngine,
-  type RandomizationParams,
-} from "./audio-engine";
+import { AudioEngine, createAmbientAudioEngine } from "./audio-engine";
 import { AMBIENT_PROGRESSIONS, generateProgression, generateScale, Mode, Note } from "./theory";
-import type { Optional } from "./types";
+import type { AudioEngineState, AudioEvent, RandomizationParams } from "./types/audio";
+import { InstrumentType } from "./types/instruments";
+import type { Optional } from "./types/shared";
 
 type ComponentMessage = { type: string; source: string; data?: unknown; timestamp: number };
 type HistoryState<T> = { past: T[]; present: T; future: T[] };

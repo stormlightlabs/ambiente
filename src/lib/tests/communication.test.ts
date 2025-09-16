@@ -1,5 +1,5 @@
-import { InstrumentType } from "$lib/audio";
 import { Mode, Note } from "$lib/theory";
+import { InstrumentType } from "$lib/types/instruments";
 import { untrack } from "svelte";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

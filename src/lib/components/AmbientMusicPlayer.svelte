@@ -31,16 +31,14 @@
 			class="cursor-pointer border-b-3 px-8 py-4 text-base transition-all duration-200 {activeTab === 'player'
 				? 'border-indigo-600 bg-indigo-50 text-indigo-600'
 				: 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-800'}"
-			onclick={() => setActiveTab('player')}
-		>
+			onclick={() => setActiveTab('player')}>
 			🎵 Player
 		</button>
 		<button
 			class="cursor-pointer border-b-3 px-8 py-4 text-base transition-all duration-200 {activeTab === 'composer'
 				? 'border-indigo-600 bg-indigo-50 text-indigo-600'
 				: 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-800'}"
-			onclick={() => setActiveTab('composer')}
-		>
+			onclick={() => setActiveTab('composer')}>
 			🎹 Composer
 		</button>
 		<button
@@ -48,8 +46,7 @@
 				? 'border-indigo-600 bg-indigo-50 text-indigo-600'
 				: 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-800'}"
 			onclick={() => setActiveTab('sequencer')}
-			disabled
-		>
+			disabled>
 			Sequencer
 		</button>
 	</nav>
@@ -66,8 +63,7 @@
 			onRedo={appState.redo.bind(appState)}
 			onSetRandomization={appState.setRandomization.bind(appState)}
 			{currentChordNotes}
-			selectedPreset={appState.ui.selectedPreset}
-		/>
+			selectedPreset={appState.ui.selectedPreset} />
 
 		{#if activeTab === 'player'}
 			<div class="animate-fadeIn">
@@ -77,8 +73,7 @@
 					onSetTempo={appState.setTempo.bind(appState)}
 					onSetKeyAndMode={appState.setKeyAndMode.bind(appState)}
 					onSetVolume={appState.setVolume.bind(appState)}
-					onToggleInstrument={appState.toggleInstrument.bind(appState)}
-				/>
+					onToggleInstrument={appState.toggleInstrument.bind(appState)} />
 			</div>
 		{:else if activeTab === 'composer'}
 			<div class="animate-fadeIn">
@@ -87,8 +82,7 @@
 					onSetTempo={appState.setTempo.bind(appState)}
 					onSetKeyAndMode={appState.setKeyAndMode.bind(appState)}
 					onSetVolume={appState.setVolume.bind(appState)}
-					onToggleInstrument={appState.toggleInstrument.bind(appState)}
-				/>
+					onToggleInstrument={appState.toggleInstrument.bind(appState)} />
 			</div>
 		{:else}
 			<div class="animate-fadeIn">Coming Soon!</div>

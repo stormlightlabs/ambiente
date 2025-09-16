@@ -1,4 +1,4 @@
-import type { Optional } from "./types";
+import type { Optional } from "./types/shared";
 
 export enum Note {
   C = 0,

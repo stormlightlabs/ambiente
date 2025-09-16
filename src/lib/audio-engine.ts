@@ -2,51 +2,17 @@ import { BehaviorSubject, combineLatest, Observable, Subject, timer } from "rxjs
 import { debounceTime, distinctUntilChanged, filter, map, scan, switchMap, takeUntil } from "rxjs/operators";
 import { SvelteSet } from "svelte/reactivity";
 import * as Tone from "tone";
-import {
-  ambientMixer,
-  createSynth,
-  EffectType,
-  initializeAudio,
-  InstrumentType,
-  noteToToneString,
-  ParameterAutomation,
-} from "./audio";
-import { AmbientPadSynth, GranularSynth, HarmonicDroneSynth, MelodicSynth, RhythmicPulseSynth } from "./instruments";
+import { ambientMixer, createSynth, initializeAudio, noteToToneString, ParameterAutomation } from "./audio";
+import { AmbientPadSynth } from "./instruments/ambient-pad";
+import { GranularSynth } from "./instruments/granular-synth";
+import { HarmonicDroneSynth } from "./instruments/harmonic-drone-synth";
+import { MelodicSynth } from "./instruments/melodic-synth";
 import { AMBIENT_PROGRESSIONS, generateProgression, generateScale, Mode, Note } from "./theory";
-import type { Optional } from "./types";
-
-export interface AudioEngineState {
-  isPlaying: boolean;
-  tempo: number;
-  key: Note;
-  mode: Mode;
-  currentChord: number;
-  volume: number;
-  instruments: SvelteSet<InstrumentType>;
-  randomization: RandomizationParams;
-}
-
-export type AudioEventKind = "play" | "pause" | "stop" | "chord-change" | "parameter-change" | "instrument-toggle";
-export type AudioEventData = { chord?: Note[]; index?: number; instrument?: InstrumentType; enabled?: boolean };
-export type AudioEvent = { type: AudioEventKind; timestamp: number; data?: AudioEventData };
-export type PatternStep = { note: Note; velocity: number; duration: string; enabled: boolean };
-export type InstrumentPattern = { type: InstrumentType; steps: PatternStep[]; length: number; enabled: boolean };
-
-export interface RandomizationParams {
-  enabled: boolean;
-  /** 0-1, probability of rhythm changes */
-  rhythmVariability: number;
-  /** 0-1, probability of note substitutions */
-  melodicVariability: number;
-  /** 0-1, probability of chord substitutions */
-  chordProgression: number;
-  /** 0-1, probability of pattern mutations */
-  patternEvolution: number;
-  /** 0-1, constraint strength for musical coherence */
-  constraintStrength: number;
-  /** For reproducible randomization */
-  seed?: number;
-}
+import type { AudioEngineState, AudioEvent, InstrumentPattern, PatternStep, RandomizationParams } from "./types/audio";
+import { FieldRecordingSynth } from "./types/field-recording-synth";
+import { EffectType, InstrumentType } from "./types/instruments";
+import { RhythmicPulseSynth } from "./types/rhythmic-pulse-synth";
+import type { Optional } from "./types/shared";
 
 class PatternRandomizer {
   private static seededRandom(seed: number): number {
@@ -175,7 +141,7 @@ export class AudioEngine {
 
   private readonly ambientInstruments: Map<
     InstrumentType,
-    GranularSynth | AmbientPadSynth | MelodicSynth | HarmonicDroneSynth | RhythmicPulseSynth
+    GranularSynth | AmbientPadSynth | MelodicSynth | HarmonicDroneSynth | RhythmicPulseSynth | FieldRecordingSynth
   >;
   private readonly currentScale$: BehaviorSubject<Note[]>;
 
@@ -462,12 +428,15 @@ export class AudioEngine {
       InstrumentType.Melodic,
       InstrumentType.HarmonicDrone,
       InstrumentType.RhythmicPulse,
+      InstrumentType.FieldRecording,
     ].includes(type);
   }
 
   private createAmbientInstrument(
     type: InstrumentType,
-  ): Optional<GranularSynth | AmbientPadSynth | MelodicSynth | HarmonicDroneSynth | RhythmicPulseSynth> {
+  ): Optional<
+    GranularSynth | AmbientPadSynth | MelodicSynth | HarmonicDroneSynth | RhythmicPulseSynth | FieldRecordingSynth
+  > {
     switch (type) {
       case InstrumentType.Granular: {
         return new GranularSynth();
@@ -484,6 +453,9 @@ export class AudioEngine {
       case InstrumentType.RhythmicPulse: {
         return new RhythmicPulseSynth();
       }
+      case InstrumentType.FieldRecording: {
+        return new FieldRecordingSynth();
+      }
       default: {
         return void 0;
       }
@@ -491,7 +463,13 @@ export class AudioEngine {
   }
 
   private updateAmbientInstrumentContext(
-    instrument: GranularSynth | AmbientPadSynth | MelodicSynth | HarmonicDroneSynth | RhythmicPulseSynth,
+    instrument:
+      | GranularSynth
+      | AmbientPadSynth
+      | MelodicSynth
+      | HarmonicDroneSynth
+      | RhythmicPulseSynth
+      | FieldRecordingSynth,
   ): void {
     const currentScale = this.currentScale$.value;
     const currentChord = this.currentChord$.value;
@@ -717,6 +695,8 @@ export class AudioEngine {
         instrument.updateParams({ enabled: false });
       } else if (instrument instanceof RhythmicPulseSynth) {
         instrument.updateParams({ enabled: false });
+      } else if (instrument instanceof FieldRecordingSynth) {
+        instrument.updateParams({ enabled: false });
       }
     }
 
@@ -770,6 +750,7 @@ export const createAmbientAudioEngine = (initialState?: Partial<AudioEngineState
         InstrumentType.Melodic,
         InstrumentType.HarmonicDrone,
         InstrumentType.RhythmicPulse,
+        InstrumentType.FieldRecording,
       ].includes(instrumentType);
 
       if (!isAmbient) {

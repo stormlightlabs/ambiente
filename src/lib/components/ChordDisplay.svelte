@@ -39,8 +39,7 @@
 					class="flex-1 rounded px-2 py-1 text-center text-xs font-medium transition-all duration-300 {index ===
 					currentChordIndex
 						? 'bg-white text-blue-600'
-						: 'bg-white/20 text-white'}"
-				>
+						: 'bg-white/20 text-white'}">
 					{chord.name}
 				</div>
 			{/each}

@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { InstrumentType } from '$lib/audio';
-	import { PRESETS, type Preset, getThemes, scaleToNotes } from '$lib/data/presets';
+	import { PRESETS, getThemes, scaleToNotes } from '$lib/data/presets';
 	import { titleCase } from '$lib/helpers';
 	import { Mode, ModeUtilities, Note, NoteUtilities } from '$lib/theory';
+	import { InstrumentType } from '$lib/types/instruments';
+	import type { Preset } from '$lib/types/presets';
 
 	type Props = {
 		currentInstruments: Set<InstrumentType>;
@@ -90,8 +91,7 @@
 			<select
 				id="theme-select"
 				bind:value={selectedTheme}
-				class="rounded border border-gray-300 bg-white px-2 py-1 text-sm"
-			>
+				class="rounded border border-gray-300 bg-white px-2 py-1 text-sm">
 				{#each themes as theme (theme)}
 					<option value={theme}>{theme}</option>
 				{/each}
@@ -109,8 +109,7 @@
 				onclick={() => loadPreset(preset)}
 				role="button"
 				tabindex="0"
-				onkeydown={(e) => e.key === 'Enter' && loadPreset(preset)}
-			>
+				onkeydown={(e) => e.key === 'Enter' && loadPreset(preset)}>
 				<div class="mb-3">
 					<h3 class="mb-2 text-lg font-medium text-gray-800">{preset.name}</h3>
 					<p class="mb-2 text-sm leading-relaxed text-gray-600">{preset.description}</p>
@@ -202,8 +201,7 @@
 
 			<button
 				onclick={clearSelection}
-				class="rounded bg-red-500 px-4 py-2 text-sm text-white transition-colors hover:bg-red-600"
-			>
+				class="rounded bg-red-500 px-4 py-2 text-sm text-white transition-colors hover:bg-red-600">
 				Clear Selection
 			</button>
 		</div>

@@ -1,12 +1,7 @@
-import { InstrumentType } from "$lib/audio";
-import {
-  AudioEngine,
-  type AudioEngineState,
-  createAmbientAudioEngine,
-  createDefaultPattern,
-  type InstrumentPattern,
-} from "$lib/audio-engine";
+import { AudioEngine, createAmbientAudioEngine, createDefaultPattern } from "$lib/audio-engine";
 import { Mode, Note } from "$lib/theory";
+import type { AudioEngineState, InstrumentPattern } from "$lib/types/audio";
+import { InstrumentType } from "$lib/types/instruments";
 import { SvelteSet } from "svelte/reactivity";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 

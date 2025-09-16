@@ -1,10 +1,9 @@
 <script lang="ts">
-	import type { InstrumentType } from '$lib/audio';
 	import { Mode, Note } from '$lib/theory';
+	import type { RandomizationParams } from '$lib/types/audio';
+	import type { InstrumentType } from '$lib/types/instruments';
 	import type { SvelteSet } from 'svelte/reactivity';
 	import ChordDisplay from './ChordDisplay.svelte';
-
-	import type { RandomizationParams } from '$lib/audio-engine';
 
 	type AudioState = {
 		isPlaying: boolean;
