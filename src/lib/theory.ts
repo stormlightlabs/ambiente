@@ -243,3 +243,97 @@ export const NoteUtilities = {
   fromMidi: (midiNote: number): Note => midiNote % 12,
   toMidi: (note: Note, octave: number = 4): number => note + octave * 12 + 12,
 };
+
+export const ModeUtilities = {
+  toString(mode: Mode): string {
+    switch (mode) {
+      case Mode.Ionian: {
+        return "Ionian (Major)";
+      }
+      case Mode.Dorian: {
+        return "Dorian (Minor ♮6)";
+      }
+      case Mode.Phrygian: {
+        return "Phrygian (Minor ♭2)";
+      }
+      case Mode.Lydian: {
+        return "Lydian (Major ♯4)";
+      }
+      case Mode.Mixolydian: {
+        return "Mixolydian (Major ♭7)";
+      }
+      case Mode.Aeolian: {
+        return "Aeolian (Minor)";
+      }
+      case Mode.Locrian: {
+        return "Locrian (Minor ♭2 ♭5)";
+      }
+      default: {
+        return "Unknown mode";
+      }
+    }
+  },
+};
+
+export const ChordAnalysis = {
+  analyzeChord: (notes: Note[]): { root: Note; type?: ChordType; name: string } => {
+    if (notes.length === 0) {
+      return { root: Note.C, name: "..." };
+    }
+
+    const uniqueNotes = [...new Set(notes)].toSorted((a, b) => a - b);
+    const root = uniqueNotes[0];
+    const intervals = uniqueNotes.map(note => (note - root + 12) % 12).toSorted((a, b) => a - b);
+
+    for (const [chordType, pattern] of Object.entries(CHORD_PATTERNS)) {
+      const normalizedPattern = [...pattern].toSorted((a, b) => a - b);
+      if (
+        intervals.length === normalizedPattern.length
+        && intervals.every((interval, index) => interval === normalizedPattern[index])
+      ) {
+        return {
+          root,
+          type: chordType as ChordType,
+          name: `${NoteUtilities.toString(root)}${ChordAnalysis.getChordSuffix(chordType as ChordType)}`,
+        };
+      }
+    }
+
+    return { root, name: `${NoteUtilities.toString(root)} chord` };
+  },
+
+  getChordSuffix: (type: ChordType): string => {
+    switch (type) {
+      case ChordType.Major: {
+        return "";
+      }
+      case ChordType.Minor: {
+        return "m";
+      }
+      case ChordType.Diminished: {
+        return "°";
+      }
+      case ChordType.Augmented: {
+        return "+";
+      }
+      case ChordType.Sus2: {
+        return "sus2";
+      }
+      case ChordType.Sus4: {
+        return "sus4";
+      }
+      case ChordType.Major7: {
+        return "maj7";
+      }
+      case ChordType.Minor7: {
+        return "m7";
+      }
+      case ChordType.Dominant7: {
+        return "7";
+      }
+      default: {
+        return "";
+      }
+    }
+  },
+};

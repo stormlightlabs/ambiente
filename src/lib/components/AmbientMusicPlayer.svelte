@@ -1,16 +1,23 @@
 <script lang="ts">
 	import type { AppStateManager } from '$lib/communication.svelte.ts';
+	import { type Note } from '$lib/theory';
 	import CompositionCreator from './CompositionCreator.svelte';
 	import PlayerControls from './PlayerControls.svelte';
 	import PresetPlayer from './PresetPlayer.svelte';
 
 	let { appState }: { appState: AppStateManager } = $props();
-	let activeTab = $state<'player' | 'composer'>('player');
+	let activeTab = $state<'player' | 'composer' | 'sequencer'>('player');
+	let currentChordNotes = $state<Note[]>([]);
 
-	function setActiveTab(tab: 'player' | 'composer') {
+	function setActiveTab(tab: 'player' | 'composer' | 'sequencer') {
 		activeTab = tab;
 		appState.setActiveView(tab === 'player' ? 'player' : 'composer');
 	}
+
+	$effect(() => {
+		const subscription = appState.getCurrentChord$().subscribe((notes) => (currentChordNotes = notes));
+		return () => subscription.unsubscribe();
+	});
 </script>
 
 <div class="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 to-gray-300">
@@ -24,15 +31,26 @@
 			class="cursor-pointer border-b-3 px-8 py-4 text-base transition-all duration-200 {activeTab === 'player'
 				? 'border-indigo-600 bg-indigo-50 text-indigo-600'
 				: 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-800'}"
-			onclick={() => setActiveTab('player')}>
+			onclick={() => setActiveTab('player')}
+		>
 			🎵 Player
 		</button>
 		<button
 			class="cursor-pointer border-b-3 px-8 py-4 text-base transition-all duration-200 {activeTab === 'composer'
 				? 'border-indigo-600 bg-indigo-50 text-indigo-600'
 				: 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-800'}"
-			onclick={() => setActiveTab('composer')}>
+			onclick={() => setActiveTab('composer')}
+		>
 			🎹 Composer
+		</button>
+		<button
+			class="cursor-pointer border-b-3 px-8 py-4 text-base transition-all duration-200 {activeTab === 'sequencer'
+				? 'border-indigo-600 bg-indigo-50 text-indigo-600'
+				: 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-800'}"
+			onclick={() => setActiveTab('sequencer')}
+			disabled
+		>
+			Sequencer
 		</button>
 	</nav>
 
@@ -45,7 +63,10 @@
 			onSetVolume={appState.setVolume.bind(appState)}
 			onSetTempo={appState.setTempo.bind(appState)}
 			onUndo={appState.undo.bind(appState)}
-			onRedo={appState.redo.bind(appState)} />
+			onRedo={appState.redo.bind(appState)}
+			{currentChordNotes}
+			selectedPreset={appState.ui.selectedPreset}
+		/>
 
 		{#if activeTab === 'player'}
 			<div class="animate-fadeIn">
@@ -55,24 +76,28 @@
 					onSetTempo={appState.setTempo.bind(appState)}
 					onSetKeyAndMode={appState.setKeyAndMode.bind(appState)}
 					onSetVolume={appState.setVolume.bind(appState)}
-					onToggleInstrument={appState.toggleInstrument.bind(appState)} />
+					onToggleInstrument={appState.toggleInstrument.bind(appState)}
+				/>
 			</div>
-		{:else}
+		{:else if activeTab === 'composer'}
 			<div class="animate-fadeIn">
 				<CompositionCreator
 					audioState={appState.audio}
 					onSetTempo={appState.setTempo.bind(appState)}
 					onSetKeyAndMode={appState.setKeyAndMode.bind(appState)}
 					onSetVolume={appState.setVolume.bind(appState)}
-					onToggleInstrument={appState.toggleInstrument.bind(appState)} />
+					onToggleInstrument={appState.toggleInstrument.bind(appState)}
+				/>
 			</div>
+		{:else}
+			<div class="animate-fadeIn">Coming Soon!</div>
 		{/if}
 	</main>
 
 	<footer class="border-t border-gray-200 bg-white p-4 shadow-sm md:p-8">
 		<div class="flex flex-wrap items-center justify-center gap-8 text-sm text-gray-600">
 			<span class="flex items-center gap-2 font-medium">
-				{appState.ui.isInitialized ? '🟢 Engine Ready' : '🔴 Engine Loading'}
+				{appState.ui.isInitialized ? '🟢 Engine Ready' : '🔴 Engine Stopped '}
 			</span>
 
 			{#if appState.ui.selectedPreset}

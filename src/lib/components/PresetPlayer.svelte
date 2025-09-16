@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { InstrumentType } from '$lib/audio';
 	import { PRESETS, type Preset, getThemes, scaleToNotes } from '$lib/data/presets';
-	import { Mode, Note } from '$lib/theory';
+	import { titleCase } from '$lib/helpers';
+	import { Mode, ModeUtilities, Note, NoteUtilities } from '$lib/theory';
 
 	type Props = {
 		currentInstruments: Set<InstrumentType>;
@@ -20,42 +21,44 @@
 		onSetVolume,
 		onToggleInstrument
 	}: Props = $props();
+	const themes = getThemes();
 
 	let selectedPresetId = $state<string>();
 	let selectedTheme = $state<string>('All');
 
-	const themes = ['All', ...getThemes()];
-	const filteredPresets = $derived.by(() => {
-		if (selectedTheme === 'All') return PRESETS;
-		return PRESETS.filter((preset) => preset.theme === selectedTheme);
-	});
-
-	const currentPreset = $derived.by(() => {
-		return selectedPresetId ? PRESETS.find((p) => p.id === selectedPresetId) : undefined;
-	});
+	const currentPreset = $derived(selectedPresetId ? PRESETS.find((p) => p.id === selectedPresetId) : undefined);
+	const filteredPresets = $derived.by(() =>
+		selectedTheme === 'All' ? PRESETS : PRESETS.filter((preset) => preset.theme === selectedTheme)
+	);
 
 	function loadPreset(preset: Preset) {
 		selectedPresetId = preset.id;
 		onSetSelectedPreset(preset.id);
 
-		if (preset.config.tempo) onSetTempo(preset.config.tempo);
-		if (preset.config.volume) onSetVolume(preset.config.volume);
+		// Set key and mode first to ensure chord progression updates
 		if (preset.config.key && preset.config.mode) {
 			onSetKeyAndMode(preset.config.key, preset.config.mode);
 		}
 
-		if (preset.ambient) {
-			const ambientPreset = preset.ambient;
-
-			onSetTempo(ambientPreset.tempo);
-			onSetVolume(ambientPreset.mix.volume);
+		if (preset.texture) {
+			const ambientPreset = preset.texture;
 
 			const scaleNotes = scaleToNotes(ambientPreset.scale);
 			if (scaleNotes.length > 0) {
-				onSetKeyAndMode(scaleNotes[0], Mode.Aeolian);
+				const key = scaleNotes[0];
+				const mode = preset.config.mode || Mode.Aeolian;
+				onSetKeyAndMode(key, mode);
 			}
+
+			onSetTempo(ambientPreset.tempo);
+			onSetVolume(ambientPreset.mix.volume);
+		} else {
+			// Apply preset config if no texture
+			if (preset.config.tempo) onSetTempo(preset.config.tempo);
+			if (preset.config.volume) onSetVolume(preset.config.volume);
 		}
 
+		// Update instruments after key/mode to ensure proper pattern generation
 		const targetInstruments = new Set<InstrumentType>(preset.config.instruments || new Set());
 		const currentInstrumentsCopy = new Set<InstrumentType>(currentInstruments);
 
@@ -87,7 +90,8 @@
 			<select
 				id="theme-select"
 				bind:value={selectedTheme}
-				class="rounded border border-gray-300 bg-white px-2 py-1 text-sm">
+				class="rounded border border-gray-300 bg-white px-2 py-1 text-sm"
+			>
 				{#each themes as theme (theme)}
 					<option value={theme}>{theme}</option>
 				{/each}
@@ -105,7 +109,8 @@
 				onclick={() => loadPreset(preset)}
 				role="button"
 				tabindex="0"
-				onkeydown={(e) => e.key === 'Enter' && loadPreset(preset)}>
+				onkeydown={(e) => e.key === 'Enter' && loadPreset(preset)}
+			>
 				<div class="mb-3">
 					<h3 class="mb-2 text-lg font-medium text-gray-800">{preset.name}</h3>
 					<p class="mb-2 text-sm leading-relaxed text-gray-600">{preset.description}</p>
@@ -119,14 +124,16 @@
 						Tempo: {preset.config.tempo || 'Variable'} BPM
 					</div>
 					<div class="text-xs text-gray-600">
-						Key: {preset.config.key ? `${preset.config.key} ${preset.config.mode}` : 'Variable'}
+						Key: {preset.config.key
+							? `${NoteUtilities.toString(preset.config.key)} ${preset.config.mode ? ModeUtilities.toString(preset.config.mode) : ''}`
+							: 'Variable'}
 					</div>
 					<div class="text-xs text-gray-600">
 						Instruments: {preset.config.instruments?.size || 0}
 					</div>
-					{#if preset.ambient}
+					{#if preset.texture}
 						<div class="text-xs font-medium text-blue-600">
-							Ambient: {preset.ambient.structure.layering} layering
+							Texture: {titleCase(preset.texture.structure.layering)} layering
 						</div>
 					{/if}
 				</div>
@@ -169,25 +176,25 @@
 				</div>
 			</div>
 
-			{#if currentPreset.ambient}
+			{#if currentPreset.texture}
 				<div class="mb-4 rounded bg-blue-50 p-3">
 					<h4 class="mb-2 font-medium text-blue-800">Ambient Configuration</h4>
 					<div class="grid grid-cols-2 gap-2 text-sm">
 						<div>
 							<span class="font-medium text-gray-700">Scale:</span>
-							{currentPreset.ambient.scale.join(', ')}
+							{currentPreset.texture.scale.join(', ')}
 						</div>
 						<div>
 							<span class="font-medium text-gray-700">Pattern:</span>
-							{currentPreset.ambient.structure.generativePattern}
+							{currentPreset.texture.structure.generativePattern}
 						</div>
 						<div>
 							<span class="font-medium text-gray-700">Layering:</span>
-							{currentPreset.ambient.structure.layering}
+							{currentPreset.texture.structure.layering}
 						</div>
 						<div>
 							<span class="font-medium text-gray-700">Reverb:</span>
-							{Math.round(currentPreset.ambient.processing.reverb.wet * 100)}%
+							{Math.round(currentPreset.texture.processing.reverb.wet * 100)}%
 						</div>
 					</div>
 				</div>
@@ -195,7 +202,8 @@
 
 			<button
 				onclick={clearSelection}
-				class="rounded bg-red-500 px-4 py-2 text-sm text-white transition-colors hover:bg-red-600">
+				class="rounded bg-red-500 px-4 py-2 text-sm text-white transition-colors hover:bg-red-600"
+			>
 				Clear Selection
 			</button>
 		</div>

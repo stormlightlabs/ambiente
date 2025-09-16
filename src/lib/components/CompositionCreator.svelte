@@ -25,13 +25,7 @@
 		onToggleInstrument: (instrument: InstrumentType) => void;
 	};
 
-	const {
-		audioState,
-		onSetTempo,
-		onSetKeyAndMode,
-		onSetVolume,
-		onToggleInstrument
-	}: Props = $props();
+	const { audioState, onSetTempo, onSetKeyAndMode, onSetVolume, onToggleInstrument }: Props = $props();
 
 	let customTempo = $state(audioState.tempo);
 	let customKey = $state(audioState.key);
@@ -99,11 +93,7 @@
 		}
 		selectedInstruments.clear();
 
-		const ambientInstruments = [
-			InstrumentType.Pad,
-			InstrumentType.Atmosphere,
-			InstrumentType.Texture
-		];
+		const ambientInstruments = [InstrumentType.Pad, InstrumentType.Atmosphere, InstrumentType.Texture];
 
 		for (const instrument of ambientInstruments) {
 			selectedInstruments.add(instrument);
@@ -140,15 +130,11 @@
 	<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 		<!-- Musical Parameters -->
 		<div class="rounded-lg border border-gray-200 bg-white p-4">
-			<h3 class="mb-4 border-b border-gray-100 pb-2 text-lg font-medium text-gray-800">
-				Musical Parameters
-			</h3>
+			<h3 class="mb-4 border-b border-gray-100 pb-2 text-lg font-medium text-gray-800">Musical Parameters</h3>
 
 			<div class="space-y-4">
 				<div>
-					<label for="tempo" class="mb-2 block font-medium text-gray-700"
-						>Tempo: {customTempo} BPM</label
-					>
+					<label for="tempo" class="mb-2 block font-medium text-gray-700">Tempo: {customTempo} BPM</label>
 					<input
 						id="tempo"
 						type="range"
@@ -209,9 +195,7 @@
 
 		<!-- Instruments -->
 		<div class="rounded-lg border border-gray-200 bg-white p-4">
-			<h3 class="mb-4 border-b border-gray-100 pb-2 text-lg font-medium text-gray-800">
-				Instruments
-			</h3>
+			<h3 class="mb-4 border-b border-gray-100 pb-2 text-lg font-medium text-gray-800">Instruments</h3>
 
 			<div class="grid grid-cols-2 gap-2">
 				{#each instrumentTypes as instrument (instrument)}
@@ -231,9 +215,7 @@
 
 		<!-- Scale Information -->
 		<div class="rounded-lg border border-gray-200 bg-white p-4">
-			<h3 class="mb-4 border-b border-gray-100 pb-2 text-lg font-medium text-gray-800">
-				Current Scale
-			</h3>
+			<h3 class="mb-4 border-b border-gray-100 pb-2 text-lg font-medium text-gray-800">Current Scale</h3>
 
 			<div>
 				<p class="mb-4 text-gray-700">
@@ -258,16 +240,12 @@
 
 		<!-- Live Status -->
 		<div class="rounded-lg border border-gray-200 bg-white p-4">
-			<h3 class="mb-4 border-b border-gray-100 pb-2 text-lg font-medium text-gray-800">
-				Live Status
-			</h3>
+			<h3 class="mb-4 border-b border-gray-100 pb-2 text-lg font-medium text-gray-800">Live Status</h3>
 
 			<div class="space-y-3">
 				<div class="flex items-center justify-between">
 					<span class="font-medium text-gray-700">Playing:</span>
-					<span
-						class="font-semibold {audioState.isPlaying ? 'text-green-600' : 'text-gray-600'}"
-					>
+					<span class="font-semibold {audioState.isPlaying ? 'text-green-600' : 'text-gray-600'}">
 						{audioState.isPlaying ? 'Yes' : 'No'}
 					</span>
 				</div>

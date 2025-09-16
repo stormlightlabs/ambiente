@@ -1,8 +1,8 @@
-import type { Observable, Subscription } from "rxjs";
+import { BehaviorSubject, type Observable, type Subscription } from "rxjs";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
 import { InstrumentType } from "./audio";
 import { AudioEngine, type AudioEngineState, type AudioEvent, createAmbientAudioEngine } from "./audio-engine";
-import { Mode, Note } from "./theory";
+import { AMBIENT_PROGRESSIONS, generateProgression, generateScale, Mode, Note } from "./theory";
 import type { Optional } from "./types";
 
 type ComponentMessage = { type: string; source: string; data?: unknown; timestamp: number };
@@ -20,6 +20,7 @@ type UIState = {
 export class AppStateManager {
   private audioEngine: Optional<AudioEngine>;
   private subscriptions: Subscription[] = [];
+  private currentChordSubject = new BehaviorSubject<Note[]>([]);
 
   private uiState = $state<UIState>({
     isInitialized: false,
@@ -43,6 +44,16 @@ export class AppStateManager {
   private events = $state<AudioEvent[]>([]);
 
   constructor() {
+    // Initialize chord progression based on initial state
+    this.updateChordProgression();
+  }
+
+  private updateChordProgression(): void {
+    const scale = generateScale(this.audioState.key, this.audioState.mode);
+    const progression = generateProgression(scale, [...AMBIENT_PROGRESSIONS.emotional]);
+    if (progression.length > 0) {
+      this.currentChordSubject.next(progression[0]);
+    }
   }
 
   private ensureAudioEngine(): void {
@@ -65,6 +76,10 @@ export class AppStateManager {
         if (this.events.length > 50) {
           this.events.shift();
         }
+      }),
+      // Sync chord progression from audio engine to local subject
+      this.audioEngine.getCurrentChord$().subscribe((chord: Note[]) => {
+        this.currentChordSubject.next(chord);
       }),
     );
 
@@ -123,23 +138,45 @@ export class AppStateManager {
   }
 
   setTempo(tempo: number): void {
-    this.ensureAudioEngine();
-    this.audioEngine!.setTempo(tempo);
+    if (this.audioEngine) {
+      this.audioEngine.setTempo(tempo);
+    }
+    // Update local state immediately for UI
+    this.audioState.tempo = Math.max(40, Math.min(200, tempo));
   }
 
   setKeyAndMode(key: Note, mode: Mode): void {
-    this.ensureAudioEngine();
-    this.audioEngine!.setKeyAndMode(key, mode);
+    if (this.audioEngine) {
+      this.audioEngine.setKeyAndMode(key, mode);
+    }
+    // Update local state immediately for UI
+    this.audioState.key = key;
+    this.audioState.mode = mode;
+    this.audioState.currentChord = 0;
+
+    // Update chord progression for immediate UI feedback
+    this.updateChordProgression();
   }
 
   setVolume(volume: number): void {
-    this.ensureAudioEngine();
-    this.audioEngine!.setVolume(volume);
+    if (this.audioEngine) {
+      this.audioEngine.setVolume(volume);
+    }
+    // Update local state immediately for UI
+    this.audioState.volume = Math.max(0, Math.min(1, volume));
   }
 
   toggleInstrument(instrument: InstrumentType): void {
-    this.ensureAudioEngine();
-    this.audioEngine!.toggleInstrument(instrument);
+    if (this.audioEngine) {
+      this.audioEngine.toggleInstrument(instrument);
+    } else {
+      // Update local state immediately for UI
+      if (this.audioState.instruments.has(instrument)) {
+        this.audioState.instruments.delete(instrument);
+      } else {
+        this.audioState.instruments.add(instrument);
+      }
+    }
   }
 
   automateParameter(
@@ -148,8 +185,9 @@ export class AppStateManager {
     targetValue: number,
     duration: string = "4m",
   ): void {
-    this.ensureAudioEngine();
-    this.audioEngine!.automateParameter(instrumentType, paramPath, targetValue, duration);
+    if (this.audioEngine) {
+      this.audioEngine.automateParameter(instrumentType, paramPath, targetValue, duration);
+    }
   }
 
   undo(): void {
@@ -203,13 +241,15 @@ export class AppStateManager {
   }
 
   getCurrentChord$(): Observable<Note[]> {
-    this.ensureAudioEngine();
-    return this.audioEngine!.getCurrentChord$();
+    // Always return local observable that syncs with audio engine when available
+    return this.currentChordSubject.asObservable();
   }
 
   dispose(): void {
     for (const sub of this.subscriptions) sub.unsubscribe();
     this.subscriptions = [];
+
+    this.currentChordSubject.complete();
 
     if (this.audioEngine) {
       this.audioEngine.dispose();

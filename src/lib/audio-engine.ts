@@ -1,5 +1,6 @@
 import { BehaviorSubject, combineLatest, Observable, Subject, timer } from "rxjs";
 import { debounceTime, distinctUntilChanged, filter, map, scan, switchMap, takeUntil } from "rxjs/operators";
+import { SvelteSet } from "svelte/reactivity";
 import * as Tone from "tone";
 import {
   ambientMixer,
@@ -21,7 +22,7 @@ export interface AudioEngineState {
   mode: Mode;
   currentChord: number;
   volume: number;
-  instruments: Set<InstrumentType>;
+  instruments: SvelteSet<InstrumentType>;
 }
 
 export type AudioEventKind = "play" | "pause" | "stop" | "chord-change" | "parameter-change" | "instrument-toggle";
@@ -45,7 +46,6 @@ export class AudioEngine {
   private readonly synthInstances: Map<InstrumentType, Tone.PolySynth>;
   private readonly patterns$: BehaviorSubject<Map<InstrumentType, InstrumentPattern>>;
 
-  // Ambient instruments
   private readonly ambientInstruments: Map<
     InstrumentType,
     GranularSynth | AmbientPadSynth | MelodicSynth | HarmonicDroneSynth | RhythmicPulseSynth
@@ -63,7 +63,6 @@ export class AudioEngine {
     this.patterns$ = new BehaviorSubject(new Map());
     this.currentChord$ = new BehaviorSubject<Note[]>([]);
 
-    // Initialize ambient instruments
     this.ambientInstruments = new Map();
     this.currentScale$ = new BehaviorSubject<Note[]>([]);
 
@@ -74,7 +73,7 @@ export class AudioEngine {
       mode: Mode.Ionian,
       currentChord: 0,
       volume: 0.7,
-      instruments: new Set([InstrumentType.Pad, InstrumentType.Atmosphere]),
+      instruments: new SvelteSet([InstrumentType.Pad, InstrumentType.Atmosphere]),
       ...initialState,
     });
 
@@ -90,7 +89,6 @@ export class AudioEngine {
       distinctUntilChanged((a, b) => a.key === b.key && a.mode === b.mode),
       map(({ key, mode }) => {
         const scale = generateScale(key, mode);
-        // Update current scale for ambient instruments
         this.currentScale$.next(scale);
         return generateProgression(scale, [...AMBIENT_PROGRESSIONS.emotional]);
       }),
@@ -150,7 +148,7 @@ export class AudioEngine {
     });
 
     this.currentScale$.pipe(takeUntil(this.destroy$)).subscribe(scale => {
-      for (const [type, instrument] of this.ambientInstruments.entries()) {
+      for (const [, instrument] of this.ambientInstruments.entries()) {
         if (instrument instanceof GranularSynth) {
           instrument.setScale(scale);
         }
@@ -158,7 +156,7 @@ export class AudioEngine {
     });
 
     this.currentChord$.pipe(takeUntil(this.destroy$)).subscribe(chord => {
-      for (const [type, instrument] of this.ambientInstruments.entries()) {
+      for (const [, instrument] of this.ambientInstruments.entries()) {
         if (instrument instanceof AmbientPadSynth) {
           instrument.setChord(chord);
         }
@@ -244,7 +242,7 @@ export class AudioEngine {
             instrument.connect(channel);
             this.ambientInstruments.set(type, instrument);
 
-            this.updateAmbientInstrumentContext(instrument, type);
+            this.updateAmbientInstrumentContext(instrument);
           }
         }
       } else {
@@ -302,7 +300,6 @@ export class AudioEngine {
 
   private updateAmbientInstrumentContext(
     instrument: GranularSynth | AmbientPadSynth | MelodicSynth | HarmonicDroneSynth | RhythmicPulseSynth,
-    type: InstrumentType,
   ): void {
     const currentScale = this.currentScale$.value;
     const currentChord = this.currentChord$.value;
@@ -413,6 +410,14 @@ export class AudioEngine {
     if (patternsUpdated) {
       this.patterns$.next(patterns);
     }
+
+    // Force chord progression to reset immediately for real-time updates
+    const scale = generateScale(key, mode);
+    this.currentScale$.next(scale);
+    const newProgression = generateProgression(scale, [...AMBIENT_PROGRESSIONS.emotional]);
+    if (newProgression.length > 0) {
+      this.currentChord$.next(newProgression[0]);
+    }
   }
 
   setVolume(volume: number): void {
@@ -422,7 +427,7 @@ export class AudioEngine {
 
   toggleInstrument(instrument: InstrumentType): void {
     const currentState = this.state$.value;
-    const newInstruments = new Set(currentState.instruments);
+    const newInstruments = new SvelteSet(currentState.instruments);
 
     if (newInstruments.has(instrument)) {
       newInstruments.delete(instrument);
@@ -519,13 +524,12 @@ export const createAmbientAudioEngine = (initialState?: Partial<AudioEngineState
     key: Note.C,
     mode: Mode.Aeolian,
     volume: 0.6,
-    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Granular]),
+    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Granular]),
   };
 
   const finalState = { ...defaultState, ...initialState };
   const engine = new AudioEngine(finalState);
 
-  // Only create patterns for traditional instruments (not ambient ones)
   if (finalState.instruments) {
     for (const instrumentType of finalState.instruments) {
       const isAmbient = [

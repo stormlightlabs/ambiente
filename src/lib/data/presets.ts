@@ -2,6 +2,7 @@ import { EffectType, InstrumentType } from "$lib/audio";
 import type { AudioEngineState } from "$lib/audio-engine";
 import { Mode, Note } from "$lib/theory";
 import type { Optional } from "$lib/types";
+import { SvelteSet } from "svelte/reactivity";
 
 export interface AmbientInstrumentConfig {
   ambientPad: { volume: number; muted: boolean; enabled: boolean; filterFreq: number; resonance: number };
@@ -80,7 +81,7 @@ export type Preset = {
   theme: string;
   config: Partial<AudioEngineState>;
   effects?: Partial<Record<InstrumentType, EffectType[]>>;
-  ambient: AmbientPreset;
+  texture: AmbientPreset;
 };
 
 export const PRESETS: Preset[] = [{
@@ -93,9 +94,9 @@ export const PRESETS: Preset[] = [{
     key: Note.A,
     mode: Mode.Aeolian,
     volume: 0.65,
-    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.Melodic]),
+    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.Melodic]),
   },
-  ambient: {
+  texture: {
     name: "Cosmic Voyage",
     tempo: 68,
     scale: ["A", "B", "C", "D", "E", "F", "G"],
@@ -147,9 +148,9 @@ export const PRESETS: Preset[] = [{
     key: Note.D,
     mode: Mode.Dorian,
     volume: 0.6,
-    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.HarmonicDrone]),
+    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.HarmonicDrone]),
   },
-  ambient: {
+  texture: {
     name: "Ancient Forest",
     tempo: 75,
     scale: ["D", "E", "F", "G", "A", "B", "C"],
@@ -201,9 +202,9 @@ export const PRESETS: Preset[] = [{
     key: Note.E,
     mode: Mode.Lydian,
     volume: 0.55,
-    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.Melodic]),
+    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.Melodic]),
   },
-  ambient: {
+  texture: {
     name: "Lucid Dreams",
     tempo: 60,
     scale: ["E", "F#", "G#", "A#", "B", "C#", "D#"],
@@ -256,9 +257,9 @@ export const PRESETS: Preset[] = [{
     key: Note.F,
     mode: Mode.Phrygian,
     volume: 0.75,
-    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.RhythmicPulse]),
+    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.RhythmicPulse]),
   },
-  ambient: {
+  texture: {
     name: "Steel Cathedral",
     tempo: 88,
     scale: ["F", "Gb", "Ab", "Bb", "C", "Db", "Eb"],
@@ -310,9 +311,9 @@ export const PRESETS: Preset[] = [{
     key: Note.G,
     mode: Mode.Ionian,
     volume: 0.65,
-    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Melodic, InstrumentType.HarmonicDrone]),
+    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Melodic, InstrumentType.HarmonicDrone]),
   },
-  ambient: {
+  texture: {
     name: "Gentle Current",
     tempo: 80,
     scale: ["G", "A", "B", "C", "D", "E", "F#"],
@@ -364,9 +365,9 @@ export const PRESETS: Preset[] = [{
     key: Note.C,
     mode: Mode.Aeolian,
     volume: 0.7,
-    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.Melodic]),
+    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.Melodic]),
   },
-  ambient: {
+  texture: {
     name: "Brian Eno – Discreet Music",
     tempo: 60,
     scale: ["C", "D", "F", "G", "A"],
@@ -418,9 +419,9 @@ export const PRESETS: Preset[] = [{
     key: Note.C,
     mode: Mode.Aeolian,
     volume: 0.6,
-    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Melodic, InstrumentType.HarmonicDrone]),
+    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Melodic, InstrumentType.HarmonicDrone]),
   },
-  ambient: {
+  texture: {
     name: "Harold Budd – Lovely Thunder",
     tempo: 45,
     scale: ["C", "D", "E", "G", "A", "B"],
@@ -463,9 +464,9 @@ export const PRESETS: Preset[] = [{
     key: Note.C,
     mode: Mode.Aeolian,
     volume: 0.8,
-    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.HarmonicDrone]),
+    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.HarmonicDrone]),
   },
-  ambient: {
+  texture: {
     name: "Stars of the Lid – Drone",
     tempo: 40,
     scale: ["C", "F", "G"],
@@ -543,4 +544,4 @@ export const getPresetsByTheme = (theme: string): Preset[] => {
   return PRESETS.filter(preset => preset.theme.toLowerCase().includes(theme.toLowerCase()));
 };
 
-export const getThemes = (): string[] => [...new Set(PRESETS.map(preset => preset.theme))];
+export const getThemes = (): string[] => ["All", ...new SvelteSet(PRESETS.map(preset => preset.theme))];

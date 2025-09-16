@@ -83,6 +83,34 @@ Provides granular control over all musical aspects with live preview.
 - Preset application (default and ambient configurations)
 - Live status monitoring (playback state, active instruments)
 
+### ChordDisplay
+
+Real-time chord progression visualization component that shows the current chord name and progression context.
+Provides intelligent chord analysis and visual progression tracking.
+
+**Props Interface**:
+
+- `currentChordNotes`: Array of Note values representing the active chord
+- `currentChordIndex`: Zero-based index of the current chord in the progression
+- `key`: Root key of the current musical context
+- `mode`: Modal context for chord analysis
+- `progressionName`: Optional progression name (defaults to 'classic')
+
+**Functionality**:
+
+- Automatic chord name recognition using music theory analysis
+- Visual progression display with current chord highlighting
+- Support for multiple chord types (major, minor, diminished, augmented, sus, 7th chords)
+- Real-time updates synchronized with audio engine chord changes
+- Compact display showing progression context and current position
+
+**Integration**:
+
+- Used within PlayerControls to replace basic chord index display
+- Subscribes to audio engine chord changes through AppStateManager
+- Leverages ChordAnalysis utility from theory module for intelligent naming
+- Displays progression based on current key/mode and selected progression type
+
 ## Architecture Benefits
 
 ### Prop Specificity

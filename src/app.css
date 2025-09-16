@@ -19,3 +19,7 @@ h5,
 h6 {
 	@apply font-display leading-tight tracking-wide;
 }
+
+button {
+	@apply disabled:cursor-not-allowed;
+}
