@@ -64,6 +64,7 @@
 			onSetTempo={appState.setTempo.bind(appState)}
 			onUndo={appState.undo.bind(appState)}
 			onRedo={appState.redo.bind(appState)}
+			onSetRandomization={appState.setRandomization.bind(appState)}
 			{currentChordNotes}
 			selectedPreset={appState.ui.selectedPreset}
 		/>

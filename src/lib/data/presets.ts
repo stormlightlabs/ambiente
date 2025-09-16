@@ -1,34 +1,16 @@
 import { EffectType, InstrumentType } from "$lib/audio";
 import type { AudioEngineState } from "$lib/audio-engine";
+import type { Params } from "$lib/instruments";
 import { Mode, Note } from "$lib/theory";
 import type { Optional } from "$lib/types";
 import { SvelteSet } from "svelte/reactivity";
 
 export interface AmbientInstrumentConfig {
-  ambientPad: { volume: number; muted: boolean; enabled: boolean; filterFreq: number; resonance: number };
-  granular: {
-    volume: number;
-    muted: boolean;
-    enabled: boolean;
-    density: number;
-    grainSize: number;
-    pitch: number;
-    spread: number;
-  };
-  melodic: { volume: number; muted: boolean; enabled: boolean; octave: number };
-  harmonicDrone: {
-    volume: number;
-    muted: boolean;
-    enabled: boolean;
-    changeInterval: number;
-    voiceLeading: number;
-    voiceCount: number;
-    spread: number;
-  };
-  rhythmicPulse: {
-    volume: number;
-    muted: boolean;
-    enabled: boolean;
+  ambientPad: Params & { filterFreq: number; resonance: number };
+  granular: Params & { density: number; grainSize: number; pitch: number; spread: number };
+  melodic: Params & { octave: number };
+  harmonicDrone: Params & { changeInterval: number; voiceLeading: number; voiceCount: number; spread: number };
+  rhythmicPulse: Params & {
     baseTempo: number;
     accentProb: number;
     layerCount: number;
@@ -87,7 +69,7 @@ export type Preset = {
 export const PRESETS: Preset[] = [{
   id: "cosmic-voyage",
   name: "Cosmic Voyage",
-  description: "Drift through starfields and nebulae with ethereal pads and atmospheric textures",
+  description: "Drift through starfields and nebulae with ethereal pads and shimmering atmospheric textures",
   theme: "Space",
   config: {
     tempo: 68,
@@ -114,9 +96,9 @@ export const PRESETS: Preset[] = [{
     structure: { density: 8, randomness: 0.4, layering: "medium", generativePattern: "random-walk" },
     mix: { width: 0.9, tapeSaturation: 0.15, volume: 0.65 },
     instruments: {
-      ambientPad: { volume: 0.5, muted: false, enabled: true, filterFreq: 600, resonance: 1.2 },
-      granular: { volume: 0.25, muted: false, enabled: true, density: 0.15, grainSize: 0.2, pitch: 0, spread: 400 },
-      melodic: { volume: 0.15, muted: false, enabled: true, octave: 4 },
+      ambientPad: { volume: 0.7, muted: false, enabled: true, filterFreq: 800, resonance: 1.5 },
+      granular: { volume: 0.45, muted: false, enabled: true, density: 0.25, grainSize: 0.3, pitch: 2, spread: 600 },
+      melodic: { volume: 0.35, muted: false, enabled: true, octave: 5 },
       harmonicDrone: {
         volume: 0.3,
         muted: false,
@@ -168,11 +150,11 @@ export const PRESETS: Preset[] = [{
     structure: { density: 10, randomness: 0.6, layering: "medium", generativePattern: "markov" },
     mix: { width: 0.8, tapeSaturation: 0.25, volume: 0.6 },
     instruments: {
-      ambientPad: { volume: 0.4, muted: false, enabled: true, filterFreq: 500, resonance: 1 },
-      granular: { volume: 0.2, muted: false, enabled: true, density: 0.25, grainSize: 0.18, pitch: -1, spread: 350 },
-      melodic: { volume: 0.12, muted: false, enabled: false, octave: 3 },
+      ambientPad: { volume: 0.55, muted: false, enabled: true, filterFreq: 400, resonance: 1.2 },
+      granular: { volume: 0.4, muted: false, enabled: true, density: 0.3, grainSize: 0.25, pitch: -1, spread: 450 },
+      melodic: { volume: 0.25, muted: false, enabled: false, octave: 3 },
       harmonicDrone: {
-        volume: 0.35,
+        volume: 0.5,
         muted: false,
         enabled: true,
         changeInterval: 10,
@@ -207,7 +189,7 @@ export const PRESETS: Preset[] = [{
   texture: {
     name: "Lucid Dreams",
     tempo: 60,
-    scale: ["E", "F#", "G#", "A#", "B", "C#", "D#"],
+    scale: ["E", "F#", "G#", "A#", "B", "C#"],
     voices: [{
       type: "synth",
       count: 3,
@@ -223,9 +205,9 @@ export const PRESETS: Preset[] = [{
     structure: { density: 6, randomness: 0.3, layering: "minimal", generativePattern: "random-walk" },
     mix: { width: 1, tapeSaturation: 0.1, volume: 0.55 },
     instruments: {
-      ambientPad: { volume: 0.45, muted: false, enabled: true, filterFreq: 800, resonance: 0.8 },
-      granular: { volume: 0.18, muted: false, enabled: true, density: 0.12, grainSize: 0.25, pitch: 2, spread: 600 },
-      melodic: { volume: 0.08, muted: false, enabled: true, octave: 5 },
+      ambientPad: { volume: 0.6, muted: false, enabled: true, filterFreq: 1000, resonance: 0.6 },
+      granular: { volume: 0.35, muted: false, enabled: true, density: 0.18, grainSize: 0.35, pitch: 3, spread: 800 },
+      melodic: { volume: 0.25, muted: false, enabled: true, octave: 6 },
       harmonicDrone: {
         volume: 0.2,
         muted: false,
@@ -262,7 +244,7 @@ export const PRESETS: Preset[] = [{
   texture: {
     name: "Steel Cathedral",
     tempo: 88,
-    scale: ["F", "Gb", "Ab", "Bb", "C", "Db", "Eb"],
+    scale: ["F", "Gb", "Ab", "Bb", "C", "Db"],
     voices: [{
       type: "synth",
       count: 6,
@@ -277,9 +259,9 @@ export const PRESETS: Preset[] = [{
     structure: { density: 18, randomness: 0.5, layering: "dense", generativePattern: "euclidean" },
     mix: { width: 0.7, tapeSaturation: 0.4, volume: 0.75 },
     instruments: {
-      ambientPad: { volume: 0.35, muted: false, enabled: true, filterFreq: 300, resonance: 2 },
-      granular: { volume: 0.3, muted: false, enabled: true, density: 0.4, grainSize: 0.08, pitch: -3, spread: 200 },
-      melodic: { volume: 0.1, muted: false, enabled: false, octave: 2 },
+      ambientPad: { volume: 0.5, muted: false, enabled: true, filterFreq: 250, resonance: 2.5 },
+      granular: { volume: 0.5, muted: false, enabled: true, density: 0.5, grainSize: 0.1, pitch: -2, spread: 300 },
+      melodic: { volume: 0.2, muted: false, enabled: false, octave: 2 },
       harmonicDrone: {
         volume: 0.25,
         muted: false,
@@ -290,7 +272,7 @@ export const PRESETS: Preset[] = [{
         spread: 1,
       },
       rhythmicPulse: {
-        volume: 0.4,
+        volume: 0.6,
         muted: false,
         enabled: true,
         baseTempo: 88,
@@ -331,11 +313,11 @@ export const PRESETS: Preset[] = [{
     structure: { density: 14, randomness: 0.4, layering: "medium", generativePattern: "markov" },
     mix: { width: 0.85, tapeSaturation: 0.2, volume: 0.65 },
     instruments: {
-      ambientPad: { volume: 0.3, muted: false, enabled: true, filterFreq: 700, resonance: 1.1 },
-      granular: { volume: 0.15, muted: false, enabled: false, density: 0.18, grainSize: 0.16, pitch: 1, spread: 300 },
-      melodic: { volume: 0.4, muted: false, enabled: true, octave: 4 },
+      ambientPad: { volume: 0.45, muted: false, enabled: true, filterFreq: 700, resonance: 1.1 },
+      granular: { volume: 0.3, muted: false, enabled: false, density: 0.18, grainSize: 0.16, pitch: 1, spread: 300 },
+      melodic: { volume: 0.6, muted: false, enabled: true, octave: 4 },
       harmonicDrone: {
-        volume: 0.25,
+        volume: 0.4,
         muted: false,
         enabled: true,
         changeInterval: 8,
@@ -385,9 +367,9 @@ export const PRESETS: Preset[] = [{
     structure: { density: 12, randomness: 0.3, layering: "minimal", generativePattern: "random-walk" },
     mix: { width: 0.8, tapeSaturation: 0.2, volume: 0.7 },
     instruments: {
-      ambientPad: { volume: 0.4, muted: false, enabled: true, filterFreq: 400, resonance: 1.5 },
-      granular: { volume: 0.15, muted: false, enabled: true, density: 0.2, grainSize: 0.15, pitch: -1, spread: 300 },
-      melodic: { volume: 0.1, muted: false, enabled: true, octave: 3 },
+      ambientPad: { volume: 0.55, muted: false, enabled: true, filterFreq: 400, resonance: 1.5 },
+      granular: { volume: 0.3, muted: false, enabled: true, density: 0.25, grainSize: 0.2, pitch: -1, spread: 350 },
+      melodic: { volume: 0.25, muted: false, enabled: true, octave: 3 },
       harmonicDrone: {
         volume: 0.25,
         muted: false,
@@ -430,11 +412,11 @@ export const PRESETS: Preset[] = [{
     structure: { density: 6, randomness: 0.5, layering: "medium", generativePattern: "markov" },
     mix: { width: 0.9, tapeSaturation: 0.3, volume: 0.6 },
     instruments: {
-      ambientPad: { volume: 0.2, muted: false, enabled: true, filterFreq: 600, resonance: 1.2 },
-      granular: { volume: 0.1, muted: false, enabled: false, density: 0.1, grainSize: 0.2, pitch: 0, spread: 200 },
-      melodic: { volume: 0.3, muted: false, enabled: true, octave: 4 },
+      ambientPad: { volume: 0.4, muted: false, enabled: true, filterFreq: 600, resonance: 1.2 },
+      granular: { volume: 0.2, muted: false, enabled: false, density: 0.1, grainSize: 0.2, pitch: 0, spread: 200 },
+      melodic: { volume: 0.5, muted: false, enabled: true, octave: 4 },
       harmonicDrone: {
-        volume: 0.15,
+        volume: 0.35,
         muted: false,
         enabled: true,
         changeInterval: 12,
@@ -480,11 +462,11 @@ export const PRESETS: Preset[] = [{
     structure: { density: 2, randomness: 0.1, layering: "dense", generativePattern: "static-drone" },
     mix: { width: 1, tapeSaturation: 0.4, volume: 0.8 },
     instruments: {
-      ambientPad: { volume: 0.5, muted: false, enabled: true, filterFreq: 300, resonance: 0.8 },
-      granular: { volume: 0.2, muted: false, enabled: true, density: 0.05, grainSize: 0.3, pitch: -2, spread: 500 },
-      melodic: { volume: 0.05, muted: false, enabled: false, octave: 2 },
+      ambientPad: { volume: 0.65, muted: false, enabled: true, filterFreq: 250, resonance: 0.6 },
+      granular: { volume: 0.35, muted: false, enabled: true, density: 0.08, grainSize: 0.4, pitch: -2, spread: 700 },
+      melodic: { volume: 0.15, muted: false, enabled: false, octave: 2 },
       harmonicDrone: {
-        volume: 0.6,
+        volume: 0.75,
         muted: false,
         enabled: true,
         changeInterval: 16,

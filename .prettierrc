@@ -3,7 +3,7 @@
 	"singleQuote": true,
 	"objectWrap": "collapse",
 	"trailingComma": "none",
-	"svelteBracketNewLine": false,
+  "bracketSameLine": false,
 	"printWidth": 120,
 	"plugins": ["prettier-plugin-svelte", "prettier-plugin-tailwindcss"],
 	"overrides": [{ "files": "*.svelte", "options": { "parser": "svelte" } }],

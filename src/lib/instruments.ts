@@ -21,7 +21,7 @@ export type GranularParams = {
   spread: number;
 };
 
-interface Params {
+export interface Params {
   volume: number;
   muted: boolean;
   enabled: boolean;
@@ -37,8 +37,8 @@ export interface MelodicParams extends Params {
 }
 
 export interface HarmonicDroneParams extends Params {
-  changeInterval: number; // beats
-  voiceLeading: number; // 0-1
+  changeInterval: number;
+  voiceLeading: number;
   voiceCount: number;
   spread: number;
 }
@@ -49,6 +49,14 @@ export interface RhythmicPulseParams extends Params {
   layerCount: number;
   tempoVar: number;
   syncopation: number;
+}
+
+export interface FieldRecordingParams extends Params {
+  textureType: 'rain' | 'forest' | 'urban' | 'wind' | 'ocean';
+  density: number;
+  filterFreq: number;
+  reverb: number;
+  fadeTime: number;
 }
 
 export class GranularSynth {
@@ -62,7 +70,7 @@ export class GranularSynth {
 
   constructor(initialParams: Partial<GranularParams> = {}) {
     const defaultParams: GranularParams = {
-      volume: 0.15,
+      volume: 0.35,
       muted: false,
       enabled: true,
       density: 0.2,
@@ -154,10 +162,9 @@ export class GranularSynth {
 
     const grainDuration = params.grainSize * (0.8 + Math.random() * 0.4);
 
-    // Apply stereo spread by panning individual grains
     if (params.spread > 0) {
-      const pan = (Math.random() - 0.5) * (params.spread / 500); // Convert spread to pan range
-      panner.pan.value = Math.max(-1, Math.min(1, pan)); // Clamp to valid pan range
+      const pan = (Math.random() - 0.5) * (params.spread / 500);
+      panner.pan.value = Math.max(-1, Math.min(1, pan));
     }
 
     const now = Tone.now();
@@ -212,7 +219,7 @@ export class AmbientPadSynth {
 
   constructor(initialParams: Partial<AmbientPadParams> = {}) {
     const defaultParams: AmbientPadParams = {
-      volume: 0.4,
+      volume: 0.6,
       muted: false,
       enabled: true,
       filterFreq: 400,
@@ -313,7 +320,7 @@ export class MelodicSynth {
   private scheduler?: ReturnType<typeof setTimeout>;
 
   constructor(initialParams: Partial<MelodicParams> = {}) {
-    const defaultParams: MelodicParams = { volume: 0.3, muted: false, enabled: true, octave: 4, ...initialParams };
+    const defaultParams: MelodicParams = { volume: 0.5, muted: false, enabled: true, octave: 4, ...initialParams };
 
     this.params$ = new BehaviorSubject(defaultParams);
     this.output = new Tone.Gain(defaultParams.volume);
@@ -350,7 +357,6 @@ export class MelodicSynth {
       const params = this.params$.value;
       if (!params.enabled || params.muted || this.currentScale.length === 0) return;
 
-      // Very sparse notes - 3-8 seconds between notes
       const nextInterval = 3000 + Math.random() * 5000;
 
       this.scheduler = setTimeout(() => {
@@ -415,9 +421,6 @@ export class MelodicSynth {
   }
 }
 
-/**
- * Harmonic drone instrument for static foundation with voice leading
- */
 export class HarmonicDroneSynth {
   private synths: Tone.PolySynth[];
   private output: Tone.Gain;
@@ -430,10 +433,10 @@ export class HarmonicDroneSynth {
 
   constructor(initialParams: Partial<HarmonicDroneParams> = {}) {
     const defaultParams: HarmonicDroneParams = {
-      volume: 0.25,
+      volume: 0.45,
       muted: false,
       enabled: true,
-      changeInterval: 8, // beats
+      changeInterval: 8,
       voiceLeading: 0.7,
       voiceCount: 4,
       spread: 1.5,
@@ -463,6 +466,15 @@ export class HarmonicDroneSynth {
     this.subscriptions.push(
       this.params$.pipe(map(params => params.volume), takeUntil(this.destroy$)).subscribe(volume => {
         this.output.gain.value = volume;
+      }),
+      this.params$.subscribe(params => {
+        if (params.enabled && !params.muted) {
+          if (this.currentChord.length > 0) {
+            this.updateDroneChord();
+          }
+        } else {
+          this.stopAllNotes();
+        }
       }),
     );
   }
@@ -498,6 +510,15 @@ export class HarmonicDroneSynth {
         this.activeNotes.add(noteString);
       }
     }
+  }
+
+  private stopAllNotes(): void {
+    for (const noteString of this.activeNotes) {
+      for (const synth of this.synths) {
+        synth.triggerRelease(noteString);
+      }
+    }
+    this.activeNotes.clear();
   }
 
   updateParams(newParams: Partial<HarmonicDroneParams>): void {
@@ -566,7 +587,7 @@ export class RhythmicPulseSynth {
 
   constructor(initialParams: Partial<RhythmicPulseParams> = {}) {
     const defaultParams: RhythmicPulseParams = {
-      volume: 0.2,
+      volume: 0.4,
       muted: false,
       enabled: true,
       baseTempo: 90,

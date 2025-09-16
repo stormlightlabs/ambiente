@@ -28,12 +28,19 @@
 
 - Continuous Texture Generation
     - Replace step-sequencer patterns with organic, evolving ambient textures
-- Five Core Instruments:
+- Core Instruments:
     - `ambientPad`: Sustained harmonic layers with filter automation
     - `granular`: Textural grains with density/size/pitch modulation
     - `melodic`: Sparse melodic elements based on scale relationships
     - `harmonicDrone`: Static harmonic foundation with voice leading
     - `rhythmicPulse`: Subtle probability-based rhythmic textures
+    - `fieldRecording`: Nature sounds, urban ambience textures
+    - `vocalPad`: Ethereal vocal-like sustained tones
+    - `arpeggiator`: Flowing melodic patterns
+- Advanced Effects:
+    - Spectral processing, granular delay, convolution reverb
+    - Tape saturation, modulated filters, stereo imaging
+    - Probability-based ornaments, adaptive dynamics
 - Preset Templates: Load complete ambient configurations (Eno-style generative music)
     - All texture parameters automatable through reactive streams
     - Instruments respect current key/mode for harmonic coherence
@@ -56,6 +63,14 @@
 - Implement CRUD operations for user compositions
 - Create import/export functionality
 - Build preset management system
+
+### Randomization System
+
+- Implement reactive randomization engine for rhythm and melody variation
+- Create pattern randomizer with music theory constraints
+- Add probabilistic chord progression substitutions
+- Build intelligent constraint system for musical coherence
+- Integrate randomization controls into player UI
 
 ### Step Sequencer (ToneMatrix inspired!)
 

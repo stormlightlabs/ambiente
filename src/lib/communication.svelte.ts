@@ -1,7 +1,13 @@
 import { BehaviorSubject, type Observable, type Subscription } from "rxjs";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
 import { InstrumentType } from "./audio";
-import { AudioEngine, type AudioEngineState, type AudioEvent, createAmbientAudioEngine } from "./audio-engine";
+import {
+  AudioEngine,
+  type AudioEngineState,
+  type AudioEvent,
+  createAmbientAudioEngine,
+  type RandomizationParams,
+} from "./audio-engine";
 import { AMBIENT_PROGRESSIONS, generateProgression, generateScale, Mode, Note } from "./theory";
 import type { Optional } from "./types";
 
@@ -38,13 +44,20 @@ export class AppStateManager {
     currentChord: 0,
     volume: 0.7,
     instruments: new SvelteSet([InstrumentType.Pad, InstrumentType.Atmosphere]),
+    randomization: {
+      enabled: false,
+      rhythmVariability: 0.3,
+      melodicVariability: 0.2,
+      chordProgression: 0.1,
+      patternEvolution: 0.15,
+      constraintStrength: 0.7,
+    },
   });
 
   private history = $state<HistoryState<UndoableState>>({ past: [], present: { ...this.audioState }, future: [] });
   private events = $state<AudioEvent[]>([]);
 
   constructor() {
-    // Initialize chord progression based on initial state
     this.updateChordProgression();
   }
 
@@ -77,7 +90,6 @@ export class AppStateManager {
           this.events.shift();
         }
       }),
-      // Sync chord progression from audio engine to local subject
       this.audioEngine.getCurrentChord$().subscribe((chord: Note[]) => {
         this.currentChordSubject.next(chord);
       }),
@@ -141,7 +153,6 @@ export class AppStateManager {
     if (this.audioEngine) {
       this.audioEngine.setTempo(tempo);
     }
-    // Update local state immediately for UI
     this.audioState.tempo = Math.max(40, Math.min(200, tempo));
   }
 
@@ -149,12 +160,11 @@ export class AppStateManager {
     if (this.audioEngine) {
       this.audioEngine.setKeyAndMode(key, mode);
     }
-    // Update local state immediately for UI
+
     this.audioState.key = key;
     this.audioState.mode = mode;
     this.audioState.currentChord = 0;
 
-    // Update chord progression for immediate UI feedback
     this.updateChordProgression();
   }
 
@@ -162,7 +172,7 @@ export class AppStateManager {
     if (this.audioEngine) {
       this.audioEngine.setVolume(volume);
     }
-    // Update local state immediately for UI
+
     this.audioState.volume = Math.max(0, Math.min(1, volume));
   }
 
@@ -170,7 +180,6 @@ export class AppStateManager {
     if (this.audioEngine) {
       this.audioEngine.toggleInstrument(instrument);
     } else {
-      // Update local state immediately for UI
       if (this.audioState.instruments.has(instrument)) {
         this.audioState.instruments.delete(instrument);
       } else {
@@ -187,6 +196,14 @@ export class AppStateManager {
   ): void {
     if (this.audioEngine) {
       this.audioEngine.automateParameter(instrumentType, paramPath, targetValue, duration);
+    }
+  }
+
+  setRandomization(params: Partial<RandomizationParams>): void {
+    if (this.audioEngine) {
+      this.audioEngine.setRandomization(params);
+    } else {
+      Object.assign(this.audioState.randomization, params);
     }
   }
 
@@ -215,6 +232,7 @@ export class AppStateManager {
     this.audioEngine!.setTempo(state.tempo);
     this.audioEngine!.setKeyAndMode(state.key, state.mode);
     this.audioEngine!.setVolume(state.volume);
+    this.audioEngine!.setRandomization(state.randomization);
 
     const currentInstruments = new SvelteSet(this.audioState.instruments);
     for (const instrument of state.instruments) {
@@ -241,7 +259,6 @@ export class AppStateManager {
   }
 
   getCurrentChord$(): Observable<Note[]> {
-    // Always return local observable that syncs with audio engine when available
     return this.currentChordSubject.asObservable();
   }
 

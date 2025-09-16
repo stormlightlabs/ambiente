@@ -23,20 +23,146 @@ export interface AudioEngineState {
   currentChord: number;
   volume: number;
   instruments: SvelteSet<InstrumentType>;
+  randomization: RandomizationParams;
 }
 
 export type AudioEventKind = "play" | "pause" | "stop" | "chord-change" | "parameter-change" | "instrument-toggle";
-export interface AudioEventData {
-  chord?: Note[];
-  index?: number;
-  instrument?: InstrumentType;
-  enabled?: boolean;
-  [key: string]: unknown;
-}
-
+export type AudioEventData = { chord?: Note[]; index?: number; instrument?: InstrumentType; enabled?: boolean };
 export type AudioEvent = { type: AudioEventKind; timestamp: number; data?: AudioEventData };
 export type PatternStep = { note: Note; velocity: number; duration: string; enabled: boolean };
 export type InstrumentPattern = { type: InstrumentType; steps: PatternStep[]; length: number; enabled: boolean };
+
+export interface RandomizationParams {
+  enabled: boolean;
+  /** 0-1, probability of rhythm changes */
+  rhythmVariability: number;
+  /** 0-1, probability of note substitutions */
+  melodicVariability: number;
+  /** 0-1, probability of chord substitutions */
+  chordProgression: number;
+  /** 0-1, probability of pattern mutations */
+  patternEvolution: number;
+  /** 0-1, constraint strength for musical coherence */
+  constraintStrength: number;
+  /** For reproducible randomization */
+  seed?: number;
+}
+
+class PatternRandomizer {
+  private static seededRandom(seed: number): number {
+    const x = Math.sin(seed) * 10_000;
+    return x - Math.floor(x);
+  }
+
+  static randomizeRhythm(pattern: InstrumentPattern, variability: number, seed = Math.random()): InstrumentPattern {
+    if (variability === 0) return pattern;
+
+    const randomizedSteps = pattern.steps.map((step, index) => {
+      const stepSeed = seed + index * 0.1;
+      const random = this.seededRandom(stepSeed);
+
+      if (random < variability * 0.3) {
+        return { ...step, enabled: !step.enabled };
+      }
+
+      if (random < variability * 0.5) {
+        const velocityVariation = (random - 0.5) * 0.2 * variability;
+        return { ...step, velocity: Math.max(0.1, Math.min(1, step.velocity + velocityVariation)) };
+      }
+
+      return step;
+    });
+
+    return { ...pattern, steps: randomizedSteps };
+  }
+
+  static randomizeMelody(
+    pattern: InstrumentPattern,
+    scale: Note[],
+    variability: number,
+    seed = Math.random(),
+  ): InstrumentPattern {
+    if (variability === 0 || scale.length === 0) return pattern;
+
+    const randomizedSteps = pattern.steps.map((step, index) => {
+      const stepSeed = seed + index * 0.2;
+      const random = this.seededRandom(stepSeed);
+
+      if (random < variability * 0.4 && step.enabled) {
+        const currentIndex = scale.indexOf(step.note);
+        if (currentIndex !== -1) {
+          const maxJump = Math.ceil(scale.length * 0.3);
+          const direction = random < 0.5 ? -1 : 1;
+          const jump = Math.floor(random * maxJump) + 1;
+          const newIndex = (currentIndex + direction * jump + scale.length) % scale.length;
+
+          return { ...step, note: scale[newIndex] };
+        }
+      }
+
+      return step;
+    });
+
+    return { ...pattern, steps: randomizedSteps };
+  }
+
+  static randomizeProgression(
+    progression: Note[][],
+    scale: Note[],
+    variability: number,
+    constraintStrength = 0.7,
+    seed = Math.random(),
+  ): Note[][] {
+    if (variability === 0 || scale.length === 0) return progression;
+
+    return progression.map((chord, index) => {
+      const chordSeed = seed + index * 0.3;
+      const random = this.seededRandom(chordSeed);
+
+      if (random < variability * 0.3) {
+        const rootIndex = scale.indexOf(chord[0]);
+        if (rootIndex !== -1) {
+          const maxJump = Math.max(1, Math.floor((1 - constraintStrength) * scale.length * 0.5));
+          const direction = random < 0.5 ? -1 : 1;
+          const jump = Math.floor(random * maxJump) + 1;
+          const newRootIndex = (rootIndex + direction * jump + scale.length) % scale.length;
+
+          return chord.map((_, chordIndex) => {
+            const noteOffset = chordIndex * 2;
+            return scale[(newRootIndex + noteOffset) % scale.length];
+          });
+        }
+      }
+
+      return chord;
+    });
+  }
+
+  static evolvePattern(pattern: InstrumentPattern, evolution: number, seed = Math.random()): InstrumentPattern {
+    if (evolution === 0) return pattern;
+
+    const mutatedSteps = pattern.steps.map((step, index) => {
+      const mutationSeed = seed + index * 0.4;
+      const random = this.seededRandom(mutationSeed);
+
+      if (random < evolution * 0.25) {
+        const durations = ["8n", "4n", "2n", "1m"];
+        const currentIndex = durations.indexOf(step.duration);
+        const newIndex = Math.max(0, Math.min(durations.length - 1, currentIndex + (random < 0.5 ? -1 : 1)));
+
+        return { ...step, duration: durations[newIndex] };
+      }
+
+      if (random < evolution * 0.15) {
+        return { ...step, enabled: random < 0.7 };
+      }
+
+      return step;
+    });
+
+    return { ...pattern, steps: mutatedSteps };
+  }
+}
 
 export class AudioEngine {
   private readonly state$: BehaviorSubject<AudioEngineState>;
@@ -45,6 +171,7 @@ export class AudioEngine {
 
   private readonly synthInstances: Map<InstrumentType, Tone.PolySynth>;
   private readonly patterns$: BehaviorSubject<Map<InstrumentType, InstrumentPattern>>;
+  private readonly randomizedPatterns$: Observable<Map<InstrumentType, InstrumentPattern>>;
 
   private readonly ambientInstruments: Map<
     InstrumentType,
@@ -74,6 +201,14 @@ export class AudioEngine {
       currentChord: 0,
       volume: 0.7,
       instruments: new SvelteSet([InstrumentType.Pad, InstrumentType.Atmosphere]),
+      randomization: {
+        enabled: false,
+        rhythmVariability: 0.3,
+        melodicVariability: 0.2,
+        chordProgression: 0.1,
+        patternEvolution: 0.15,
+        constraintStrength: 0.7,
+      },
       ...initialState,
     });
 
@@ -85,12 +220,69 @@ export class AudioEngine {
     );
 
     this.chordProgression$ = this.state$.pipe(
-      map(state => ({ key: state.key, mode: state.mode })),
-      distinctUntilChanged((a, b) => a.key === b.key && a.mode === b.mode),
-      map(({ key, mode }) => {
+      map(state => ({ key: state.key, mode: state.mode, randomization: state.randomization })),
+      distinctUntilChanged((a, b) =>
+        a.key === b.key && a.mode === b.mode && a.randomization.chordProgression === b.randomization.chordProgression
+      ),
+      map(({ key, mode, randomization }) => {
         const scale = generateScale(key, mode);
         this.currentScale$.next(scale);
-        return generateProgression(scale, [...AMBIENT_PROGRESSIONS.emotional]);
+        const baseProgression = generateProgression(scale, [...AMBIENT_PROGRESSIONS.emotional]);
+
+        if (randomization.enabled && randomization.chordProgression > 0) {
+          return PatternRandomizer.randomizeProgression(
+            baseProgression,
+            scale,
+            randomization.chordProgression,
+            randomization.constraintStrength,
+            randomization.seed,
+          );
+        }
+        return baseProgression;
+      }),
+      takeUntil(this.destroy$),
+    );
+
+    this.randomizedPatterns$ = combineLatest([
+      this.patterns$,
+      this.currentScale$,
+      this.state$.pipe(map(state => state.randomization)),
+    ]).pipe(
+      map(([patterns, scale, randomization]) => {
+        if (!randomization.enabled) return patterns;
+
+        const randomizedMap = new Map<InstrumentType, InstrumentPattern>();
+        for (const [type, pattern] of patterns.entries()) {
+          let randomizedPattern = pattern;
+
+          if (randomization.rhythmVariability > 0) {
+            randomizedPattern = PatternRandomizer.randomizeRhythm(
+              randomizedPattern,
+              randomization.rhythmVariability,
+              randomization.seed,
+            );
+          }
+
+          if (randomization.melodicVariability > 0) {
+            randomizedPattern = PatternRandomizer.randomizeMelody(
+              randomizedPattern,
+              scale,
+              randomization.melodicVariability,
+              randomization.seed,
+            );
+          }
+
+          if (randomization.patternEvolution > 0) {
+            randomizedPattern = PatternRandomizer.evolvePattern(
+              randomizedPattern,
+              randomization.patternEvolution,
+              randomization.seed,
+            );
+          }
+
+          randomizedMap.set(type, randomizedPattern);
+        }
+        return randomizedMap;
       }),
       takeUntil(this.destroy$),
     );
@@ -125,7 +317,7 @@ export class AudioEngine {
       this.events$.next({ type: "chord-change", timestamp: Tone.now(), data: { chord, index } });
     });
 
-    combineLatest([this.clock$, this.patterns$, this.currentChord$]).pipe(
+    combineLatest([this.clock$, this.randomizedPatterns$, this.currentChord$]).pipe(
       filter(() => this.state$.value.isPlaying),
       takeUntil(this.destroy$),
     ).subscribe(([beat, patterns, currentChord]) => {
@@ -345,7 +537,6 @@ export class AudioEngine {
       case InstrumentType.Percussion: {
         return [EffectType.Compressor, EffectType.Reverb];
       }
-      // Ambient instruments use built-in effects
       case InstrumentType.AmbientPad:
       case InstrumentType.Granular:
       case InstrumentType.Melodic:
@@ -383,6 +574,13 @@ export class AudioEngine {
       await initializeAudio();
       Tone.getTransport().start();
 
+      // Enable all active ambient instruments
+      for (const [type, instrument] of this.ambientInstruments.entries()) {
+        if (currentState.instruments.has(type)) {
+          instrument.updateParams({ enabled: true });
+        }
+      }
+
       this.updateState(state => ({ ...state, isPlaying: true }));
       this.events$.next({ type: "play", timestamp: Tone.now() });
     } else {
@@ -411,7 +609,6 @@ export class AudioEngine {
       this.patterns$.next(patterns);
     }
 
-    // Force chord progression to reset immediately for real-time updates
     const scale = generateScale(key, mode);
     this.currentScale$.next(scale);
     const newProgression = generateProgression(scale, [...AMBIENT_PROGRESSIONS.emotional]);
@@ -448,6 +645,27 @@ export class AudioEngine {
     const patterns = new Map(this.patterns$.value);
     patterns.set(type, pattern);
     this.patterns$.next(patterns);
+  }
+
+  setRandomization(params: Partial<RandomizationParams>): void {
+    const currentState = this.state$.value;
+    const updatedRandomization = { ...currentState.randomization, ...params };
+
+    if (
+      (params.enabled && !currentState.randomization.enabled)
+      || Math.abs((params.rhythmVariability || 0) - currentState.randomization.rhythmVariability) > 0.1
+      || Math.abs((params.melodicVariability || 0) - currentState.randomization.melodicVariability) > 0.1
+      || Math.abs((params.chordProgression || 0) - currentState.randomization.chordProgression) > 0.05
+      || Math.abs((params.patternEvolution || 0) - currentState.randomization.patternEvolution) > 0.1
+    ) {
+      updatedRandomization.seed = Math.random();
+    }
+
+    this.updateState(state => ({ ...state, randomization: updatedRandomization }));
+  }
+
+  getRandomization(): RandomizationParams {
+    return this.state$.value.randomization;
   }
 
   getSynth(type: InstrumentType): Tone.PolySynth | undefined {
@@ -493,6 +711,12 @@ export class AudioEngine {
         instrument.updateParams({ enabled: false });
       } else if (instrument instanceof AmbientPadSynth) {
         instrument.updateParams({ enabled: false });
+      } else if (instrument instanceof MelodicSynth) {
+        instrument.updateParams({ enabled: false });
+      } else if (instrument instanceof HarmonicDroneSynth) {
+        instrument.updateParams({ enabled: false });
+      } else if (instrument instanceof RhythmicPulseSynth) {
+        instrument.updateParams({ enabled: false });
       }
     }
 
@@ -525,6 +749,14 @@ export const createAmbientAudioEngine = (initialState?: Partial<AudioEngineState
     mode: Mode.Aeolian,
     volume: 0.6,
     instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Granular]),
+    randomization: {
+      enabled: false,
+      rhythmVariability: 0.2,
+      melodicVariability: 0.15,
+      chordProgression: 0.05,
+      patternEvolution: 0.1,
+      constraintStrength: 0.8,
+    },
   };
 
   const finalState = { ...defaultState, ...initialState };

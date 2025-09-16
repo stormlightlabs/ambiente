@@ -20,6 +20,9 @@ export enum InstrumentType {
   Melodic = "melodic",
   HarmonicDrone = "harmonicDrone",
   RhythmicPulse = "rhythmicPulse",
+  FieldRecording = "fieldRecording",
+  VocalPad = "vocalPad",
+  Arpeggiator = "arpeggiator",
 }
 
 export type SynthParams = {
