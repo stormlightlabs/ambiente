@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { AppStateManager } from '$lib/communication.svelte';
-	import PresetPlayer from '$lib/components/PresetPlayer.svelte';
 	import PlayerControls from '$lib/components/PlayerControls.svelte';
+	import PresetPlayer from '$lib/components/PresetPlayer.svelte';
 	import { type Note } from '$lib/theory';
 
 	const appState = new AppStateManager();
@@ -34,7 +34,8 @@
 		onSetTempo={appState.setTempo.bind(appState)}
 		onSetKeyAndMode={appState.setKeyAndMode.bind(appState)}
 		onSetVolume={appState.setVolume.bind(appState)}
-		onToggleInstrument={appState.toggleInstrument.bind(appState)} />
+		onToggleInstrument={appState.toggleInstrument.bind(appState)}
+		onApplyPresetTexture={appState.applyPresetTexture.bind(appState)} />
 </div>
 
 <style>

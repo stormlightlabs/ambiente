@@ -131,6 +131,13 @@ export class AppStateManager {
     this.uiState.selectedPreset = preset;
   }
 
+  applyPresetTexture(texture: any): void {
+    this.ensureAudioEngine();
+    if (this.audioEngine) {
+      this.audioEngine.applyPresetTexture(texture);
+    }
+  }
+
   toggleRecording(): void {
     this.uiState.isRecording = !this.uiState.isRecording;
   }

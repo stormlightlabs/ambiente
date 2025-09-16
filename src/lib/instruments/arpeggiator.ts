@@ -3,7 +3,6 @@ import { ModulatedFiltersEffect } from "$lib/effects/modulated-filters";
 import { ProbabilityOrnamentsEffect } from "$lib/effects/probability-ornaments";
 import type { ArpeggiatorParams } from "$lib/types/params";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
-import { filter, map, takeUntil } from "rxjs/operators";
 import * as Tone from "tone";
 import { Note, NoteUtilities } from "../theory";
 
@@ -90,53 +89,29 @@ export class ArpeggiatorSynth {
   }
 
   private initializeArpeggiator(): void {
-    this.subscriptions.push(
-      this.params$.pipe(map(params => params.enabled && !params.muted), filter(Boolean), takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.startArpeggiator();
-        }),
-      this.params$.pipe(map(params => !params.enabled || params.muted), filter(Boolean), takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.stopArpeggiator();
-        }),
-      this.params$.subscribe(params => {
-        this.output.gain.value = params.muted ? 0 : params.volume;
-        this.filter.frequency.value = 800 + (params.tempo - 120) * 2; // Higher tempo = brighter filter
-        this.delay.feedback.value = Math.min(0.5, 0.2 + params.swing * 0.3);
-      }),
-    );
+    this.subscriptions.push(this.params$.subscribe(params => {
+      this.output.gain.value = params.muted ? 0 : params.volume;
+      this.filter.frequency.value = 800 + (params.tempo - 120) * 2; // Higher tempo = brighter filter
+      this.delay.feedback.value = Math.min(0.5, 0.2 + params.swing * 0.3);
+    }));
   }
 
-  private startArpeggiator(): void {
-    this.stopArpeggiator();
+  tick(time: number, tickDuration: number): void {
+    const params = this.params$.value;
+    if (!params.enabled || params.muted || this.currentScale.length === 0) {
+      return;
+    }
 
-    const scheduleNext = () => {
-      const params = this.params$.value;
-      if (!params.enabled || params.muted || this.currentScale.length === 0) return;
+    // Tick internal effects
+    this.granularDelay.tick(time, tickDuration);
+    this.probabilityOrnaments.tick(time, tickDuration);
 
-      if (Math.random() < params.probability) {
-        this.triggerArpNote();
-      }
-
-      // Calculate next interval with swing
-      const baseInterval = (60 / params.tempo) * 1000 * 0.25; // 16th notes
-      const swingOffset = (this.currentNoteIndex % 2 === 1) ? baseInterval * params.swing : 0;
-      const nextInterval = baseInterval + swingOffset + (Math.random() - 0.5) * 20;
-
-      this.arpScheduler = setTimeout(scheduleNext, Math.max(50, nextInterval));
-    };
-
-    scheduleNext();
-  }
-
-  private stopArpeggiator(): void {
-    if (this.arpScheduler) {
-      clearTimeout(this.arpScheduler);
-      this.arpScheduler = undefined;
+    if (Math.random() < params.probability) {
+      this.triggerArpNote(time);
     }
   }
 
-  private triggerArpNote(): void {
+  private triggerArpNote(time: number): void {
     const params = this.params$.value;
     if (this.currentScale.length === 0) return;
 
@@ -151,7 +126,7 @@ export class ArpeggiatorSynth {
     const noteString = `${NoteUtilities.toString(note)}${octave}`;
     const velocity = 0.1 + Math.random() * 0.3;
 
-    this.synth.triggerAttackRelease(noteString, params.noteDuration, Tone.now(), velocity);
+    this.synth.triggerAttackRelease(noteString, params.noteDuration, time, velocity);
 
     this.advanceNoteIndex();
   }
@@ -228,7 +203,8 @@ export class ArpeggiatorSynth {
       newParams.tempo && Math.abs(newParams.tempo - currentParams.tempo) > 10 && updatedParams.enabled
       && !updatedParams.muted
     ) {
-      this.startArpeggiator();
+      // The arpeggiator will automatically adjust to the new tempo via the tick method.
+      // No need to restart it manually.
     }
   }
 
@@ -243,8 +219,6 @@ export class ArpeggiatorSynth {
   dispose(): void {
     this.destroy$.next();
     this.destroy$.complete();
-
-    this.stopArpeggiator();
 
     for (const sub of this.subscriptions) sub.unsubscribe();
     this.subscriptions = [];

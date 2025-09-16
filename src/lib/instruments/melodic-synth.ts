@@ -1,6 +1,6 @@
 import type { MelodicParams } from "$lib/types/params";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
-import { filter, map, takeUntil } from "rxjs/operators";
+import { map, takeUntil } from "rxjs/operators";
 import * as Tone from "tone";
 import { Note, NoteUtilities } from "../theory";
 
@@ -11,7 +11,6 @@ export class MelodicSynth {
   private subscriptions: Subscription[] = [];
   private destroy$ = new BehaviorSubject<void>(undefined);
   private currentScale: Note[] = [];
-  private scheduler?: ReturnType<typeof setTimeout>;
 
   constructor(initialParams: Partial<MelodicParams> = {}) {
     const defaultParams: MelodicParams = { volume: 0.5, muted: false, enabled: true, octave: 4, ...initialParams };
@@ -30,48 +29,28 @@ export class MelodicSynth {
 
   private initializeMelodicScheduling(): void {
     this.subscriptions.push(
-      this.params$.pipe(map(params => params.enabled && !params.muted), filter(Boolean), takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.startMelodicScheduling();
-        }),
-      this.params$.pipe(map(params => !params.enabled || params.muted), filter(Boolean), takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.stopMelodicScheduling();
-        }),
       this.params$.pipe(map(params => params.volume), takeUntil(this.destroy$)).subscribe(volume => {
         this.output.gain.value = volume;
       }),
     );
   }
 
-  private startMelodicScheduling(): void {
-    this.stopMelodicScheduling();
+  tick(time: number, tickDuration: number): void {
+    const params = this.params$.value;
+    if (!params.enabled || params.muted || this.currentScale.length === 0) {
+      return;
+    }
 
-    const scheduleNextNote = () => {
-      const params = this.params$.value;
-      if (!params.enabled || params.muted || this.currentScale.length === 0) return;
-
-      const nextInterval = 3000 + Math.random() * 5000;
-
-      this.scheduler = setTimeout(() => {
-        this.triggerMelodicNote();
-        scheduleNextNote();
-      }, nextInterval);
-    };
-
-    scheduleNextNote();
-  }
-
-  private stopMelodicScheduling(): void {
-    if (this.scheduler) {
-      clearTimeout(this.scheduler);
-      this.scheduler = undefined;
+    if (Math.random() < 0.1) {
+      this.triggerMelodicNote(time);
     }
   }
 
-  private triggerMelodicNote(): void {
+  private triggerMelodicNote(time: number): void {
     const params = this.params$.value;
-    if (this.currentScale.length === 0) return;
+    if (this.currentScale.length === 0) {
+      return;
+    }
 
     const scaleIndex = Math.floor(Math.random() * Math.random() * this.currentScale.length);
     const note = this.currentScale[scaleIndex];
@@ -80,7 +59,7 @@ export class MelodicSynth {
     const duration = 1 + Math.random() * 3;
     const velocity = 0.1 + Math.random() * 0.2;
 
-    this.synth.triggerAttackRelease(noteString, duration, Tone.now(), velocity);
+    this.synth.triggerAttackRelease(noteString, duration, time, velocity);
   }
 
   setScale(scale: Note[]): void {
@@ -104,8 +83,6 @@ export class MelodicSynth {
   dispose(): void {
     this.destroy$.next();
     this.destroy$.complete();
-
-    this.stopMelodicScheduling();
 
     for (const sub of this.subscriptions) sub.unsubscribe();
     this.subscriptions = [];

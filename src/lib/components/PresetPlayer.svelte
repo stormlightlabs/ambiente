@@ -4,6 +4,7 @@
 	import { Mode, ModeUtilities, Note, NoteUtilities } from '$lib/theory';
 	import { InstrumentType } from '$lib/types/instruments';
 	import type { Preset } from '$lib/types/presets';
+	import { twMerge } from 'tailwind-merge';
 
 	type Props = {
 		currentInstruments: Set<InstrumentType>;
@@ -12,6 +13,7 @@
 		onSetKeyAndMode: (key: Note, mode: Mode) => void;
 		onSetVolume: (volume: number) => void;
 		onToggleInstrument: (instrument: InstrumentType) => void;
+		onApplyPresetTexture?: (texture: any) => void;
 	};
 
 	const {
@@ -20,7 +22,8 @@
 		onSetTempo,
 		onSetKeyAndMode,
 		onSetVolume,
-		onToggleInstrument
+		onToggleInstrument,
+		onApplyPresetTexture
 	}: Props = $props();
 	const themes = getThemes();
 
@@ -36,7 +39,6 @@
 		selectedPresetId = preset.id;
 		onSetSelectedPreset(preset.id);
 
-		// Set key and mode first to ensure chord progression updates
 		if (preset.config.key && preset.config.mode) {
 			onSetKeyAndMode(preset.config.key, preset.config.mode);
 		}
@@ -54,12 +56,10 @@
 			onSetTempo(ambientPreset.tempo);
 			onSetVolume(ambientPreset.mix.volume);
 		} else {
-			// Apply preset config if no texture
 			if (preset.config.tempo) onSetTempo(preset.config.tempo);
 			if (preset.config.volume) onSetVolume(preset.config.volume);
 		}
 
-		// Update instruments after key/mode to ensure proper pattern generation
 		const targetInstruments = new Set<InstrumentType>(preset.config.instruments || new Set());
 		const currentInstrumentsCopy = new Set<InstrumentType>(currentInstruments);
 
@@ -73,6 +73,12 @@
 			if (!currentInstrumentsCopy.has(instrument)) {
 				onToggleInstrument(instrument);
 			}
+		}
+
+		if (preset.texture && onApplyPresetTexture) {
+			setTimeout(() => {
+				onApplyPresetTexture(preset.texture);
+			}, 100);
 		}
 	}
 
@@ -102,19 +108,25 @@
 	<div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
 		{#each filteredPresets as preset (preset.id)}
 			<div
-				class="cursor-pointer rounded-lg border-2 bg-surface-50 p-4 transition-all duration-200 hover:border-surface-500 hover:shadow-md dark:bg-surface-900 dark:hover:border-surface-400 {selectedPresetId ===
-				preset.id
-					? 'border-primary-600 bg-primary-50 dark:bg-primary-900/50'
-					: 'border-surface-200 dark:border-surface-700'}"
+				class={twMerge(
+					'cursor-pointer rounded-lg border-2 bg-surface-50 p-4',
+					'transition-all duration-200 hover:border-surface-500 hover:shadow-md dark:bg-surface-900 dark:hover:border-surface-400',
+					selectedPresetId === preset.id
+						? 'border-primary-600 bg-primary-50 dark:bg-primary-900/50'
+						: 'border-surface-200 dark:border-surface-700'
+				)}
 				onclick={() => loadPreset(preset)}
 				role="button"
 				tabindex="0"
 				onkeydown={(event_) => event_.key === 'Enter' && loadPreset(preset)}>
 				<div class="mb-3">
-					<h3 class="mb-2 text-lg font-medium text-surface-800 dark:text-surface-200">{preset.name}</h3>
+					<h3 class="mb-2 font-serif text-xl font-medium text-surface-800 dark:text-surface-200">{preset.name}</h3>
 					<p class="mb-2 text-sm leading-relaxed text-surface-600 dark:text-surface-400">{preset.description}</p>
 					<span
-						class="inline-block rounded-full bg-primary-100 px-2 py-1 text-xs font-medium text-primary-800 dark:bg-primary-900/50 dark:text-primary-400">
+						class={twMerge(
+							'inline-block rounded-full bg-primary-100 px-2 py-1 text-xs font-medium text-primary-800',
+							'dark:bg-primary-900/50 dark:text-primary-400'
+						)}>
 						{preset.theme}
 					</span>
 				</div>

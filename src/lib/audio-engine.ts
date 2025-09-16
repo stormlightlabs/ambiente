@@ -1,5 +1,5 @@
-import { BehaviorSubject, combineLatest, Observable, Subject, timer } from "rxjs";
-import { debounceTime, distinctUntilChanged, filter, map, scan, switchMap, takeUntil } from "rxjs/operators";
+import { BehaviorSubject, combineLatest, Observable, Subject } from "rxjs";
+import { debounceTime, distinctUntilChanged, map, take, takeUntil } from "rxjs/operators";
 import { SvelteSet } from "svelte/reactivity";
 import * as Tone from "tone";
 import { ambientMixer, createSynth, initializeAudio, noteToToneString, ParameterAutomation } from "./audio";
@@ -154,7 +154,6 @@ export class AudioEngine {
   >;
   private readonly currentScale$: BehaviorSubject<Note[]>;
 
-  private readonly clock$: Observable<number>;
   private readonly chordProgression$: Observable<Note[][]>;
   private readonly currentChord$: BehaviorSubject<Note[]>;
 
@@ -173,7 +172,7 @@ export class AudioEngine {
       tempo: 80,
       key: Note.C,
       mode: Mode.Ionian,
-      currentChord: 0,
+      currentChord: -1, // Initialize to -1 to ensure first chord is always processed
       volume: 0.7,
       instruments: new SvelteSet([InstrumentType.Pad, InstrumentType.Atmosphere]),
       randomization: {
@@ -186,13 +185,6 @@ export class AudioEngine {
       },
       ...initialState,
     });
-
-    this.clock$ = this.state$.pipe(
-      map(state => state.tempo),
-      distinctUntilChanged(),
-      switchMap(tempo => timer(0, this.tempoToMs(tempo))),
-      takeUntil(this.destroy$),
-    );
 
     this.chordProgression$ = this.state$.pipe(
       map(state => ({ key: state.key, mode: state.mode, randomization: state.randomization })),
@@ -276,33 +268,62 @@ export class AudioEngine {
       },
     );
 
-    combineLatest([
-      this.clock$.pipe(filter(() => this.state$.value.isPlaying), scan(count => count + 1, 0)),
-      this.chordProgression$,
-    ]).pipe(
-      map(([beat, progression]) => {
-        const chordIndex = Math.floor(beat / 8) % progression.length;
-        return { chord: progression[chordIndex], index: chordIndex };
-      }),
-      distinctUntilChanged((a, b) => a.index === b.index),
-      takeUntil(this.destroy$),
-    ).subscribe(({ chord, index }) => {
-      this.currentChord$.next(chord);
-      this.updateState(state => ({ ...state, currentChord: index }));
-      this.events$.next({ type: "chord-change", timestamp: Tone.now(), data: { chord, index } });
+    this.state$.pipe(map(s => s.tempo), distinctUntilChanged(), takeUntil(this.destroy$)).subscribe(tempo => {
+      Tone.getTransport().bpm.value = tempo;
     });
 
-    combineLatest([this.clock$, this.randomizedPatterns$, this.currentChord$]).pipe(
-      filter(() => this.state$.value.isPlaying),
-      takeUntil(this.destroy$),
-    ).subscribe(([beat, patterns, currentChord]) => {
-      this.playPatternStep(beat, patterns, currentChord);
-    });
+    Tone.getTransport().scheduleRepeat(time => {
+      if (!this.state$.value.isPlaying) return;
+
+      const totalTicks = Tone.getTransport().ticks;
+      const sixteenthNotes = Math.round(totalTicks / (Tone.getTransport().PPQ / 4));
+
+      combineLatest([this.chordProgression$, this.randomizedPatterns$]).pipe(take(1)).subscribe(
+        ([progression, patterns]) => {
+          if (progression.length === 0) {
+            return;
+          }
+
+          const chordIndex = Math.floor(sixteenthNotes / 8) % progression.length;
+          let chord = this.currentChord$.value;
+
+          if (this.state$.value.currentChord !== chordIndex) {
+            chord = progression[chordIndex];
+            this.currentChord$.next(chord);
+            this.updateState(state => ({ ...state, currentChord: chordIndex }));
+            this.events$.next({ type: "chord-change", timestamp: time, data: { chord, index: chordIndex } });
+
+            for (const [, instrument] of this.ambientInstruments.entries()) {
+              if (
+                instrument instanceof AmbientPadSynth
+                || instrument instanceof HarmonicDroneSynth
+                || instrument instanceof VocalPadSynth
+              ) {
+                instrument.setChord(chord, time);
+              }
+            }
+          }
+
+          const tickDuration = 60 / this.state$.value.tempo / 4;
+          this.playPatternStep(sixteenthNotes, patterns, chord, time);
+
+          for (const [, instrument] of this.ambientInstruments.entries()) {
+            if (
+              instrument instanceof ArpeggiatorSynth
+              || instrument instanceof MelodicSynth
+              || instrument instanceof GranularSynth
+              || instrument instanceof VocalPadSynth
+              || instrument instanceof RhythmicPulseSynth
+            ) {
+              instrument.tick(time, tickDuration);
+            }
+          }
+        },
+      );
+    }, "16n");
 
     this.state$.pipe(map(state => state.volume), distinctUntilChanged(), debounceTime(50), takeUntil(this.destroy$))
-      .subscribe(volume => {
-        ambientMixer.setMasterVolume(volume);
-      });
+      .subscribe(volume => ambientMixer.setMasterVolume(volume));
 
     this.state$.pipe(
       map(state => state.instruments),
@@ -310,9 +331,7 @@ export class AudioEngine {
         return a.size === b.size && [...a].every(x => b.has(x));
       }),
       takeUntil(this.destroy$),
-    ).subscribe(instruments => {
-      this.updateInstruments(instruments);
-    });
+    ).subscribe(instruments => this.updateInstruments(instruments));
 
     this.currentScale$.pipe(takeUntil(this.destroy$)).subscribe(scale => {
       for (const [, instrument] of this.ambientInstruments.entries()) {
@@ -330,23 +349,9 @@ export class AudioEngine {
         }
       }
     });
-
-    this.currentChord$.pipe(takeUntil(this.destroy$)).subscribe(chord => {
-      for (const [, instrument] of this.ambientInstruments.entries()) {
-        if (instrument instanceof AmbientPadSynth) {
-          instrument.setChord(chord);
-        }
-        if (instrument instanceof HarmonicDroneSynth) {
-          instrument.setChord(chord);
-        }
-        if (instrument instanceof VocalPadSynth) {
-          instrument.setChord(chord);
-        }
-      }
-    });
   }
 
-  private tempoToMs(tempo: number): number {
+  tempoToMs(tempo: number): number {
     return (60 / tempo) * 1000;
   }
 
@@ -362,7 +367,12 @@ export class AudioEngine {
     this.state$.next(updater(this.state$.value));
   }
 
-  private playPatternStep(beat: number, patterns: Map<InstrumentType, InstrumentPattern>, currentChord: Note[]): void {
+  private playPatternStep(
+    beat: number,
+    patterns: Map<InstrumentType, InstrumentPattern>,
+    currentChord: Note[],
+    time: number,
+  ): void {
     for (const [instrumentType, pattern] of patterns.entries()) {
       if (!pattern.enabled) {
         continue;
@@ -377,7 +387,7 @@ export class AudioEngine {
           const note = this.harmonizeNote(step.note, currentChord, instrumentType);
           const noteString = noteToToneString(note);
 
-          synth.triggerAttackRelease(noteString, step.duration, Tone.now(), step.velocity);
+          synth.triggerAttackRelease(noteString, step.duration, time, step.velocity);
         }
       }
     }
@@ -418,9 +428,9 @@ export class AudioEngine {
           if (instrument) {
             const channel = ambientMixer.getChannel(type);
             if (!channel) {
-              console.error("🎵 No channel found for instrument type:", type);
               return;
             }
+
             instrument.connect(channel);
             this.ambientInstruments.set(type, instrument);
 
@@ -601,7 +611,6 @@ export class AudioEngine {
       await initializeAudio();
       Tone.getTransport().start();
 
-      // Enable all active ambient instruments
       for (const [type, instrument] of this.ambientInstruments.entries()) {
         if (currentState.instruments.has(type)) {
           instrument.updateParams({ enabled: true });
@@ -648,6 +657,40 @@ export class AudioEngine {
     const clampedVolume = Math.max(0, Math.min(1, volume));
     this.updateState(state => ({ ...state, volume: clampedVolume }));
   }
+
+  applyPresetTexture(texture: any): void {
+    if (!texture.instruments) {
+      return;
+    }
+
+    const instrumentMapping = {
+      ambientPad: InstrumentType.AmbientPad,
+      granular: InstrumentType.Granular,
+      melodic: InstrumentType.Melodic,
+      harmonicDrone: InstrumentType.HarmonicDrone,
+      rhythmicPulse: InstrumentType.RhythmicPulse,
+      fieldRecording: InstrumentType.FieldRecording,
+      vocalPad: InstrumentType.VocalPad,
+      arpeggiator: InstrumentType.Arpeggiator,
+    };
+
+    for (const [textureKey, params] of Object.entries(texture.instruments)) {
+      const instrumentType = instrumentMapping[textureKey as keyof typeof instrumentMapping];
+      if (instrumentType) {
+        const instrument = this.ambientInstruments.get(instrumentType);
+        if (instrument) {
+          instrument.updateParams(params as any);
+        }
+      }
+    }
+  }
+
+  // setInstruments(instruments: Set<InstrumentType>): void {
+  //   const currentState = this.state$.value;
+
+  //   this.updateState(state => ({ ...state, instruments: new SvelteSet(instruments) }));
+  //   this.events$.next({ type: "instruments-set", timestamp: Tone.now(), data: { instruments: [...instruments] } });
+  // }
 
   toggleInstrument(instrument: InstrumentType): void {
     const currentState = this.state$.value;
@@ -781,7 +824,12 @@ export const createAmbientAudioEngine = (initialState?: Partial<AudioEngineState
     key: Note.C,
     mode: Mode.Aeolian,
     volume: 0.6,
-    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Granular]),
+    instruments: new SvelteSet([
+      InstrumentType.AmbientPad,
+      InstrumentType.Granular,
+      InstrumentType.Melodic,
+      InstrumentType.Arpeggiator,
+    ]),
     randomization: {
       enabled: false,
       rhythmVariability: 0.2,

@@ -3,6 +3,7 @@
 	import type { RandomizationParams } from '$lib/types/audio';
 	import type { InstrumentType } from '$lib/types/instruments';
 	import type { SvelteSet } from 'svelte/reactivity';
+	import { twMerge } from 'tailwind-merge';
 	import ChordDisplay from './ChordDisplay.svelte';
 
 	type AudioState = {
@@ -271,7 +272,11 @@
 				<span class="text-xs opacity-80">History</span>
 				<div class="flex gap-1">
 					<button
-						class="flex h-10 w-10 items-center justify-center rounded border border-white/30 bg-white/10 text-lg transition-all duration-200 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
+						class={twMerge(
+							'flex h-10 w-10 items-center justify-center',
+							'rounded border border-white/30 bg-white/10 text-lg',
+							'transition-all duration-200 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40'
+						)}
 						onclick={onUndo}
 						disabled={!canUndo}
 						title="Undo (Ctrl+Z)"
@@ -279,7 +284,11 @@
 						<i class="i-carbon-undo h-4 w-4"></i>
 					</button>
 					<button
-						class="flex h-10 w-10 items-center justify-center rounded border border-white/30 bg-white/10 text-lg transition-all duration-200 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
+						class={twMerge(
+							'flex h-10 w-10 items-center justify-center',
+							'rounded border border-white/30 bg-white/10 text-lg',
+							'transition-all duration-200 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40'
+						)}
 						onclick={onRedo}
 						disabled={!canRedo}
 						title="Redo (Ctrl+Y)"

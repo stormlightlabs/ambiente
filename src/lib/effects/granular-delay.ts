@@ -9,7 +9,7 @@ export class GranularDelayEffect {
   private output: Tone.Gain;
   private wet: Tone.CrossFade;
   private params$: BehaviorSubject<GranularDelayParams>;
-  private grainSchedulers: ReturnType<typeof setTimeout>[] = [];
+  private timeSinceLastGrain = 0;
 
   constructor(initialParams: Partial<GranularDelayParams> = {}) {
     const defaultParams: GranularDelayParams = {
@@ -60,51 +60,37 @@ export class GranularDelayEffect {
       this.feedback.feedback.value = params.feedback;
       this.wet.fade.value = params.wet;
 
-      if (params.enabled) {
-        this.startGranularScheduling();
-      } else {
-        this.stopGranularScheduling();
+      if (!params.enabled) {
+        this.timeSinceLastGrain = 0;
       }
     });
   }
 
-  private startGranularScheduling(): void {
-    this.stopGranularScheduling();
+  tick(time: number, tickDuration: number): void {
+    const params = this.params$.value;
+    if (!params.enabled) return;
 
-    const scheduleGrains = () => {
-      const params = this.params$.value;
-      if (!params.enabled) return;
+    this.timeSinceLastGrain += tickDuration;
+    const avgInterval = 1 / params.grainDensity;
 
+    if (this.timeSinceLastGrain >= avgInterval) {
       for (const [index, delay] of this.delays.entries()) {
         const grain = this.grains[index];
 
         if (Math.random() < params.grainDensity) {
-          const pitchShift = params.grainPitch + (Math.random() - 0.5) * 0.2;
           const delayTime = params.delayTime + (Math.random() - 0.5) * params.grainSpread;
           const grainLength = params.grainSize * (0.8 + Math.random() * 0.4);
 
           delay.delayTime.value = Math.max(0.01, delayTime);
 
-          grain.gain.setValueAtTime(0, Tone.now());
-          grain.gain.linearRampToValueAtTime(0.3, Tone.now() + grainLength * 0.1);
-          grain.gain.linearRampToValueAtTime(0.3, Tone.now() + grainLength * 0.9);
-          grain.gain.linearRampToValueAtTime(0, Tone.now() + grainLength);
+          grain.gain.setValueAtTime(0, time);
+          grain.gain.linearRampToValueAtTime(0.3, time + grainLength * 0.1);
+          grain.gain.linearRampToValueAtTime(0.3, time + grainLength * 0.9);
+          grain.gain.linearRampToValueAtTime(0, time + grainLength);
         }
       }
-
-      const nextInterval = (1000 / params.grainDensity) * (0.5 + Math.random());
-      const scheduler = setTimeout(scheduleGrains, nextInterval);
-      this.grainSchedulers.push(scheduler);
-    };
-
-    scheduleGrains();
-  }
-
-  private stopGranularScheduling(): void {
-    for (const scheduler of this.grainSchedulers) {
-      clearTimeout(scheduler);
+      this.timeSinceLastGrain = 0;
     }
-    this.grainSchedulers = [];
   }
 
   updateParams(newParams: Partial<GranularDelayParams>): void {
@@ -135,8 +121,6 @@ export class GranularDelayEffect {
   }
 
   dispose(): void {
-    this.stopGranularScheduling();
-
     for (const delay of this.delays) delay.dispose();
     for (const grain of this.grains) grain.dispose();
 

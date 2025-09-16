@@ -1,6 +1,6 @@
 import type { GranularParams } from "$lib/types/params";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
-import { filter, map, takeUntil } from "rxjs/operators";
+import { map, takeUntil } from "rxjs/operators";
 import * as Tone from "tone";
 import { Note, NoteUtilities } from "../theory";
 
@@ -8,10 +8,10 @@ export class GranularSynth {
   private output: Tone.Gain;
   private grainSynths: { synth: Tone.PolySynth; panner: Tone.Panner }[];
   private params$: BehaviorSubject<GranularParams>;
-  private scheduler?: ReturnType<typeof setTimeout>;
   private subscriptions: Subscription[] = [];
   private destroy$ = new BehaviorSubject<void>(undefined);
   private currentScale: Note[] = [];
+  private timeSinceLastGrain = 0;
 
   constructor(initialParams: Partial<GranularParams> = {}) {
     const defaultParams: GranularParams = {
@@ -49,51 +49,32 @@ export class GranularSynth {
 
   private initializeGrainScheduling(): void {
     this.subscriptions.push(
-      this.params$.pipe(map(params => params.enabled && !params.muted), filter(Boolean), takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.startGrainScheduling();
-        }),
-      this.params$.pipe(map(params => !params.enabled || params.muted), filter(Boolean), takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.stopGrainScheduling();
-        }),
       this.params$.pipe(map(params => params.volume), takeUntil(this.destroy$)).subscribe(volume => {
         this.output.gain.value = volume;
       }),
     );
   }
 
-  private startGrainScheduling(): void {
-    this.stopGrainScheduling();
+  tick(time: number, tickDuration: number): void {
+    const params = this.params$.value;
+    if (!params.enabled || params.muted) return;
 
-    const scheduleNextGrain = () => {
-      const params = this.params$.value;
-      if (!params.enabled || params.muted) return;
+    this.timeSinceLastGrain += tickDuration;
+    const avgInterval = 1 / params.density;
+    const jitter = avgInterval * 0.3;
 
-      const avgInterval = 1000 / params.density;
-      const jitter = avgInterval * 0.3;
-      const nextInterval = avgInterval + (Math.random() - 0.5) * jitter;
-
-      this.scheduler = setTimeout(() => {
-        this.triggerGrain();
-        scheduleNextGrain();
-      }, Math.max(50, nextInterval));
-    };
-
-    scheduleNextGrain();
-  }
-
-  private stopGrainScheduling(): void {
-    if (this.scheduler) {
-      clearTimeout(this.scheduler);
-      this.scheduler = undefined;
+    if (this.timeSinceLastGrain >= avgInterval - jitter) {
+      this.triggerGrain(time);
+      this.timeSinceLastGrain = 0; // Reset
     }
   }
 
-  private triggerGrain(): void {
+  private triggerGrain(time: number): void {
     const params = this.params$.value;
 
-    if (this.currentScale.length === 0) return;
+    if (this.currentScale.length === 0) {
+      return;
+    }
 
     const baseNote = this.currentScale[Math.floor(Math.random() * this.currentScale.length)];
     const octave = 3 + Math.floor(Math.random() * 2);
@@ -112,10 +93,9 @@ export class GranularSynth {
       panner.pan.value = Math.max(-1, Math.min(1, pan));
     }
 
-    const now = Tone.now();
     const velocity = 0.1 + Math.random() * 0.2;
 
-    synth.triggerAttackRelease(finalFreq, grainDuration, now, velocity);
+    synth.triggerAttackRelease(finalFreq, grainDuration, time, velocity);
   }
 
   setScale(scale: Note[]): void {
@@ -139,8 +119,6 @@ export class GranularSynth {
   dispose(): void {
     this.destroy$.next();
     this.destroy$.complete();
-
-    this.stopGrainScheduling();
 
     for (const sub of this.subscriptions) sub.unsubscribe();
     this.subscriptions = [];

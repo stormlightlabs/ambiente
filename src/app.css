@@ -13,6 +13,8 @@
 @theme {
 	--font-display: 'Work Sans Variable', sans-serif;
 	--font-sans: 'Public Sans Variable', sans-serif;
+	--font-serif: 'Spectral', serif;
+	--font-title: 'Sora Variable', sans-serif;
 
 	--text-scaling: 1.067;
 	--base-font-color: var(--color-surface-950);
@@ -231,7 +233,7 @@ h3,
 h4,
 h5,
 h6 {
-	@apply font-display leading-tight tracking-wide;
+	@apply leading-tight tracking-wide;
 }
 
 button {

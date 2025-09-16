@@ -4,7 +4,10 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { AppStateManager } from '$lib/communication.svelte';
 	import '@fontsource-variable/public-sans';
+	import '@fontsource-variable/sora';
 	import '@fontsource-variable/work-sans';
+	import '@fontsource/spectral';
+	import { twMerge } from 'tailwind-merge';
 	import '../app.css';
 
 	let { children } = $props();
@@ -33,37 +36,63 @@
 <div class="flex min-h-screen flex-col bg-surface-100 dark:bg-surface-900">
 	<header
 		class="bg-gradient-to-br from-primary-500 to-secondary-500 p-8 text-center text-white shadow-lg dark:from-primary-600 dark:to-secondary-600">
-		<h1 class="mb-2 text-4xl font-semibold tracking-widest md:text-5xl">Ambiente</h1>
-		<p class="text-lg font-normal opacity-90">Reactive Ambient Music Generator</p>
+		<h1 class="mb-2 font-title text-4xl font-semibold tracking-widest md:text-5xl">Ambiente</h1>
+		<p class="font-display text-lg font-normal opacity-90">Reactive Ambient Music Generator</p>
 		<button
 			onclick={toggleDarkMode}
-			class="absolute top-4 right-4 rounded-lg bg-white/20 p-2 text-white transition-colors hover:bg-white/30"
+			class="absolute top-4 right-4 flex items-center rounded-lg bg-white/20 p-2 text-xl text-white transition-colors hover:bg-white/30"
 			title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}>
-			<span class="text-xl">{isDarkMode ? '☀️' : '🌙'}</span>
+			{#if isDarkMode}
+				<i class="i-bi-sun-fill"></i>
+			{:else}
+				<i class="i-bi-moon-stars-fill"></i>
+			{/if}
 		</button>
 	</header>
 
 	<nav
-		class="flex justify-center border-b border-surface-200 bg-surface-50 shadow-sm dark:border-surface-700 dark:bg-surface-950">
+		class="flex items-center justify-center border-b border-surface-200 bg-surface-50 shadow-sm dark:border-surface-700 dark:bg-surface-950">
 		<a
 			href={resolve('/')}
-			class="cursor-pointer border-b-3 px-8 py-4 text-base transition-all duration-200 {page.route.id === '/'
-				? 'border-primary-600 bg-primary-50 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400'
-				: 'border-transparent text-surface-600 hover:bg-surface-100 hover:text-surface-800 dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-surface-100'}">
+			class={twMerge(
+				'cursor-pointer border-b-3 px-8 py-4 text-base transition-all duration-200',
+				'flex items-center',
+				page.route.id === '/'
+					? 'border-primary-600 bg-primary-50 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400'
+					: [
+							'border-transparent text-surface-600 hover:bg-surface-100 hover:text-surface-800',
+							'dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-surface-100'
+						].join(',')
+			)}>
 			<span class="i-bi-play-circle mr-2"></span>Player
 		</a>
 		<a
 			href={resolve('/composer')}
-			class="cursor-pointer border-b-3 px-8 py-4 text-base transition-all duration-200 {page.route.id === '/composer'
-				? 'border-primary-600 bg-primary-50 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400'
-				: 'border-transparent text-surface-600 hover:bg-surface-100 hover:text-surface-800 dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-surface-100'}">
+			class={twMerge(
+				'cursor-pointer border-b-3 px-8 py-4 text-base transition-all duration-200',
+				'flex items-center',
+				page.route.id === '/composer'
+					? 'border-primary-600 bg-primary-50 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400'
+					: [
+							'border-transparent text-surface-600 hover:bg-surface-100 hover:text-surface-800',
+							'dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-surface-100'
+						].join(',')
+			)}>
 			<span class="i-bi-music-note-beamed mr-2"></span>Composer
 		</a>
 		<a
 			href={resolve('/sequencer')}
-			class="cursor-pointer border-b-3 px-8 py-4 text-base transition-all duration-200 {page.route.id === '/sequencer'
-				? 'border-primary-600 bg-primary-50 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400'
-				: 'border-transparent text-surface-600 hover:bg-surface-100 hover:text-surface-800 dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-surface-100'} opacity-75">
+			class={twMerge(
+				'flex items-center',
+				'cursor-pointer border-b-3 px-8 py-4 text-base transition-all duration-200',
+				page.route.id === '/sequencer'
+					? 'border-primary-600 bg-primary-50 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400'
+					: [
+							'border-transparent text-surface-600 hover:bg-surface-100 hover:text-surface-800',
+							'dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-surface-100'
+						].join(','),
+				'opacity-75'
+			)}>
 			<span class="i-bi-grid-3x3-gap mr-2"></span>Sequencer
 		</a>
 	</nav>

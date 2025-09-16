@@ -11,7 +11,13 @@ importers:
       '@fontsource-variable/public-sans':
         specifier: ^5.2.6
         version: 5.2.6
+      '@fontsource-variable/sora':
+        specifier: ^5.2.7
+        version: 5.2.7
       '@fontsource-variable/work-sans':
+        specifier: ^5.2.7
+        version: 5.2.7
+      '@fontsource/spectral':
         specifier: ^5.2.7
         version: 5.2.7
       rxjs:
@@ -394,8 +400,14 @@ packages:
   '@fontsource-variable/public-sans@5.2.6':
     resolution: {integrity: sha512-NXUIBhVuxk0n0S5ZUQvEJNw6k2vtgh4GIHHGMNm1hPt2dyyl7ScsDoygzUi1Q/LD4+nj6mlb1qjITzNcBAo4dw==}
 
+  '@fontsource-variable/sora@5.2.7':
+    resolution: {integrity: sha512-rZ/xwK/tWEanuzyY5HJ15jVS2YFmhWgLyhrp1B8Q+GOu0nDBNSqg5HdKufIjhqWcbTcpGkkHntrTPFFXbl53OQ==}
+
   '@fontsource-variable/work-sans@5.2.7':
     resolution: {integrity: sha512-7jIClbuoRDlkjLxmRYPOFKx/B82Mp2CerpxsEIXIbhDPPQSBGtIY0qsrPEgS53niMpGgVF1L3OvnOT82C7EyxQ==}
+
+  '@fontsource/spectral@5.2.7':
+    resolution: {integrity: sha512-lUAGDb06FQHy2yq1zTZw/YvB4wfhwnItmS9qmyuHhHUnrtnnixV73UcE4VJMSqnen2wYuz1Lx7KxdS78YFyEiA==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -2167,7 +2179,11 @@ snapshots:
 
   '@fontsource-variable/public-sans@5.2.6': {}
 
+  '@fontsource-variable/sora@5.2.7': {}
+
   '@fontsource-variable/work-sans@5.2.7': {}
+
+  '@fontsource/spectral@5.2.7': {}
 
   '@humanfs/core@0.19.1': {}
 

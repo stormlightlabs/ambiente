@@ -30,11 +30,10 @@ export class ModulatedFiltersEffect {
       Q: defaultParams.resonance,
     });
 
-    this.lfo = new Tone.LFO({
-      frequency: defaultParams.lfoRate,
-      type: defaultParams.lfoWave,
-      amplitude: defaultParams.lfoDepth,
-    });
+    this.lfo = new Tone.LFO({ frequency: defaultParams.lfoRate, type: defaultParams.lfoWave });
+
+    this.lfo.min = -defaultParams.lfoDepth / 2;
+    this.lfo.max = defaultParams.lfoDepth / 2;
 
     this.output = new Tone.Gain(1);
 
@@ -56,7 +55,8 @@ export class ModulatedFiltersEffect {
 
       this.lfo.frequency.value = params.lfoRate;
       this.lfo.type = params.lfoWave;
-      this.lfo.amplitude.value = params.lfoDepth;
+      this.lfo.min = -params.lfoDepth / 2;
+      this.lfo.max = params.lfoDepth / 2;
 
       if (params.envelope && !this.envelope) {
         this.createEnvelope();

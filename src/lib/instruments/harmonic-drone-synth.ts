@@ -12,7 +12,6 @@ export class HarmonicDroneSynth {
   private destroy$ = new BehaviorSubject<void>(undefined);
   private currentChord: Note[] = [];
   private activeNotes: Set<string> = new Set();
-  private changeScheduler?: ReturnType<typeof setTimeout>;
 
   constructor(initialParams: Partial<HarmonicDroneParams> = {}) {
     const defaultParams: HarmonicDroneParams = {
@@ -62,22 +61,22 @@ export class HarmonicDroneSynth {
     );
   }
 
-  setChord(chord: Note[]): void {
+  setChord(chord: Note[], time?: number): void {
     this.currentChord = [...chord];
     const params = this.params$.value;
     if (params.enabled && !params.muted) {
-      this.updateDroneChord();
+      this.updateDroneChord(time);
     }
   }
 
-  private updateDroneChord(): void {
+  private updateDroneChord(time?: number): void {
     const params = this.params$.value;
     if (this.currentChord.length === 0) return;
 
     for (const noteString of this.activeNotes) {
       if (Math.random() > params.voiceLeading) {
         const synthIndex = Math.floor(Math.random() * this.synths.length);
-        this.synths[synthIndex].triggerRelease(noteString);
+        this.synths[synthIndex].triggerRelease(noteString, time);
       }
     }
 
@@ -89,16 +88,16 @@ export class HarmonicDroneSynth {
         const noteString = `${NoteUtilities.toString(note)}${octave}`;
         const synthIndex = Math.floor(Math.random() * this.synths.length);
 
-        this.synths[synthIndex].triggerAttack(noteString, Tone.now(), 0.15);
+        this.synths[synthIndex].triggerAttack(noteString, time, 0.15);
         this.activeNotes.add(noteString);
       }
     }
   }
 
-  private stopAllNotes(): void {
+  private stopAllNotes(time?: number): void {
     for (const noteString of this.activeNotes) {
       for (const synth of this.synths) {
-        synth.triggerRelease(noteString);
+        synth.triggerRelease(noteString, time);
       }
     }
     this.activeNotes.clear();
@@ -147,10 +146,6 @@ export class HarmonicDroneSynth {
 
     for (const sub of this.subscriptions) sub.unsubscribe();
     this.subscriptions = [];
-
-    if (this.changeScheduler) {
-      clearTimeout(this.changeScheduler);
-    }
 
     for (const synth of this.synths) {
       synth.dispose();

@@ -52,30 +52,32 @@ export class AmbientPadSynth {
     }));
   }
 
-  setChord(chord: Note[]): void {
+  setChord(chord: Note[], time?: number): void {
     this.currentChord = [...chord];
     const params = this.params$.value;
     if (params.enabled && !params.muted) {
-      this.playCurrentChord();
+      this.playCurrentChord(time);
     }
   }
 
-  private playCurrentChord(): void {
-    this.stopAllNotes();
+  private playCurrentChord(time?: number): void {
+    this.stopAllNotes(time);
 
-    if (this.currentChord.length === 0) return;
+    if (this.currentChord.length === 0) {
+      return;
+    }
 
     const octave = 3;
     for (const note of this.currentChord) {
       const noteString = `${NoteUtilities.toString(note)}${octave}`;
-      this.synth.triggerAttack(noteString, Tone.now(), 0.3);
+      this.synth.triggerAttack(noteString, time, 0.3);
       this.activeNotes.add(noteString);
     }
   }
 
-  private stopAllNotes(): void {
+  private stopAllNotes(time?: number): void {
     for (const noteString of this.activeNotes) {
-      this.synth.triggerRelease(noteString);
+      this.synth.triggerRelease(noteString, time);
     }
     this.activeNotes.clear();
   }

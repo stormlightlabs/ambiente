@@ -1,6 +1,6 @@
 import type { RhythmicPulseParams } from "$lib/types/params";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
-import { filter, map, takeUntil } from "rxjs/operators";
+import { map, takeUntil } from "rxjs/operators";
 import * as Tone from "tone";
 import { Note, NoteUtilities } from "../theory";
 
@@ -11,7 +11,7 @@ export class RhythmicPulseSynth {
   private subscriptions: Subscription[] = [];
   private destroy$ = new BehaviorSubject<void>(undefined);
   private currentScale: Note[] = [];
-  private layers: ReturnType<typeof setTimeout>[] = [];
+  private layers: { timeSinceLastPulse: number }[] = [];
 
   constructor(initialParams: Partial<RhythmicPulseParams> = {}) {
     const defaultParams: RhythmicPulseParams = {
@@ -44,57 +44,39 @@ export class RhythmicPulseSynth {
 
   private initializeRhythmicScheduling(): void {
     this.subscriptions.push(
-      this.params$.pipe(map(params => params.enabled && !params.muted), filter(Boolean), takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.startRhythmicLayers();
-        }),
-      this.params$.pipe(map(params => !params.enabled || params.muted), filter(Boolean), takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.stopRhythmicLayers();
-        }),
       this.params$.pipe(map(params => params.volume), takeUntil(this.destroy$)).subscribe(volume => {
         this.output.gain.value = volume;
       }),
     );
+
+    for (let index = 0; index < this.params$.value.layerCount; index++) {
+      this.layers.push({ timeSinceLastPulse: 0 });
+    }
   }
 
-  private startRhythmicLayers(): void {
-    this.stopRhythmicLayers();
-
+  tick(time: number, tickDuration: number): void {
     const params = this.params$.value;
-    const baseInterval = 60_000 / params.baseTempo;
+    if (!params.enabled || params.muted) return;
 
-    for (let layer = 0; layer < Math.min(params.layerCount, this.synths.length); layer++) {
-      const layerMultiplier = Math.pow(2, layer);
+    const baseInterval = 60 / params.baseTempo;
+
+    for (let index = 0; index < Math.min(params.layerCount, this.synths.length); index++) {
+      const layer = this.layers[index];
+      if (!layer) continue;
+
+      layer.timeSinceLastPulse += tickDuration;
+
+      const layerMultiplier = Math.pow(2, index);
       const layerInterval = baseInterval / layerMultiplier;
 
-      const scheduleLayer = () => {
-        if (!this.params$.value.enabled || this.params$.value.muted) return;
-
-        if (Math.random() < 0.3 / layerMultiplier) {
-          this.triggerRhythmicPulse(layer);
-        }
-
-        const variance = 1 + (Math.random() - 0.5) * params.tempoVar;
-        const syncopationOffset = Math.random() < params.syncopation ? layerInterval * 0.5 : 0;
-        const nextInterval = layerInterval * variance + syncopationOffset;
-
-        const timeout = setTimeout(scheduleLayer, Math.max(50, nextInterval));
-        this.layers[layer] = timeout;
-      };
-
-      scheduleLayer();
+      if (layer.timeSinceLastPulse >= layerInterval && Math.random() < 0.8) {
+        this.triggerRhythmicPulse(index, time);
+        layer.timeSinceLastPulse = 0;
+      }
     }
   }
 
-  private stopRhythmicLayers(): void {
-    for (const timeout of this.layers) {
-      clearTimeout(timeout);
-    }
-    this.layers = [];
-  }
-
-  private triggerRhythmicPulse(layerIndex: number): void {
+  private triggerRhythmicPulse(layerIndex: number, time: number): void {
     const params = this.params$.value;
     if (this.currentScale.length === 0) return;
 
@@ -110,7 +92,7 @@ export class RhythmicPulseSynth {
     const velocity = Math.random() < params.accentProb ? 0.3 : 0.1;
     const duration = 0.1 + Math.random() * 0.2;
 
-    synth.triggerAttackRelease(noteString, duration, Tone.now(), velocity);
+    synth.triggerAttackRelease(noteString, duration, time, velocity);
   }
 
   setScale(scale: Note[]): void {
@@ -121,13 +103,6 @@ export class RhythmicPulseSynth {
     const currentParams = this.params$.value;
     const updatedParams = { ...currentParams, ...newParams };
     this.params$.next(updatedParams);
-
-    if (
-      newParams.baseTempo && Math.abs(newParams.baseTempo - currentParams.baseTempo) > 5 && updatedParams.enabled
-      && !updatedParams.muted
-    ) {
-      this.startRhythmicLayers();
-    }
   }
 
   getParams(): Observable<RhythmicPulseParams> {
@@ -141,8 +116,6 @@ export class RhythmicPulseSynth {
   dispose(): void {
     this.destroy$.next();
     this.destroy$.complete();
-
-    this.stopRhythmicLayers();
 
     for (const sub of this.subscriptions) sub.unsubscribe();
     this.subscriptions = [];

@@ -3,7 +3,6 @@ import { SpectralProcessingEffect } from "$lib/effects/spectral-processing";
 import { Note, NoteUtilities } from "$lib/theory";
 import type { VocalPadParams } from "$lib/types/params";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
-import { filter, map, takeUntil } from "rxjs/operators";
 import * as Tone from "tone";
 
 export class VocalPadSynth {
@@ -19,7 +18,7 @@ export class VocalPadSynth {
   private destroy$ = new BehaviorSubject<void>(undefined);
   private currentChord: Note[] = [];
   private activeNotes: Set<string> = new Set();
-  private vibratoScheduler?: ReturnType<typeof setTimeout>;
+  private tickCounter = 0;
 
   constructor(initialParams: Partial<VocalPadParams> = {}) {
     const defaultParams: VocalPadParams = {
@@ -38,16 +37,13 @@ export class VocalPadSynth {
     this.params$ = new BehaviorSubject(defaultParams);
     this.output = new Tone.Gain(defaultParams.volume);
 
-    // Use sawtooth wave for vocal-like harmonics
     this.synth = new Tone.PolySynth(Tone.Synth, {
       envelope: { attack: defaultParams.attack, decay: 0.5, sustain: 0.9, release: defaultParams.release },
       oscillator: { type: "sawtooth" },
     });
 
-    // Formant filter for vowel-like sounds
     this.filter = new Tone.Filter({ frequency: defaultParams.formantFreq, type: "bandpass", Q: 5 });
 
-    // Chorus for ethereal quality
     this.chorus = new Tone.Chorus({
       frequency: 1.5,
       delayTime: 3.5,
@@ -56,10 +52,8 @@ export class VocalPadSynth {
       spread: 180,
     });
 
-    // Vibrato for human-like expression
     this.vibrato = new Tone.Vibrato({ frequency: 6, depth: defaultParams.vibrato, type: "sine" });
 
-    // Advanced effects for enhanced vocal texture
     this.spectralProcessor = new SpectralProcessingEffect({
       enabled: true,
       spectralShift: 0.1,
@@ -69,12 +63,10 @@ export class VocalPadSynth {
 
     this.convolutionReverb = new ConvolutionReverbEffect({ enabled: true, roomSize: "medium", wet: 0.4, decay: 1.2 });
 
-    // Connect the enhanced chain: synth -> filter -> vibrato -> chorus -> spectral -> reverb -> output
     this.synth.connect(this.filter);
     this.filter.connect(this.vibrato);
     this.vibrato.connect(this.chorus);
 
-    // Connect effects in chain
     this.spectralProcessor.connectInput(this.chorus);
     this.convolutionReverb.connectInput(this.spectralProcessor.getOutput());
     this.convolutionReverb.connect(this.output);
@@ -83,101 +75,65 @@ export class VocalPadSynth {
   }
 
   private initializeVocalPadManagement(): void {
-    this.subscriptions.push(
-      this.params$.pipe(map(params => params.enabled && !params.muted), filter(Boolean), takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.startVocalPad();
-        }),
-      this.params$.pipe(map(params => !params.enabled || params.muted), filter(Boolean), takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.stopVocalPad();
-        }),
-      this.params$.subscribe(params => {
-        this.output.gain.value = params.muted ? 0 : params.volume;
-        this.filter.frequency.value = params.formantFreq;
-        this.chorus.depth = params.chorusDepth;
-        this.vibrato.depth.value = params.vibrato;
+    this.subscriptions.push(this.params$.subscribe(params => {
+      this.output.gain.value = params.muted ? 0 : params.volume;
+      this.filter.frequency.value = params.formantFreq;
+      this.chorus.depth = params.chorusDepth;
+      this.vibrato.depth.value = params.vibrato;
 
-        // Update envelope for breathiness
-        const breathinessAttack = params.attack * (1 + params.breathiness * 0.5);
-        const breathinessRelease = params.release * (1 + params.breathiness * 0.3);
-        this.synth.set({
-          envelope: {
-            attack: breathinessAttack,
-            decay: 0.5,
-            sustain: 0.9 - (params.breathiness * 0.2),
-            release: breathinessRelease,
-          },
-        });
-      }),
-    );
+      const breathinessAttack = params.attack * (1 + params.breathiness * 0.5);
+      const breathinessRelease = params.release * (1 + params.breathiness * 0.3);
+      this.synth.set({
+        envelope: {
+          attack: breathinessAttack,
+          decay: 0.5,
+          sustain: 0.9 - (params.breathiness * 0.2),
+          release: breathinessRelease,
+        },
+      });
+    }));
   }
 
-  private startVocalPad(): void {
-    if (this.currentChord.length > 0) {
-      this.playCurrentChord();
-    }
-    this.startVibratoModulation();
-  }
+  tick(time: number, tickDuration: number): void {
+    const params = this.params$.value;
+    if (!params.enabled || params.muted) return;
 
-  private stopVocalPad(): void {
-    this.stopAllNotes();
-    this.stopVibratoModulation();
-  }
-
-  private startVibratoModulation(): void {
-    this.stopVibratoModulation();
-
-    const modulate = () => {
-      const params = this.params$.value;
-      if (!params.enabled || params.muted) return;
-
-      // Subtle vibrato frequency variation for more organic feel
+    this.tickCounter++;
+    if (this.tickCounter > 100) {
       const baseFreq = 6;
       const variation = baseFreq * (0.8 + Math.random() * 0.4);
       this.vibrato.frequency.rampTo(variation, 2);
-
-      this.vibratoScheduler = setTimeout(modulate, 3000 + Math.random() * 4000);
-    };
-
-    modulate();
-  }
-
-  private stopVibratoModulation(): void {
-    if (this.vibratoScheduler) {
-      clearTimeout(this.vibratoScheduler);
-      this.vibratoScheduler = undefined;
+      this.tickCounter = 0;
     }
   }
 
-  setChord(chord: Note[]): void {
+  setChord(chord: Note[], time?: number): void {
     this.currentChord = [...chord];
     const params = this.params$.value;
     if (params.enabled && !params.muted) {
-      this.playCurrentChord();
+      this.playCurrentChord(time);
     }
   }
 
-  private playCurrentChord(): void {
-    this.stopAllNotes();
+  private playCurrentChord(time?: number): void {
+    this.stopAllNotes(time);
 
     if (this.currentChord.length === 0) return;
 
-    // Play chord across multiple octaves for rich harmonics
     const octaves = [3, 4];
     for (const octave of octaves) {
       for (const note of this.currentChord) {
         const noteString = `${NoteUtilities.toString(note)}${octave}`;
-        const velocity = octave === 3 ? 0.2 : 0.3; // Lower octave quieter
-        this.synth.triggerAttack(noteString, Tone.now(), velocity);
+        const velocity = octave === 3 ? 0.2 : 0.3;
+        this.synth.triggerAttack(noteString, time, velocity);
         this.activeNotes.add(noteString);
       }
     }
   }
 
-  private stopAllNotes(): void {
+  private stopAllNotes(time?: number): void {
     for (const noteString of this.activeNotes) {
-      this.synth.triggerRelease(noteString);
+      this.synth.triggerRelease(noteString, time);
     }
     this.activeNotes.clear();
   }
@@ -199,8 +155,6 @@ export class VocalPadSynth {
   dispose(): void {
     this.destroy$.next();
     this.destroy$.complete();
-
-    this.stopVocalPad();
 
     for (const sub of this.subscriptions) sub.unsubscribe();
     this.subscriptions = [];
