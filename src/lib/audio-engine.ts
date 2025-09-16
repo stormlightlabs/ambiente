@@ -545,55 +545,43 @@ export class AudioEngine {
   }
 
   applyPresetTexture(texture: any): void {
-    // Apply global tempo if specified in texture
     if (texture.tempo) {
       this.setTempo(texture.tempo);
     }
 
-    // Apply global volume from mix settings
     if (texture.mix?.volume !== undefined) {
       let volume = texture.mix.volume;
-      // Convert negative dB values to 0-1 range
       if (volume < 0) {
-        volume = Math.pow(10, volume / 20); // Convert dB to linear
+        volume = Math.pow(10, volume / 20);
       }
       this.setVolume(Math.max(0, Math.min(1, volume)));
     }
 
-    // Apply key/mode from scale if specified
     if (texture.scale && texture.scale.length > 0) {
       const scaleNotes = this.scaleToNotes(texture.scale);
       if (scaleNotes.length > 0) {
-        const key = scaleNotes[0];
-        // Use current mode if not specified in texture
-        const currentState = this.state$.value;
-        this.setKeyAndMode(key, currentState.mode);
+        this.setKeyAndMode(scaleNotes[0], this.state$.value.mode);
       }
     }
 
-    // Apply individual instrument parameters
     if (texture.instruments) {
       for (const [textureKey, params] of Object.entries(texture.instruments)) {
-        const instrumentType = AMBIENT_TO_ENGINE_MAPPING[textureKey as keyof typeof AMBIENT_TO_ENGINE_MAPPING];
-        if (instrumentType && typeof params === "object" && params !== null) {
-          const instrument = this.ambientInstruments.get(instrumentType);
+        const kind = AMBIENT_TO_ENGINE_MAPPING[textureKey as keyof typeof AMBIENT_TO_ENGINE_MAPPING];
+        if (kind && typeof params === "object" && params !== null) {
+          const instrument = this.ambientInstruments.get(kind);
           if (instrument) {
-            // Convert volume parameters if they're in dB
-            const convertedParams = { ...params } as any;
-            if (convertedParams.volume !== undefined && convertedParams.volume < 0) {
-              convertedParams.volume = Math.pow(10, convertedParams.volume / 20);
+            const converted = { ...params } as any;
+            if (converted.volume !== undefined && converted.volume < 0) {
+              converted.volume = Math.pow(10, converted.volume / 20);
             }
 
-            instrument.updateParams(convertedParams);
+            instrument.updateParams(converted);
           }
         }
       }
     }
 
-    // Apply processing effects to ambient mixer
     this.applyTextureProcessing(texture);
-
-    // Apply structural layering settings
     this.applyTextureLayering(texture);
   }
 
@@ -622,7 +610,6 @@ export class AudioEngine {
       ambientMixer.setGlobalChorus(texture.processing.chorus);
     }
 
-    // Apply voice-specific synthesis configurations
     this.applyVoiceConfigurations(texture);
   }
 
@@ -634,7 +621,6 @@ export class AudioEngine {
     for (const voice of texture.voices) {
       const { type, count = 1, envelope, oscillator } = voice;
 
-      // Apply voice configurations to corresponding instrument types
       for (const instrumentType of currentState.instruments) {
         if (this.shouldApplyVoiceToInstrument(type, instrumentType)) {
           this.configureInstrumentVoice(instrumentType, {
@@ -649,7 +635,6 @@ export class AudioEngine {
   }
 
   private shouldApplyVoiceToInstrument(voiceType: string, instrumentType: InstrumentType): boolean {
-    // Map voice types to instrument types
     switch (voiceType) {
       case "piano": {
         return instrumentType === InstrumentType.Melodic || instrumentType === InstrumentType.AmbientPad;
@@ -673,7 +658,6 @@ export class AudioEngine {
     const synth = this.synthInstances.get(instrumentType);
     if (!synth) return;
 
-    // Apply envelope settings if provided
     if (voiceConfig.envelope) {
       const envelope = voiceConfig.envelope;
       synth.set({
@@ -686,7 +670,6 @@ export class AudioEngine {
       });
     }
 
-    // Apply oscillator settings if provided
     if (voiceConfig.oscillator) {
       const oscillator = voiceConfig.oscillator;
 
@@ -695,15 +678,13 @@ export class AudioEngine {
       }
     }
 
-    // Apply voice character through additional effects based on voice type
     this.applyVoiceCharacteristics(synth, voiceConfig);
   }
 
   private applyVoiceCharacteristics(synth: Tone.PolySynth, voiceConfig: any): void {
-    // Apply voice-specific characteristics to create authentic sounds
     switch (voiceConfig.type) {
+      // Piano-like characteristics: sharp attack, quick decay
       case "piano": {
-        // Piano-like characteristics: sharp attack, quick decay
         synth.set({
           envelope: {
             attack: 0.001,
@@ -711,9 +692,8 @@ export class AudioEngine {
             sustain: voiceConfig.envelope?.sustain || 0.1,
             release: voiceConfig.envelope?.release || 3,
           },
-          oscillator: {
-            type: "triangle", // More piano-like than sine
-          },
+          // More piano-like than sine
+          oscillator: { type: "triangle" },
         });
         break;
       }
@@ -726,9 +706,8 @@ export class AudioEngine {
             sustain: 1,
             release: voiceConfig.envelope?.release || 12,
           },
-          oscillator: {
-            type: "sawtooth", // Rich harmonic content for drones
-          },
+          // Rich harmonic content for drones
+          oscillator: { type: "sawtooth" },
         });
         break;
       }
@@ -803,7 +782,6 @@ export class AudioEngine {
       }
     }
 
-    // Apply generative patterns if specified
     this.applyGenerativePatterns(texture);
   }
 
@@ -817,7 +795,6 @@ export class AudioEngine {
     const scale = this.currentScale$.value;
     const seed = currentState.randomization.seed || Math.random();
 
-    // Generate new patterns for non-ambient instruments using the specified pattern type
     const patterns = new Map(this.patterns$.value);
     let patternsUpdated = false;
 
@@ -848,7 +825,6 @@ export class AudioEngine {
     instrumentType: InstrumentType,
     patternType: "random-walk" | "euclidean" | "static-drone" | "markov",
   ): number {
-    // Different pattern types work better with different lengths
     switch (patternType) {
       case "static-drone": {
         return 4;
@@ -867,13 +843,6 @@ export class AudioEngine {
       }
     }
   }
-
-  // setInstruments(instruments: Set<InstrumentType>): void {
-  //   const currentState = this.state$.value;
-
-  //   this.updateState(state => ({ ...state, instruments: new SvelteSet(instruments) }));
-  //   this.events$.next({ type: "instruments-set", timestamp: Tone.now(), data: { instruments: [...instruments] } });
-  // }
 
   toggleInstrument(instrument: InstrumentType): void {
     const currentState = this.state$.value;
@@ -921,7 +890,7 @@ export class AudioEngine {
     return this.state$.value.randomization;
   }
 
-  getSynth(type: InstrumentType): Tone.PolySynth | undefined {
+  getSynth(type: InstrumentType): Optional<Tone.PolySynth> {
     return this.synthInstances.get(type);
   }
 
@@ -940,7 +909,7 @@ export class AudioEngine {
     }
   }
 
-  private getNestedParam(synth: Tone.PolySynth, path: string): Tone.Param | undefined {
+  private getNestedParam(synth: Tone.PolySynth, path: string): Optional<Tone.Param> {
     const parts = path.split(".");
     let current: unknown = synth.get();
 
@@ -1001,7 +970,7 @@ export class AudioEngine {
   }
 }
 
-export const createAmbientAudioEngine = (initialState?: Partial<AudioEngineState>): AudioEngine => {
+export const createAmbientAudioEngine = (initial?: Partial<AudioEngineState>): AudioEngine => {
   const defaultState: Partial<AudioEngineState> = {
     tempo: 72,
     key: Note.C,
@@ -1023,11 +992,11 @@ export const createAmbientAudioEngine = (initialState?: Partial<AudioEngineState
     },
   };
 
-  const finalState = { ...defaultState, ...initialState };
-  const engine = new AudioEngine(finalState);
+  const final = { ...defaultState, ...initial };
+  const engine = new AudioEngine(final);
 
-  if (finalState.instruments) {
-    for (const instrumentType of finalState.instruments) {
+  if (final.instruments) {
+    for (const kind of final.instruments) {
       const isAmbient = [
         InstrumentType.AmbientPad,
         InstrumentType.Granular,
@@ -1037,11 +1006,11 @@ export const createAmbientAudioEngine = (initialState?: Partial<AudioEngineState
         InstrumentType.FieldRecording,
         InstrumentType.VocalPad,
         InstrumentType.Arpeggiator,
-      ].includes(instrumentType);
+      ].includes(kind);
 
       if (!isAmbient) {
-        const pattern = createDefaultPattern(instrumentType, finalState.key || Note.C, finalState.mode || Mode.Aeolian);
-        engine.setInstrumentPattern(instrumentType, pattern);
+        const pattern = createDefaultPattern(kind, final.key || Note.C, final.mode || Mode.Aeolian);
+        engine.setInstrumentPattern(kind, pattern);
       }
     }
   }
@@ -1060,7 +1029,6 @@ export const createDefaultPattern = (type: InstrumentType, key: Note, mode: Mode
       }
       break;
     }
-
     case InstrumentType.Atmosphere: {
       for (let index = 0; index < 32; index++) {
         steps.push({
@@ -1072,14 +1040,12 @@ export const createDefaultPattern = (type: InstrumentType, key: Note, mode: Mode
       }
       break;
     }
-
     case InstrumentType.Bass: {
       for (let index = 0; index < 8; index++) {
         steps.push({ note: scale[0], velocity: 0.4, duration: "1m", enabled: index % 4 === 0 });
       }
       break;
     }
-
     default: {
       for (let index = 0; index < 16; index++) {
         steps.push({ note: scale[index % scale.length], velocity: 0.3, duration: "1m", enabled: index % 4 === 0 });
