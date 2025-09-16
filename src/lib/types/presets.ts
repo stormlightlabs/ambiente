@@ -6,7 +6,7 @@ export type Voice = {
   type: "synth" | "sampler" | "drone" | "granular" | "piano";
   count: number;
   envelope?: { attack: number; decay: number; sustain: number; release: number };
-  oscillator?: { type: "sine" | "triangle" | "sawtooth" | "square" | "noise"; detuneRange?: number };
+  oscillator?: { type: "sine" | "triangle" | "sawtooth" | "square"; detuneRange?: number };
   sampleUrls?: string[];
 };
 

@@ -1,4 +1,5 @@
-import { AudioEngine, createAmbientAudioEngine, createDefaultPattern } from "$lib/audio-engine";
+import { AudioEngine, createAmbientAudioEngine } from "$lib/engines/audio-engine";
+import { createDefaultPattern } from "$lib/engines/utilities";
 import { Mode, Note } from "$lib/theory";
 import type { AudioEngineState, InstrumentPattern } from "$lib/types/audio";
 import { InstrumentType } from "$lib/types/instruments";

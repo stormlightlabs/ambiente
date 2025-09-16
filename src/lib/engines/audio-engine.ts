@@ -1,47 +1,48 @@
+import { ambientMixer, createSynth, initializeAudio, noteToToneString, ParameterAutomation } from "$lib/audio";
+import { AMBIENT_TO_ENGINE_MAPPING } from "$lib/data/presets";
+import { AmbientPadSynth } from "$lib/instruments/ambient-pad";
+import { ArpeggiatorSynth } from "$lib/instruments/arpeggiator";
+import { GranularSynth } from "$lib/instruments/granular-synth";
+import { HarmonicDroneSynth } from "$lib/instruments/harmonic-drone-synth";
+import { MelodicSynth } from "$lib/instruments/melodic-synth";
+import { VocalPadSynth } from "$lib/instruments/vocal-pads";
+import { PatternRandomizer } from "$lib/seed/pattern-randomizer";
+import { AMBIENT_PROGRESSIONS, generateProgression, generateScale, Mode, Note } from "$lib/theory";
+import type { AudioEngineState, AudioEvent, InstrumentPattern, RandomizationParams } from "$lib/types/audio";
+import { FieldRecordingSynth } from "$lib/types/field-recording-synth";
+import { InstrumentType } from "$lib/types/instruments";
+import type { Texture, Voice } from "$lib/types/presets";
+import { RhythmicPulseSynth } from "$lib/types/rhythmic-pulse-synth";
+import type { Optional } from "$lib/types/shared";
 import { BehaviorSubject, combineLatest, Observable, Subject } from "rxjs";
 import { debounceTime, distinctUntilChanged, map, take, takeUntil } from "rxjs/operators";
 import { SvelteSet } from "svelte/reactivity";
 import * as Tone from "tone";
-import { ambientMixer, createSynth, initializeAudio, noteToToneString, ParameterAutomation } from "./audio";
-import { AMBIENT_TO_ENGINE_MAPPING } from "./data/presets";
-import { AmbientPadSynth } from "./instruments/ambient-pad";
-import { ArpeggiatorSynth } from "./instruments/arpeggiator";
-import { GranularSynth } from "./instruments/granular-synth";
-import { HarmonicDroneSynth } from "./instruments/harmonic-drone-synth";
-import { MelodicSynth } from "./instruments/melodic-synth";
-import { VocalPadSynth } from "./instruments/vocal-pads";
-import { PatternRandomizer } from "./seed/pattern-randomizer";
-import { AMBIENT_PROGRESSIONS, generateProgression, generateScale, Mode, Note, NoteUtilities } from "./theory";
-import type { AudioEngineState, AudioEvent, InstrumentPattern, PatternStep, RandomizationParams } from "./types/audio";
-import { FieldRecordingSynth } from "./types/field-recording-synth";
-import { EffectType, InstrumentType } from "./types/instruments";
-import { RhythmicPulseSynth } from "./types/rhythmic-pulse-synth";
-import type { Optional } from "./types/shared";
+import {
+  createAmbientInstrument,
+  createDefaultPattern,
+  getDefaultEffects,
+  getNestedParam,
+  getPatternLengthForType,
+  harmonizeNote,
+  isAmbientInstrument,
+  scaleToNotes,
+  shouldApplyVoiceToInstrument,
+  type SynthKind,
+} from "./utilities";
 
 export class AudioEngine {
   private readonly state$: BehaviorSubject<AudioEngineState>;
   private readonly events$: Subject<AudioEvent>;
   private readonly destroy$: Subject<void>;
-
   private readonly synthInstances: Map<InstrumentType, Tone.PolySynth>;
   private readonly patterns$: BehaviorSubject<Map<InstrumentType, InstrumentPattern>>;
   private readonly randomizedPatterns$: Observable<Map<InstrumentType, InstrumentPattern>>;
-
-  private readonly ambientInstruments: Map<
-    InstrumentType,
-    | GranularSynth
-    | AmbientPadSynth
-    | MelodicSynth
-    | HarmonicDroneSynth
-    | RhythmicPulseSynth
-    | FieldRecordingSynth
-    | VocalPadSynth
-    | ArpeggiatorSynth
-  >;
   private readonly currentScale$: BehaviorSubject<Note[]>;
-
   private readonly chordProgression$: Observable<Note[][]>;
   private readonly currentChord$: BehaviorSubject<Note[]>;
+
+  private readonly ambientInstruments: Map<InstrumentType, SynthKind>;
 
   constructor(initialState?: Partial<AudioEngineState>) {
     this.destroy$ = new Subject();
@@ -237,10 +238,6 @@ export class AudioEngine {
     });
   }
 
-  tempoToMs(tempo: number): number {
-    return (60 / tempo) * 1000;
-  }
-
   private startAudioContext(): void {
     Tone.getTransport().start();
   }
@@ -270,22 +267,13 @@ export class AudioEngine {
       if (step?.enabled) {
         const synth = this.synthInstances.get(instrumentType);
         if (synth) {
-          const note = this.harmonizeNote(step.note, currentChord, instrumentType);
+          const note = harmonizeNote(step.note, currentChord, instrumentType);
           const noteString = noteToToneString(note);
 
           synth.triggerAttackRelease(noteString, step.duration, time, step.velocity);
         }
       }
     }
-  }
-
-  private harmonizeNote(note: Note, chord: Note[], instrumentType: InstrumentType): Note {
-    if (instrumentType === InstrumentType.Pad || instrumentType === InstrumentType.Atmosphere) {
-      const chordNote = chord[Math.floor(Math.random() * chord.length)];
-      return chordNote;
-    }
-
-    return note;
   }
 
   private updateInstruments(instruments: Set<InstrumentType>): void {
@@ -308,9 +296,9 @@ export class AudioEngine {
     }
 
     for (const type of instruments) {
-      if (this.isAmbientInstrument(type)) {
+      if (isAmbientInstrument(type)) {
         if (!this.ambientInstruments.has(type)) {
-          const instrument = this.createAmbientInstrument(type);
+          const instrument = createAmbientInstrument(type);
           if (instrument) {
             const channel = ambientMixer.getChannel(type);
             if (!channel) {
@@ -326,7 +314,7 @@ export class AudioEngine {
       } else {
         if (!this.synthInstances.has(type)) {
           const synth = createSynth(type);
-          const effects = this.getDefaultEffects(type);
+          const effects = getDefaultEffects(type);
 
           ambientMixer.connectSynth(synth, type, effects);
           this.synthInstances.set(type, synth);
@@ -337,62 +325,6 @@ export class AudioEngine {
           patterns.set(type, pattern);
           this.patterns$.next(patterns);
         }
-      }
-    }
-  }
-
-  private isAmbientInstrument(type: InstrumentType): boolean {
-    return [
-      InstrumentType.AmbientPad,
-      InstrumentType.Granular,
-      InstrumentType.Melodic,
-      InstrumentType.HarmonicDrone,
-      InstrumentType.RhythmicPulse,
-      InstrumentType.FieldRecording,
-      InstrumentType.VocalPad,
-      InstrumentType.Arpeggiator,
-    ].includes(type);
-  }
-
-  private createAmbientInstrument(
-    type: InstrumentType,
-  ): Optional<
-    | GranularSynth
-    | AmbientPadSynth
-    | MelodicSynth
-    | HarmonicDroneSynth
-    | RhythmicPulseSynth
-    | FieldRecordingSynth
-    | VocalPadSynth
-    | ArpeggiatorSynth
-  > {
-    switch (type) {
-      case InstrumentType.Granular: {
-        return new GranularSynth();
-      }
-      case InstrumentType.AmbientPad: {
-        return new AmbientPadSynth();
-      }
-      case InstrumentType.Melodic: {
-        return new MelodicSynth();
-      }
-      case InstrumentType.HarmonicDrone: {
-        return new HarmonicDroneSynth();
-      }
-      case InstrumentType.RhythmicPulse: {
-        return new RhythmicPulseSynth();
-      }
-      case InstrumentType.FieldRecording: {
-        return new FieldRecordingSynth();
-      }
-      case InstrumentType.VocalPad: {
-        return new VocalPadSynth();
-      }
-      case InstrumentType.Arpeggiator: {
-        return new ArpeggiatorSynth();
-      }
-      default: {
-        return void 0;
       }
     }
   }
@@ -440,39 +372,6 @@ export class AudioEngine {
     }
   }
 
-  private getDefaultEffects(type: InstrumentType): EffectType[] {
-    switch (type) {
-      case InstrumentType.Pad: {
-        return [EffectType.Reverb, EffectType.Chorus];
-      }
-      case InstrumentType.Lead: {
-        return [EffectType.Delay, EffectType.Filter];
-      }
-      case InstrumentType.Bass: {
-        return [EffectType.Compressor];
-      }
-      case InstrumentType.Atmosphere: {
-        return [EffectType.Reverb, EffectType.Filter];
-      }
-      case InstrumentType.Texture: {
-        return [EffectType.Reverb, EffectType.Delay, EffectType.Chorus];
-      }
-      case InstrumentType.Percussion: {
-        return [EffectType.Compressor, EffectType.Reverb];
-      }
-      case InstrumentType.AmbientPad:
-      case InstrumentType.Granular:
-      case InstrumentType.Melodic:
-      case InstrumentType.HarmonicDrone:
-      case InstrumentType.RhythmicPulse: {
-        return [];
-      }
-      default: {
-        return [EffectType.Reverb];
-      }
-    }
-  }
-
   getState$(): Observable<AudioEngineState> {
     return this.state$.asObservable();
   }
@@ -511,8 +410,7 @@ export class AudioEngine {
   }
 
   setTempo(tempo: number): void {
-    const clampedTempo = Math.max(40, Math.min(200, tempo));
-    this.updateState(state => ({ ...state, tempo: clampedTempo }));
+    this.updateState(state => ({ ...state, tempo: Math.max(40, Math.min(200, tempo)) }));
   }
 
   setKeyAndMode(key: Note, mode: Mode): void {
@@ -540,11 +438,10 @@ export class AudioEngine {
   }
 
   setVolume(volume: number): void {
-    const clampedVolume = Math.max(0, Math.min(1, volume));
-    this.updateState(state => ({ ...state, volume: clampedVolume }));
+    this.updateState(state => ({ ...state, volume: Math.max(0, Math.min(1, volume)) }));
   }
 
-  applyPresetTexture(texture: any): void {
+  applyPresetTexture(texture: Texture): void {
     if (texture.tempo) {
       this.setTempo(texture.tempo);
     }
@@ -558,7 +455,7 @@ export class AudioEngine {
     }
 
     if (texture.scale && texture.scale.length > 0) {
-      const scaleNotes = this.scaleToNotes(texture.scale);
+      const scaleNotes = scaleToNotes(texture.scale);
       if (scaleNotes.length > 0) {
         this.setKeyAndMode(scaleNotes[0], this.state$.value.mode);
       }
@@ -585,13 +482,7 @@ export class AudioEngine {
     this.applyTextureLayering(texture);
   }
 
-  private scaleToNotes(scaleNames: string[]): Note[] {
-    return scaleNames.map(name =>
-      NoteUtilities.Map[name.replace(/[♭♯]/, match => match === "♭" ? "b" : "#")] ?? Note.C
-    );
-  }
-
-  private applyTextureProcessing(texture: any): void {
+  private applyTextureProcessing(texture: Texture): void {
     if (!texture.processing) return;
 
     if (texture.processing.reverb) {
@@ -621,45 +512,20 @@ export class AudioEngine {
     for (const voice of texture.voices) {
       const { type, count = 1, envelope, oscillator } = voice;
 
-      for (const instrumentType of currentState.instruments) {
-        if (this.shouldApplyVoiceToInstrument(type, instrumentType)) {
-          this.configureInstrumentVoice(instrumentType, {
-            type,
-            count,
-            envelope: envelope || {},
-            oscillator: oscillator || {},
-          });
+      for (const kind of currentState.instruments) {
+        if (shouldApplyVoiceToInstrument(type, kind)) {
+          this.configureInstrumentVoice(kind, { type, count, envelope: envelope || {}, oscillator: oscillator || {} });
         }
       }
     }
   }
 
-  private shouldApplyVoiceToInstrument(voiceType: string, instrumentType: InstrumentType): boolean {
-    switch (voiceType) {
-      case "piano": {
-        return instrumentType === InstrumentType.Melodic || instrumentType === InstrumentType.AmbientPad;
-      }
-      case "drone": {
-        return instrumentType === InstrumentType.HarmonicDrone || instrumentType === InstrumentType.Pad;
-      }
-      case "granular": {
-        return instrumentType === InstrumentType.Granular || instrumentType === InstrumentType.Atmosphere;
-      }
-      case "synth": {
-        return instrumentType === InstrumentType.AmbientPad || instrumentType === InstrumentType.Lead;
-      }
-      default: {
-        return false;
-      }
-    }
-  }
-
-  private configureInstrumentVoice(instrumentType: InstrumentType, voiceConfig: any): void {
-    const synth = this.synthInstances.get(instrumentType);
+  private configureInstrumentVoice(kind: InstrumentType, voice: Voice): void {
+    const synth = this.synthInstances.get(kind);
     if (!synth) return;
 
-    if (voiceConfig.envelope) {
-      const envelope = voiceConfig.envelope;
+    if (voice.envelope) {
+      const envelope = voice.envelope;
       synth.set({
         envelope: {
           attack: envelope.attack,
@@ -670,27 +536,27 @@ export class AudioEngine {
       });
     }
 
-    if (voiceConfig.oscillator) {
-      const oscillator = voiceConfig.oscillator;
+    if (voice.oscillator) {
+      const oscillator = voice.oscillator;
 
       if (oscillator.type) {
         synth.set({ oscillator: { type: oscillator.type } });
       }
     }
 
-    this.applyVoiceCharacteristics(synth, voiceConfig);
+    this.applyVoiceCharacteristics(synth, voice);
   }
 
-  private applyVoiceCharacteristics(synth: Tone.PolySynth, voiceConfig: any): void {
-    switch (voiceConfig.type) {
+  private applyVoiceCharacteristics(synth: Tone.PolySynth, voice: Voice): void {
+    switch (voice.type) {
       // Piano-like characteristics: sharp attack, quick decay
       case "piano": {
         synth.set({
           envelope: {
             attack: 0.001,
-            decay: voiceConfig.envelope?.decay || 2,
-            sustain: voiceConfig.envelope?.sustain || 0.1,
-            release: voiceConfig.envelope?.release || 3,
+            decay: voice.envelope?.decay || 2,
+            sustain: voice.envelope?.sustain || 0.1,
+            release: voice.envelope?.release || 3,
           },
           // More piano-like than sine
           oscillator: { type: "triangle" },
@@ -701,10 +567,10 @@ export class AudioEngine {
         // Drone characteristics: very slow attack, long sustain
         synth.set({
           envelope: {
-            attack: voiceConfig.envelope?.attack || 8,
+            attack: voice.envelope?.attack || 8,
             decay: 0,
             sustain: 1,
-            release: voiceConfig.envelope?.release || 12,
+            release: voice.envelope?.release || 12,
           },
           // Rich harmonic content for drones
           oscillator: { type: "sawtooth" },
@@ -716,22 +582,22 @@ export class AudioEngine {
         synth.set({
           envelope: {
             attack: 0.01,
-            decay: voiceConfig.envelope?.decay || 0.1,
-            sustain: voiceConfig.envelope?.sustain || 0.3,
-            release: voiceConfig.envelope?.release || 0.2,
+            decay: voice.envelope?.decay || 0.1,
+            sustain: voice.envelope?.sustain || 0.3,
+            release: voice.envelope?.release || 0.2,
           },
           oscillator: { type: "square" },
         });
         break;
       }
       default: {
-        synth.set({ oscillator: { type: voiceConfig.oscillator?.type || "sine" } });
+        synth.set({ oscillator: { type: voice.oscillator?.type || "sine" } });
         break;
       }
     }
 
-    if (voiceConfig.count > 1 && voiceConfig.oscillator?.detuneRange) {
-      this.applyVoiceDetuning(synth, voiceConfig.count, voiceConfig.oscillator.detuneRange);
+    if (voice.count > 1 && voice.oscillator?.detuneRange) {
+      this.applyVoiceDetuning(synth, voice.count, voice.oscillator.detuneRange);
     }
   }
 
@@ -747,7 +613,7 @@ export class AudioEngine {
     (synth as any)._voiceCount = voiceCount;
   }
 
-  private applyTextureLayering(texture: any): void {
+  private applyTextureLayering(texture: Texture): void {
     if (!texture.structure?.layering) return;
 
     const layering = texture.structure.layering;
@@ -785,7 +651,7 @@ export class AudioEngine {
     this.applyGenerativePatterns(texture);
   }
 
-  private applyGenerativePatterns(texture: any): void {
+  private applyGenerativePatterns(texture: Texture): void {
     if (!texture.structure?.generativePattern) return;
 
     const patternType = texture.structure.generativePattern as "random-walk" | "euclidean" | "static-drone" | "markov";
@@ -798,20 +664,21 @@ export class AudioEngine {
     const patterns = new Map(this.patterns$.value);
     let patternsUpdated = false;
 
-    for (const instrumentType of currentState.instruments) {
-      if (!this.isAmbientInstrument(instrumentType)) {
-        const patternLength = this.getPatternLengthForType(instrumentType, patternType);
+    for (const kind of currentState.instruments) {
+      if (!isAmbientInstrument(kind)) {
+        const patternLength = getPatternLengthForType(kind, patternType);
         const newPattern = PatternRandomizer.generatePatternByType(
           patternType,
-          instrumentType,
+          kind,
           patternLength,
           scale,
           density,
           randomness,
-          seed + Object.values(InstrumentType).indexOf(instrumentType), // Use instrument type as additional seed variation
+          // Use instrument type as additional seed variation
+          seed + Object.values(InstrumentType).indexOf(kind),
         );
 
-        patterns.set(instrumentType, newPattern);
+        patterns.set(kind, newPattern);
         patternsUpdated = true;
       }
     }
@@ -821,37 +688,14 @@ export class AudioEngine {
     }
   }
 
-  private getPatternLengthForType(
-    instrumentType: InstrumentType,
-    patternType: "random-walk" | "euclidean" | "static-drone" | "markov",
-  ): number {
-    switch (patternType) {
-      case "static-drone": {
-        return 4;
-      } // Short patterns for sustained drone notes
-      case "euclidean": {
-        return 16;
-      } // Medium length for rhythmic patterns
-      case "random-walk": {
-        return 12;
-      } // Medium length for melodic wandering
-      case "markov": {
-        return 8;
-      } // Shorter for more coherent musical phrases
-      default: {
-        return 16;
-      }
-    }
-  }
-
-  toggleInstrument(instrument: InstrumentType): void {
+  toggleInstrument(kind: InstrumentType): void {
     const currentState = this.state$.value;
     const newInstruments = new SvelteSet(currentState.instruments);
 
-    if (newInstruments.has(instrument)) {
-      newInstruments.delete(instrument);
+    if (newInstruments.has(kind)) {
+      newInstruments.delete(kind);
     } else {
-      newInstruments.add(instrument);
+      newInstruments.add(kind);
     }
 
     this.updateState(state => ({ ...state, instruments: newInstruments }));
@@ -859,13 +703,13 @@ export class AudioEngine {
     this.events$.next({
       type: "instrument-toggle",
       timestamp: Tone.now(),
-      data: { instrument, enabled: newInstruments.has(instrument) },
+      data: { instrument: kind, enabled: newInstruments.has(kind) },
     });
   }
 
-  setInstrumentPattern(type: InstrumentType, pattern: InstrumentPattern): void {
+  setInstrumentPattern(kind: InstrumentType, pattern: InstrumentPattern): void {
     const patterns = new Map(this.patterns$.value);
-    patterns.set(type, pattern);
+    patterns.set(kind, pattern);
     this.patterns$.next(patterns);
   }
 
@@ -894,34 +738,14 @@ export class AudioEngine {
     return this.synthInstances.get(type);
   }
 
-  automateParameter(
-    instrumentType: InstrumentType,
-    paramPath: string,
-    targetValue: number,
-    duration: string = "4m",
-  ): void {
-    const synth = this.synthInstances.get(instrumentType);
+  automateParameter(kind: InstrumentType, paramPath: string, targetValue: number, duration: string = "4m"): void {
+    const synth = this.synthInstances.get(kind);
     if (!synth) return;
 
-    const param = this.getNestedParam(synth, paramPath);
+    const param = getNestedParam(synth, paramPath);
     if (param) {
       ParameterAutomation.automateParameter(param, targetValue, duration);
     }
-  }
-
-  private getNestedParam(synth: Tone.PolySynth, path: string): Optional<Tone.Param> {
-    const parts = path.split(".");
-    let current: unknown = synth.get();
-
-    for (const part of parts) {
-      if (current && typeof current === "object" && part in current) {
-        current = (current as Record<string, unknown>)[part];
-      } else {
-        return undefined;
-      }
-    }
-
-    return current instanceof Tone.Param ? current : undefined;
   }
 
   stop(): void {
@@ -929,21 +753,18 @@ export class AudioEngine {
     Tone.getTransport().stop();
 
     for (const instrument of this.ambientInstruments.values()) {
-      if (instrument instanceof GranularSynth) {
-        instrument.updateParams({ enabled: false });
-      } else if (instrument instanceof AmbientPadSynth) {
-        instrument.updateParams({ enabled: false });
-      } else if (instrument instanceof MelodicSynth) {
-        instrument.updateParams({ enabled: false });
-      } else if (instrument instanceof HarmonicDroneSynth) {
-        instrument.updateParams({ enabled: false });
-      } else if (instrument instanceof RhythmicPulseSynth) {
-        instrument.updateParams({ enabled: false });
-      } else if (instrument instanceof FieldRecordingSynth) {
-        instrument.updateParams({ enabled: false });
-      } else if (instrument instanceof VocalPadSynth) {
-        instrument.updateParams({ enabled: false });
-      } else if (instrument instanceof ArpeggiatorSynth) {
+      if (
+        [
+          GranularSynth,
+          AmbientPadSynth,
+          HarmonicDroneSynth,
+          MelodicSynth,
+          RhythmicPulseSynth,
+          FieldRecordingSynth,
+          VocalPadSynth,
+          ArpeggiatorSynth,
+        ].some(c => instrument instanceof c)
+      ) {
         instrument.updateParams({ enabled: false });
       }
     }
@@ -971,7 +792,7 @@ export class AudioEngine {
 }
 
 export const createAmbientAudioEngine = (initial?: Partial<AudioEngineState>): AudioEngine => {
-  const defaultState: Partial<AudioEngineState> = {
+  const final = {
     tempo: 72,
     key: Note.C,
     mode: Mode.Aeolian,
@@ -990,25 +811,14 @@ export const createAmbientAudioEngine = (initial?: Partial<AudioEngineState>): A
       patternEvolution: 0.1,
       constraintStrength: 0.8,
     },
+    ...initial,
   };
 
-  const final = { ...defaultState, ...initial };
   const engine = new AudioEngine(final);
 
   if (final.instruments) {
     for (const kind of final.instruments) {
-      const isAmbient = [
-        InstrumentType.AmbientPad,
-        InstrumentType.Granular,
-        InstrumentType.Melodic,
-        InstrumentType.HarmonicDrone,
-        InstrumentType.RhythmicPulse,
-        InstrumentType.FieldRecording,
-        InstrumentType.VocalPad,
-        InstrumentType.Arpeggiator,
-      ].includes(kind);
-
-      if (!isAmbient) {
+      if (!isAmbientInstrument(kind)) {
         const pattern = createDefaultPattern(kind, final.key || Note.C, final.mode || Mode.Aeolian);
         engine.setInstrumentPattern(kind, pattern);
       }
@@ -1016,42 +826,4 @@ export const createAmbientAudioEngine = (initial?: Partial<AudioEngineState>): A
   }
 
   return engine;
-};
-
-export const createDefaultPattern = (type: InstrumentType, key: Note, mode: Mode): InstrumentPattern => {
-  const scale = generateScale(key, mode);
-  const steps: PatternStep[] = [];
-
-  switch (type) {
-    case InstrumentType.Pad: {
-      for (let index = 0; index < 16; index++) {
-        steps.push({ note: scale[index % scale.length], velocity: 0.3, duration: "2m", enabled: index % 8 === 0 });
-      }
-      break;
-    }
-    case InstrumentType.Atmosphere: {
-      for (let index = 0; index < 32; index++) {
-        steps.push({
-          note: scale[Math.floor(index / 4) % scale.length],
-          velocity: 0.2,
-          duration: "4m",
-          enabled: index % 16 === 0,
-        });
-      }
-      break;
-    }
-    case InstrumentType.Bass: {
-      for (let index = 0; index < 8; index++) {
-        steps.push({ note: scale[0], velocity: 0.4, duration: "1m", enabled: index % 4 === 0 });
-      }
-      break;
-    }
-    default: {
-      for (let index = 0; index < 16; index++) {
-        steps.push({ note: scale[index % scale.length], velocity: 0.3, duration: "1m", enabled: index % 4 === 0 });
-      }
-    }
-  }
-
-  return { type, steps, length: steps.length, enabled: true };
 };

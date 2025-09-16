@@ -1,6 +1,6 @@
 import { BehaviorSubject, type Observable, type Subscription } from "rxjs";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
-import { AudioEngine, createAmbientAudioEngine } from "./audio-engine";
+import { AudioEngine, createAmbientAudioEngine } from "./engines/audio-engine";
 import { AMBIENT_PROGRESSIONS, generateProgression, generateScale, Mode, Note } from "./theory";
 import type { AudioEngineState, AudioEvent, RandomizationParams } from "./types/audio";
 import { InstrumentType } from "./types/instruments";
