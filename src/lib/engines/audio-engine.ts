@@ -116,9 +116,6 @@ export class AudioEngine {
     this.state$.next(updater(this.state$.value));
   }
 
-  /**
-   * Get the next measure boundary for scheduling instrument changes
-   */
   private getNextMeasureBoundary(): string {
     const transport = Tone.getTransport();
     const positionString = transport.position.toString();
@@ -135,8 +132,12 @@ export class AudioEngine {
     this.log("Initializing audio with timeout:", timeoutMs + "ms");
 
     const initPromise = initializeAudio();
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("Audio initialization timeout")), timeoutMs);
+    const timeoutPromise = new Promise((_, reject) => {
+      const timeoutId = Tone.getTransport().schedule(() => {
+        reject(new Error("Audio initialization timeout"));
+      }, `+${timeoutMs / 1000}`);
+
+      initPromise.finally(() => Tone.getTransport().clear(timeoutId));
     });
 
     await Promise.race([initPromise, timeoutPromise]);

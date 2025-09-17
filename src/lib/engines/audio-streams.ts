@@ -218,7 +218,7 @@ export class AudioStreams {
           const tickDuration = 60 / this.state$.value.tempo / 4;
           this.playPatternStep(sixteenthNotes, patterns, chord, time);
 
-          for (const [, instrument] of this.ambientInstruments.entries()) {
+          for (const [instrumentType, instrument] of this.ambientInstruments.entries()) {
             if (
               instrument instanceof ArpeggiatorSynth
               || instrument instanceof MelodicSynth
@@ -227,6 +227,15 @@ export class AudioStreams {
               || instrument instanceof RhythmicPulseSynth
             ) {
               instrument.tick(time, tickDuration);
+
+              // Emit instrument tick event for tracking
+              this.events$.next({
+                type: "instrument-tick",
+                timestamp: time,
+                data: {
+                  instrument: instrumentType,
+                },
+              });
             }
           }
         },
@@ -255,6 +264,18 @@ export class AudioStreams {
           const noteString = noteToToneString(note);
 
           synth.triggerAttackRelease(noteString, step.duration, time, step.velocity);
+
+          // Emit playback event for tracking
+          this.events$.next({
+            type: "note-played",
+            timestamp: time,
+            data: {
+              instrument: instrumentType,
+              notes: [note],
+              velocity: step.velocity,
+              duration: step.duration,
+            },
+          });
         }
       }
     }

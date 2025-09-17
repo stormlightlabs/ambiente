@@ -1,24 +1,11 @@
 <script lang="ts">
-	import { Mode, Note } from '$lib/theory';
-	import type { RandomizationParams } from '$lib/types/audio';
-	import type { InstrumentType } from '$lib/types/instruments';
-	import type { SvelteSet } from 'svelte/reactivity';
+	import { ModeUtilities, Note, NoteUtilities } from '$lib/theory';
+	import type { AudioEngineState, RandomizationParams } from '$lib/types/audio';
 	import { twMerge } from 'tailwind-merge';
 	import ChordDisplay from './ChordDisplay.svelte';
 
-	type AudioState = {
-		isPlaying: boolean;
-		tempo: number;
-		key: Note;
-		mode: Mode;
-		volume: number;
-		currentChord: number;
-		instruments: SvelteSet<InstrumentType>;
-		randomization: RandomizationParams;
-	};
-
 	type Props = {
-		audioState: AudioState;
+		audioState: AudioEngineState;
 		canUndo: boolean;
 		canRedo: boolean;
 		onTogglePlayback: () => Promise<void>;
@@ -45,36 +32,20 @@
 		selectedPreset
 	}: Props = $props();
 
-	const noteNames = Object.keys(Note).filter((key) => Number.isNaN(Number(key)));
-	const modeNames = Object.keys(Mode).filter((key) => Number.isNaN(Number(key)));
-
+	// NOTE: User gesture triggered - safe to initialize audio context
 	async function togglePlayback() {
-		if (!selectedPreset) {
-			return;
-		}
+		if (!selectedPreset) return;
+
 		try {
-			// NOTE: User gesture triggered - safe to initialize audio context
 			await onTogglePlayback();
 		} catch (error) {
 			console.error('Error in PlayerControls togglePlayback:', error);
 		}
 	}
 
-	async function stopPlayback() {
-		if (audioState.isPlaying) {
-			await onTogglePlayback();
-		}
-	}
-
-	function adjustVolume(delta: number) {
-		const newVolume = Math.max(0, Math.min(1, audioState.volume + delta));
-		onSetVolume(newVolume);
-	}
-
-	function adjustTempo(delta: number) {
-		const newTempo = Math.max(40, Math.min(200, audioState.tempo + delta));
-		onSetTempo(newTempo);
-	}
+	const stopPlayback = async () => (audioState.isPlaying ? await onTogglePlayback() : await Promise.resolve(void 0));
+	const adjustVolume = (delta: number) => onSetVolume(Math.max(0, Math.min(1, audioState.volume + delta)));
+	const adjustTempo = (delta: number) => onSetTempo(Math.max(40, Math.min(200, audioState.tempo + delta)));
 
 	async function handleKeydown(event: KeyboardEvent) {
 		if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) {
@@ -149,8 +120,8 @@
 			<div class="text-center">
 				<div class="mb-1 text-xs opacity-80">Key:</div>
 				<div class="font-semibold">
-					{noteNames[Number(audioState.key)]}
-					{modeNames[Number(audioState.mode)]}
+					{NoteUtilities.names[Number(audioState.key)]}
+					{ModeUtilities.names[Number(audioState.mode)]}
 				</div>
 			</div>
 
@@ -315,8 +286,8 @@
 				<div class="flex items-center justify-center rounded-lg bg-white/10 p-2">
 					<div class="text-center">
 						<div class="font-semibold">
-							{noteNames[Number(audioState.key)]}
-							{modeNames[Number(audioState.mode)]}
+							{NoteUtilities.names[Number(audioState.key)]}
+							{ModeUtilities.names[Number(audioState.mode)]}
 						</div>
 						<div class="text-xs opacity-60">Current</div>
 					</div>
@@ -348,7 +319,7 @@
 										class="flex h-6 w-6 animate-pulse items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-secondary-500"
 										style="animation-delay: {index * 200}ms">
 									</div>
-									<span class="text-xs font-bold">{noteNames[note] || '?'}</span>
+									<span class="text-xs font-bold">{NoteUtilities.names[note] || '?'}</span>
 								{/each}
 							</div>
 						</div>

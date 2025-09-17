@@ -14,10 +14,10 @@ export class FieldRecordingSynth extends BaseInstrument<FieldRecordingParams> {
   private stereoImaging: StereoImagingEffect;
   private params$: BehaviorSubject<FieldRecordingParams>;
   private destroy$ = new BehaviorSubject<void>(undefined);
-  private textureScheduler?: ReturnType<typeof setTimeout>;
+  private textureSchedulerId?: number;
 
-  constructor(initialParams: Partial<FieldRecordingParams> = {}) {
-    super(initialParams);
+  constructor(initial: Partial<FieldRecordingParams> = {}) {
+    super(initial);
     const defaultParams: FieldRecordingParams = {
       volume: 0.3,
       muted: false,
@@ -27,7 +27,7 @@ export class FieldRecordingSynth extends BaseInstrument<FieldRecordingParams> {
       filterFreq: 800,
       reverb: 0.4,
       fadeTime: 3,
-      ...initialParams,
+      ...initial,
     };
 
     this.params$ = new BehaviorSubject(defaultParams);
@@ -125,25 +125,25 @@ export class FieldRecordingSynth extends BaseInstrument<FieldRecordingParams> {
 
     this.noiseSource.start();
 
-    const scheduleTexture = () => {
+    const scheduleTexture = (_time: number) => {
       if (!this.params$.value.enabled || this.params$.value.muted) return;
 
       const currentParams = this.params$.value;
-      const interval = (1000 / currentParams.density) * (0.8 + Math.random() * 0.4);
+      const intervalSeconds = (1 / currentParams.density) * (0.8 + Math.random() * 0.4);
 
       const freqVariation = currentParams.filterFreq * (0.9 + Math.random() * 0.2);
       this.filter.frequency.rampTo(freqVariation, currentParams.fadeTime);
 
-      this.textureScheduler = setTimeout(scheduleTexture, interval);
+      this.textureSchedulerId = Tone.getTransport().schedule(scheduleTexture, `+${intervalSeconds}`);
     };
 
-    scheduleTexture();
+    this.textureSchedulerId = Tone.getTransport().schedule(scheduleTexture, "+0.1");
   }
 
   private stopTextureGeneration(): void {
-    if (this.textureScheduler) {
-      clearTimeout(this.textureScheduler);
-      this.textureScheduler = undefined;
+    if (this.textureSchedulerId !== undefined) {
+      Tone.getTransport().clear(this.textureSchedulerId);
+      this.textureSchedulerId = undefined;
     }
 
     this.noiseSource.stop();

@@ -176,6 +176,7 @@ export const HarmonicAnalysis = {
 };
 
 export const NoteUtilities = {
+  names: Object.keys(Note).filter((key) => Number.isNaN(Number(key))),
   toString: (note: Note): string => {
     switch (note) {
       case Note.C: {
@@ -244,6 +245,7 @@ export const NoteUtilities = {
 };
 
 export const ModeUtilities = {
+  names: Object.keys(Mode).filter((key) => Number.isNaN(Number(key))),
   toString(mode: Mode): string {
     switch (mode) {
       case Mode.Ionian: {

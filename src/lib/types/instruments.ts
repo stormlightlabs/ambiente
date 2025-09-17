@@ -16,6 +16,10 @@ export enum InstrumentType {
   Arpeggiator = "arpeggiator",
 }
 
+export const instrumentTypes = Object.values(InstrumentType);
+
+export const getInstrumentDisplayName = (type: InstrumentType): string => type.replaceAll(/([A-Z])/g, " $1").trim();
+
 export type SynthParams = {
   attack: number;
   decay: number;

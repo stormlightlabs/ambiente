@@ -1,6 +1,7 @@
 import { BehaviorSubject, type Observable, type Subscription } from "rxjs";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
 import { AudioEngine, createAmbientAudioEngine } from "./engines/audio-engine";
+import { playbackBridge } from "./services/playback-bridge";
 import { AMBIENT_PROGRESSIONS, generateProgression, generateScale, Mode, Note } from "./theory";
 import type { AudioEngineState, AudioEvent, RandomizationParams } from "./types/audio";
 import { InstrumentType } from "./types/instruments";
@@ -69,6 +70,7 @@ export class AppStateManager {
     if (!this.audioEngine) {
       this.audioEngine = createAmbientAudioEngine();
       this.initializeStateSync();
+      playbackBridge.connect(this.audioEngine);
     }
   }
 
@@ -142,6 +144,8 @@ export class AppStateManager {
   applyPreset(preset: Preset): void {
     this.ensureAudioEngine();
     if (!this.audioEngine) return;
+
+    playbackBridge.setPresetName(preset.name);
 
     if (preset.config.key && preset.config.mode) {
       this.setKeyAndMode(preset.config.key, preset.config.mode);
@@ -312,6 +316,8 @@ export class AppStateManager {
     this.subscriptions = [];
 
     this.currentChordSubject.complete();
+
+    playbackBridge.dispose();
 
     if (this.audioEngine) {
       this.audioEngine.dispose();

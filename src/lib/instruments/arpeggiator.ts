@@ -16,7 +16,6 @@ export class ArpeggiatorSynth extends BaseInstrument<ArpeggiatorParams> {
   private probabilityOrnaments: ProbabilityOrnamentsEffect;
   private params$: BehaviorSubject<ArpeggiatorParams>;
   private destroy$ = new BehaviorSubject<void>(undefined);
-  private arpScheduler?: ReturnType<typeof setTimeout>;
   private currentNoteIndex: number = 0;
   private direction: number = 1;
 

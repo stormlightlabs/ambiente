@@ -1,23 +1,10 @@
 <script lang="ts">
-	import { Mode, Note, generateScale } from '$lib/theory';
-	import { InstrumentType } from '$lib/types/instruments';
-
-	const noteNames = Object.keys(Note).filter((key) => Number.isNaN(Number(key)));
-	const modeNames = Object.keys(Mode).filter((key) => Number.isNaN(Number(key)));
-	const instrumentTypes = Object.values(InstrumentType);
-
-	type AudioState = {
-		tempo: number;
-		key: Note;
-		mode: Mode;
-		volume: number;
-		instruments: Set<InstrumentType>;
-		isPlaying: boolean;
-		currentChord: number;
-	};
+	import { generateScale, Mode, ModeUtilities, Note, NoteUtilities } from '$lib/theory';
+	import type { AudioEngineState } from '$lib/types/audio';
+	import { InstrumentType, instrumentTypes } from '$lib/types/instruments';
 
 	type Props = {
-		audioState: AudioState;
+		audioState: AudioEngineState;
 		onSetTempo: (tempo: number) => void;
 		onSetKeyAndMode: (key: Note, mode: Mode) => void;
 		onSetVolume: (volume: number) => void;
@@ -26,28 +13,17 @@
 
 	const { audioState, onSetTempo, onSetKeyAndMode, onSetVolume, onToggleInstrument }: Props = $props();
 
-	let customTempo = $state(audioState.tempo);
-	let customKey = $state(audioState.key);
-	let customMode = $state(audioState.mode);
-	let customVolume = $state(audioState.volume);
-	const selectedInstruments = $state(new Set(audioState.instruments));
+	let customTempo = $derived(audioState.tempo);
+	let customKey = $derived(audioState.key);
+	let customMode = $derived(audioState.mode);
+	let customVolume = $derived(audioState.volume);
+	const selectedInstruments = $derived(new Set(audioState.instruments));
 	const currentScale = $derived.by(() => generateScale(customKey, customMode));
 
-	function updateTempo() {
-		onSetTempo(customTempo);
-	}
-
-	function updateKey() {
-		onSetKeyAndMode(customKey, customMode);
-	}
-
-	function updateMode() {
-		onSetKeyAndMode(customKey, customMode);
-	}
-
-	function updateVolume() {
-		onSetVolume(customVolume);
-	}
+	const updateTempo = () => onSetTempo(customTempo);
+	const updateKey = () => onSetKeyAndMode(customKey, customMode);
+	const updateMode = () => onSetKeyAndMode(customKey, customMode);
+	const updateVolume = () => onSetVolume(customVolume);
 
 	function toggleInstrument(instrument: InstrumentType) {
 		if (selectedInstruments.has(instrument)) {
@@ -150,7 +126,7 @@
 						bind:value={customKey}
 						onchange={updateKey}
 						class="w-full rounded border border-surface-300 bg-white p-2 text-base">
-						{#each noteNames as noteName, index (noteName)}
+						{#each NoteUtilities.names as noteName, index (noteName)}
 							<option value={index}>{noteName}</option>
 						{/each}
 					</select>
@@ -163,7 +139,7 @@
 						bind:value={customMode}
 						onchange={updateMode}
 						class="w-full rounded border border-surface-300 bg-white p-2 text-base">
-						{#each modeNames as modeName, index (modeName)}
+						{#each ModeUtilities.names as modeName, index (modeName)}
 							<option value={index}>{modeName}</option>
 						{/each}
 					</select>
@@ -211,8 +187,8 @@
 			<div>
 				<p class="mb-4 text-surface-700">
 					<strong>Key:</strong>
-					{noteNames[Number(customKey)]}
-					{modeNames[Number(customMode)]}
+					{NoteUtilities.names[Number(customKey)]}
+					{ModeUtilities.names[Number(customMode)]}
 				</p>
 				<div class="flex flex-wrap items-center gap-2">
 					<span class="font-medium text-surface-700">Notes:</span>
@@ -221,7 +197,7 @@
 							class="inline-block rounded px-2 py-1 text-xs font-medium {index === 0
 								? 'bg-blue-600 text-white'
 								: 'bg-blue-100 text-blue-800'}">
-							{noteNames[note]}
+							{NoteUtilities.names[note]}
 						</span>
 					{/each}
 				</div>

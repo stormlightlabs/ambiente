@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { AppStateManager } from '$lib/communication.svelte';
+	import PlaybackDisplay from '$lib/components/PlaybackDisplay.svelte';
 	import PlayerControls from '$lib/components/PlayerControls.svelte';
 	import PresetPlayer from '$lib/components/PresetPlayer.svelte';
+	import { playbackStore } from '$lib/stores/playback-store.svelte';
 	import { type Note } from '$lib/theory';
 
 	const appState = new AppStateManager();
@@ -27,16 +29,27 @@
 	{currentChordNotes}
 	selectedPreset={appState.ui.selectedPreset} />
 
-<div class="animate-fadeIn">
-	<PresetPlayer
-		currentInstruments={appState.audio.instruments}
-		onSetSelectedPreset={appState.setSelectedPreset.bind(appState)}
-		onSetTempo={appState.setTempo.bind(appState)}
-		onSetKeyAndMode={appState.setKeyAndMode.bind(appState)}
-		onSetVolume={appState.setVolume.bind(appState)}
-		onToggleInstrument={appState.toggleInstrument.bind(appState)}
-		onApplyPresetTexture={appState.applyPresetTexture.bind(appState)}
-		onApplyPreset={appState.applyPreset.bind(appState)} />
+<div class="animate-fadeIn grid gap-6 lg:grid-cols-3">
+	<div class="lg:col-span-2">
+		<PresetPlayer
+			currentInstruments={appState.audio.instruments}
+			onSetSelectedPreset={appState.setSelectedPreset.bind(appState)}
+			onSetTempo={appState.setTempo.bind(appState)}
+			onSetKeyAndMode={appState.setKeyAndMode.bind(appState)}
+			onSetVolume={appState.setVolume.bind(appState)}
+			onToggleInstrument={appState.toggleInstrument.bind(appState)}
+			onApplyPresetTexture={appState.applyPresetTexture.bind(appState)}
+			onApplyPreset={appState.applyPreset.bind(appState)} />
+	</div>
+
+	<div class="lg:col-span-1">
+		<PlaybackDisplay
+			isTracking={playbackStore.isTracking}
+			currentChord={playbackStore.currentChord}
+			activeInstrumentsList={playbackStore.activeInstrumentsList}
+			currentlyPlayingNotes={playbackStore.currentlyPlayingNotes}
+			recentEvents={playbackStore.recentEvents} />
+	</div>
 </div>
 
 <style>

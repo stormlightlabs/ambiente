@@ -9,7 +9,7 @@ export class AdaptiveDynamicsEffect {
   private adaptiveGain: Tone.Gain;
   private output: Tone.Gain;
   private params$: BehaviorSubject<AdaptiveDynamicsParams>;
-  private analysisScheduler?: ReturnType<typeof setInterval>;
+  private analysisSchedulerId?: number;
   private levelHistory: number[] = [];
 
   constructor(initialParams: Partial<AdaptiveDynamicsParams> = {}) {
@@ -69,16 +69,20 @@ export class AdaptiveDynamicsEffect {
     this.stopAdaptiveAnalysis();
 
     const params = this.params$.value;
+    const intervalSeconds = params.analysisWindow / 1000;
 
-    this.analysisScheduler = setInterval(() => {
+    const scheduleAnalysis = () => {
       this.analyzeAndAdapt();
-    }, params.analysisWindow);
+      this.analysisSchedulerId = Tone.getTransport().schedule(scheduleAnalysis, `+${intervalSeconds}`);
+    };
+
+    this.analysisSchedulerId = Tone.getTransport().schedule(scheduleAnalysis, `+${intervalSeconds}`);
   }
 
   private stopAdaptiveAnalysis(): void {
-    if (this.analysisScheduler) {
-      clearInterval(this.analysisScheduler);
-      this.analysisScheduler = undefined;
+    if (this.analysisSchedulerId !== undefined) {
+      Tone.getTransport().clear(this.analysisSchedulerId);
+      this.analysisSchedulerId = undefined;
     }
   }
 

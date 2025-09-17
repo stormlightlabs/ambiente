@@ -21,6 +21,8 @@ The main AudioEngine class acts as a coordinator, delegating responsibilities to
 - Audio Streams (`audio-streams.ts`): Manages all reactive stream setup, chord progressions, pattern randomization, and the main transport loop.
 - Preset Processor (`preset-processor.ts`): Handles texture application, voice configuration, layering, and generative pattern generation.
 - Instrument Manager (`instrument-manager.ts`): Manages instrument lifecycle, pattern assignment, and ambient instrument context updates.
+- Audio Engine (`audio-engine.ts`): Main coordinator class integrating engine modules.
+- Utilities (`utilities.ts`): Shared utilities for pattern creation, harmonization, and parameter access.
 
 ## Key Components
 
@@ -65,13 +67,16 @@ The `createDefaultPattern` function in `src/lib/engines/utilities.ts` generates 
 - **Pad**: Sustained chords on downbeats (every 8 steps)
 - **Atmosphere**: Very sparse notes (every 16 steps) with long durations
 - **Bass**: Root note emphasis (every 4 steps)
+- **Lead**: Melodic activity (every 2-4 steps)
+- **Texture**: Dense atmospheric patterns (every 2 steps)
+- **Percussion**: Rhythmic emphasis (every 4 steps)
 - **Default**: Moderate activity (every 4 steps)
 
 Patterns use the current scale and adapt to key/mode changes automatically through AudioStreams.
 
 ## Harmonic Processing
 
-The `harmonizeNote` method in `src/lib/engines/utilities.ts` provides intelligent note selection:
+The `harmonizeNote` function in `src/lib/engines/utilities.ts` provides "intelligent" note selection:
 
 - Pad and Atmosphere instruments use chord tones from the current progression
 - Other instruments play their original pattern notes
@@ -98,6 +103,7 @@ The `harmonizeNote` method in `src/lib/engines/utilities.ts` provides intelligen
 - `AudioStreams`: Reactive stream management and timing coordination
 - `InstrumentManager`: Instrument lifecycle and pattern management
 - `PresetProcessor`: Texture application and voice configuration
+- `Utilities`: Pattern generation, harmonization, and parameter access helpers
 - Audio Modules: Synthesis, effects, and mixing infrastructure
 
 ## Lifecycle Management

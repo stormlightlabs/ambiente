@@ -13,8 +13,16 @@ export interface AudioEngineState {
   randomization: RandomizationParams;
 }
 
-export type AudioEventKind = "play" | "pause" | "stop" | "chord-change" | "parameter-change" | "instrument-toggle";
-export type AudioEventData = { chord?: Note[]; index?: number; instrument?: InstrumentType; enabled?: boolean };
+export type AudioEventKind = "play" | "pause" | "stop" | "chord-change" | "parameter-change" | "instrument-toggle" | "note-played" | "instrument-tick";
+export type AudioEventData = {
+  chord?: Note[];
+  index?: number;
+  instrument?: InstrumentType;
+  enabled?: boolean;
+  notes?: Note[];
+  velocity?: number;
+  duration?: string;
+};
 export type AudioEvent = { type: AudioEventKind; timestamp: number; data?: AudioEventData };
 export type PatternStep = { note: Note; velocity: number; duration: string; enabled: boolean };
 export type InstrumentPattern = { type: InstrumentType; steps: PatternStep[]; length: number; enabled: boolean };
