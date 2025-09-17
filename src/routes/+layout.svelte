@@ -64,7 +64,7 @@
 							'dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-surface-100'
 						].join(',')
 			)}>
-			<span class="i-bi-play-circle mr-2"></span>Player
+			<span class="mr-2 i-bi-play-circle"></span>Player
 		</a>
 		<a
 			href={resolve('/composer')}
@@ -78,7 +78,7 @@
 							'dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-surface-100'
 						].join(',')
 			)}>
-			<span class="i-bi-music-note-beamed mr-2"></span>Composer
+			<span class="mr-2 i-bi-music-note-beamed"></span>Composer
 		</a>
 		<a
 			href={resolve('/sequencer')}
@@ -93,7 +93,7 @@
 						].join(','),
 				'opacity-75'
 			)}>
-			<span class="i-bi-grid-3x3-gap mr-2"></span>Sequencer
+			<span class="mr-2 i-bi-grid-3x3-gap"></span>Sequencer
 		</a>
 	</nav>
 

@@ -148,6 +148,139 @@ These use the svelte transition API
 - Slide transitions (300ms) for chord, instruments, playing notes, and events sections
 - Fade transitions (200ms) for session info and inactive state messages
 
+## UI Components
+
+The application includes a comprehensive set of reusable UI components built with Svelte transitions and the design system.
+All UI components follow consistent patterns for accessibility, keyboard navigation, and visual feedback.
+
+### Dialog
+
+Base dialog component providing foundational modal functionality with Svelte transitions.
+Serves as the foundation for Modal, Drawer, and Sheet components.
+
+#### Props
+
+- `open`: Boolean controlling dialog visibility
+- `onClose`: Callback function for close actions
+- `title`: Optional dialog title for accessibility
+- `description`: Optional description for screen readers
+- `showCloseButton`: Boolean to show/hide close button (default: true)
+- `closeOnEscape`: Boolean to enable Escape key closing (default: true)
+- `closeOnOutsideClick`: Boolean to enable backdrop click closing (default: true)
+- `class`: Optional CSS classes for customization
+- `children`: Svelte snippet for dialog content
+
+#### Features
+
+- Backdrop with fade transition (300ms)
+- Dialog content with scale transition (300ms, cubic-out easing)
+- Keyboard accessibility (Escape key support)
+- Click-outside-to-close functionality
+- Proper ARIA attributes for screen readers
+- Focus management and modal behavior
+- Dark mode support with semantic color system
+
+#### Integration
+
+Used as the base component for Modal extensions. Provides consistent behavior across all dialog variants.
+
+### Modal
+
+Enhanced dialog component with size variants and improved layout options.
+Extends the base Dialog component with additional sizing capabilities.
+
+#### Props
+
+Inherits all Dialog props plus:
+
+- `size`: Size variant ('sm' | 'md' | 'lg' | 'xl' | 'full', default: 'md')
+
+#### Features
+
+- Five size presets with responsive max-width constraints
+- Automatic size class application
+- Consistent centering and layout
+- All base Dialog functionality
+
+#### Size Classes
+
+- `sm`: max-w-sm (384px)
+- `md`: max-w-md (448px)
+- `lg`: max-w-lg (512px)
+- `xl`: max-w-xl (576px)
+- `full`: max-w-6xl (1152px)
+
+### Drawer
+
+Side-sliding panel component for navigation, settings, or contextual content.
+Provides directional slide animations from any screen edge.
+
+#### Props
+
+Inherits base Dialog props plus:
+
+- `side`: Direction ('left' | 'right' | 'top' | 'bottom', default: 'right')
+
+#### Features
+
+- Four-direction slide support with appropriate transitions
+- Responsive sizing (320px width for horizontal, 320px height for vertical)
+- Maximum viewport constraints (90vw/90vh)
+- Direction-specific fly transitions with cubic-out easing
+- Fixed positioning relative to screen edges
+- Scrollable content with overflow-y-auto
+
+#### Side Classes
+
+- `left/right`: 320px width, full height, vertical positioning
+- `top/bottom`: full width, 320px height, horizontal positioning
+
+### Sheet
+
+Bottom/top sliding panel with snap points for height adjustment.
+Ideal for mobile-style bottom sheets and expandable content areas.
+
+#### Props
+
+Inherits base Dialog props plus:
+
+- `side`: Direction ('bottom' | 'top', default: 'bottom')
+- `snapPoints`: Array of height values (default: ['400px'])
+- `defaultSnapPoint`: Initial height value (default: first snap point)
+
+#### Features
+
+- Multi-height snap point system
+- Interactive drag handle for height cycling
+- Visual snap point indicators (when multiple points exist)
+- Click-to-resize functionality on both handle and indicators
+- Rounded corners appropriate to slide direction
+- Viewport height constraints (max-height: 90vh)
+- Smooth transitions between snap points
+
+#### Snap Point System
+
+- Drag handle cycles through available heights
+- Individual indicator buttons for direct height selection
+- Visual feedback showing current snap point
+- Automatic cycling (last point returns to first)
+
+### UI Component Usage
+
+All UI components are exported from `src/lib/components/ui/index.ts` for convenient importing:
+
+```typescript
+import { Dialog, Modal, Drawer, Sheet } from '$lib/components/ui';
+```
+
+#### Common Patterns
+
+- All components use `$bindable()` for reactive open state
+- Consistent callback pattern with `onClose` function
+- Unified styling with design system tokens
+- Shared accessibility features and keyboard support
+- Responsive design with mobile-first approach
+
 ## Architecture Benefits
 
 ### Prop Specificity

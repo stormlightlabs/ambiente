@@ -59,7 +59,7 @@ export class AmbientPadSynth extends BaseInstrument<AmbientPadParams> {
     }));
   }
 
-  tick(time: number, tickDuration: number): void {
+  tick(_time: number, _tickDuration: number): void {
     throw new Error("not implemented");
   }
 

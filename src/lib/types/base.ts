@@ -11,7 +11,7 @@ export abstract class BaseInstrument<T extends Params> {
 
   declare output: Tone.Gain;
 
-  constructor(initialParams: Partial<T> = {}) {}
+  constructor(_initial: Partial<T> = {}) {}
 
   abstract tick(time: number, tickDuration: number): void;
   abstract connect(destination: Tone.ToneAudioNode): void;

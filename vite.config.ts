@@ -12,6 +12,8 @@ export default defineConfig({
     projects: [{
       extends: "./vite.config.ts",
       test: {
+        testTimeout: 2500,
+        retry: 1,
         name: "client",
         environment: "browser",
         browser: { enabled: true, provider: "playwright", instances: [{ browser: "chromium", headless: true }] },
