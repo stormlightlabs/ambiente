@@ -1,19 +1,20 @@
 import { Note, NoteUtilities } from "$lib/theory";
+import { BaseInstrument } from "$lib/types/base";
 import type { HarmonicDroneParams } from "$lib/types/params";
-import { BehaviorSubject, Observable, Subscription } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 import { map, takeUntil } from "rxjs/operators";
 import * as Tone from "tone";
 
-export class HarmonicDroneSynth {
+export class HarmonicDroneSynth extends BaseInstrument<HarmonicDroneParams> {
   private synths: Tone.PolySynth[];
-  private output: Tone.Gain;
   private params$: BehaviorSubject<HarmonicDroneParams>;
-  private subscriptions: Subscription[] = [];
   private destroy$ = new BehaviorSubject<void>(undefined);
   private currentChord: Note[] = [];
   private activeNotes: Set<string> = new Set();
 
-  constructor(initialParams: Partial<HarmonicDroneParams> = {}) {
+  constructor(initial: Partial<HarmonicDroneParams> = {}) {
+    super(initial);
+
     const defaultParams: HarmonicDroneParams = {
       volume: 0.45,
       muted: false,
@@ -22,16 +23,17 @@ export class HarmonicDroneSynth {
       voiceLeading: 0.7,
       voiceCount: 4,
       spread: 1.5,
-      ...initialParams,
+      ...initial,
     };
 
     this.params$ = new BehaviorSubject(defaultParams);
     this.output = new Tone.Gain(defaultParams.volume);
 
     this.synths = Array.from({ length: defaultParams.voiceCount }, (_, index) => {
-      const synth = new Tone.PolySynth(Tone.Synth, {
-        envelope: { attack: 8, decay: 0, sustain: 1, release: 10 },
-        oscillator: { type: "sine" },
+      const synth = new Tone.PolySynth({
+        voice: Tone.Synth,
+        options: { envelope: { attack: 8, decay: 0, sustain: 1, release: 10 }, oscillator: { type: "sine" } },
+        maxPolyphony: 4,
       });
 
       const detune = (index - defaultParams.voiceCount / 2) * defaultParams.spread;
@@ -70,17 +72,9 @@ export class HarmonicDroneSynth {
   }
 
   private updateDroneChord(time?: number): void {
-    const params = this.params$.value;
     if (this.currentChord.length === 0) return;
 
-    for (const noteString of this.activeNotes) {
-      if (Math.random() > params.voiceLeading) {
-        const synthIndex = Math.floor(Math.random() * this.synths.length);
-        this.synths[synthIndex].triggerRelease(noteString, time);
-      }
-    }
-
-    this.activeNotes.clear();
+    this.stopAllNotes(time);
 
     const baseOctave = 2;
     for (let octave = baseOctave; octave <= baseOctave + 1; octave++) {
@@ -119,9 +113,10 @@ export class HarmonicDroneSynth {
     }
 
     this.synths = Array.from({ length: params.voiceCount }, (_, index) => {
-      const synth = new Tone.PolySynth(Tone.Synth, {
-        envelope: { attack: 8, decay: 0, sustain: 1, release: 10 },
-        oscillator: { type: "sine" },
+      const synth = new Tone.PolySynth({
+        voice: Tone.Synth,
+        options: { envelope: { attack: 8, decay: 0, sustain: 1, release: 10 }, oscillator: { type: "sine" } },
+        maxPolyphony: 4,
       });
 
       const detune = (index - params.voiceCount / 2) * params.spread;
@@ -151,5 +146,9 @@ export class HarmonicDroneSynth {
       synth.dispose();
     }
     this.output.dispose();
+  }
+
+  tick(time: number, tickDuration: number): void {
+    throw new Error("not implemented");
   }
 }

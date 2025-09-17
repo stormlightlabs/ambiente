@@ -1,19 +1,19 @@
 import { Note, NoteUtilities } from "$lib/theory";
 import type { RhythmicPulseParams } from "$lib/types/params";
-import { BehaviorSubject, Observable, Subscription } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 import { map, takeUntil } from "rxjs/operators";
 import * as Tone from "tone";
+import { BaseInstrument } from "./base";
 
-export class RhythmicPulseSynth {
+export class RhythmicPulseSynth extends BaseInstrument<RhythmicPulseParams> {
   private synths: Tone.PolySynth[];
-  private output: Tone.Gain;
   private params$: BehaviorSubject<RhythmicPulseParams>;
-  private subscriptions: Subscription[] = [];
   private destroy$ = new BehaviorSubject<void>(undefined);
-  private currentScale: Note[] = [];
   private layers: { timeSinceLastPulse: number }[] = [];
 
   constructor(initialParams: Partial<RhythmicPulseParams> = {}) {
+    super(initialParams);
+
     const defaultParams: RhythmicPulseParams = {
       volume: 0.4,
       muted: false,
@@ -30,9 +30,10 @@ export class RhythmicPulseSynth {
     this.output = new Tone.Gain(defaultParams.volume);
 
     this.synths = Array.from({ length: defaultParams.layerCount }, () => {
-      const synth = new Tone.PolySynth(Tone.Synth, {
-        envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.3 },
-        oscillator: { type: "square" },
+      const synth = new Tone.PolySynth({
+        voice: Tone.Synth,
+        options: { envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.3 }, oscillator: { type: "square" } },
+        maxPolyphony: 4,
       });
 
       synth.connect(this.output);

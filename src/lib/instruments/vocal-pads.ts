@@ -1,12 +1,12 @@
 import { ConvolutionReverbEffect } from "$lib/effects/convolution-reverb";
 import { SpectralProcessingEffect } from "$lib/effects/spectral-processing";
 import { Note, NoteUtilities } from "$lib/theory";
+import { BaseInstrument } from "$lib/types/base";
 import type { VocalPadParams } from "$lib/types/params";
-import { BehaviorSubject, Observable, Subscription } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 import * as Tone from "tone";
 
-export class VocalPadSynth {
-  private output: Tone.Gain;
+export class VocalPadSynth extends BaseInstrument<VocalPadParams> {
   private synth: Tone.PolySynth;
   private filter: Tone.Filter;
   private chorus: Tone.Chorus;
@@ -14,13 +14,14 @@ export class VocalPadSynth {
   private spectralProcessor: SpectralProcessingEffect;
   private convolutionReverb: ConvolutionReverbEffect;
   private params$: BehaviorSubject<VocalPadParams>;
-  private subscriptions: Subscription[] = [];
   private destroy$ = new BehaviorSubject<void>(undefined);
   private currentChord: Note[] = [];
   private activeNotes: Set<string> = new Set();
   private tickCounter = 0;
 
   constructor(initialParams: Partial<VocalPadParams> = {}) {
+    super(initialParams);
+
     const defaultParams: VocalPadParams = {
       volume: 0.4,
       muted: false,
@@ -37,9 +38,13 @@ export class VocalPadSynth {
     this.params$ = new BehaviorSubject(defaultParams);
     this.output = new Tone.Gain(defaultParams.volume);
 
-    this.synth = new Tone.PolySynth(Tone.Synth, {
-      envelope: { attack: defaultParams.attack, decay: 0.5, sustain: 0.9, release: defaultParams.release },
-      oscillator: { type: "sawtooth" },
+    this.synth = new Tone.PolySynth({
+      voice: Tone.Synth,
+      options: {
+        envelope: { attack: defaultParams.attack, decay: 0.5, sustain: 0.9, release: defaultParams.release },
+        oscillator: { type: "sawtooth" },
+      },
+      maxPolyphony: 8,
     });
 
     this.filter = new Tone.Filter({ frequency: defaultParams.formantFreq, type: "bandpass", Q: 5 });
@@ -124,7 +129,7 @@ export class VocalPadSynth {
     for (const octave of octaves) {
       for (const note of this.currentChord) {
         const noteString = `${NoteUtilities.toString(note)}${octave}`;
-        const velocity = octave === 3 ? 0.2 : 0.3;
+        const velocity = octave === 3 ? 0.1 : 0.15;
         this.synth.triggerAttack(noteString, time, velocity);
         this.activeNotes.add(noteString);
       }

@@ -1,106 +1,120 @@
 # Reactive Audio Engine
 
-The AudioEngine class provides a reactive audio system built on Tone.js and RxJS for ambient music generation.
+The AudioEngine class provides a reactive audio system built on Tone.js and RxJS for ambient music generation through a modular architecture that separates concerns for better maintainability and testability.
 
-## Core Architecture
+## Modular Architecture
 
-The engine uses reactive streams to manage audio state, timing, and pattern playback.
-All state changes flow through RxJS observables, enabling declarative audio programming and real-time responsiveness.
+The engine is now organized into specialized modules, each with a single responsibility:
 
-### Key Components
+### Core Engine (`src/lib/engines/audio-engine.ts`)
 
-**State Management**: Central state stream (`state$`) manages playbook status, tempo, key/mode, volume, and active instruments.
-State updates trigger cascading reactive changes throughout the system.
+The main AudioEngine class acts as a coordinator, delegating responsibilities to specialized modules while maintaining the same public API.
 
-**Clock System**: Tempo-based timer stream (`clock$`) drives pattern playback and chord progression timing.
-The clock converts BPM to millisecond intervals and provides the rhythmic foundation.
+### Audio Modules (`src/lib/audio/`)
 
-**Chord Progression**: Generates harmonic sequences based on current key and mode using music theory utilities from `src/lib/theory.ts`.
-Progressions update automatically when key or mode changes.
+- Synth Factory (`synth-factory.ts`): Creates and configures Tone.js synthesizers with instrument-specific parameters and waveforms.
+- Effects (`effects.ts`): Manages effect chain creation and parameter automation utilities.
+- Mixer (`mixer.ts`): Handles audio routing, channel management, and global effects through the AmbientMixer class.
 
-**Pattern Engine**: Maps instrument patterns to the clock stream, triggering note events at precise timing intervals.
-Each instrument type maintains its own pattern with configurable steps, velocities, and durations.
+### Engine Modules (`src/lib/engines/`)
 
-**Synthesis Layer**: Manages Tone.js PolySynth instances for each active instrument type.
-Instruments connect through the ambient mixer with appropriate effects chains.
+- Audio Streams (`audio-streams.ts`): Manages all reactive stream setup, chord progressions, pattern randomization, and the main transport loop.
+- Preset Processor (`preset-processor.ts`): Handles texture application, voice configuration, layering, and generative pattern generation.
+- Instrument Manager (`instrument-manager.ts`): Manages instrument lifecycle, pattern assignment, and ambient instrument context updates.
+
+## Key Components
+
+- State Management: Central state stream (`state$`) coordinates between modules, with each module receiving only the observables it needs.
+- Reactive Streams: Audio timing, chord progressions, and pattern randomization flow through dedicated stream management in AudioStreams.
+- Synthesis Layer: Managed by InstrumentManager with proper lifecycle handling and context updates for both pattern-based and ambient instruments.
+- Audio Routing: AmbientMixer provides flexible signal routing with global effects and channel management.
 
 ## State Flow
 
-State changes propagate through reactive streams:
+State changes propagate through the modular architecture:
 
-1. User actions call public methods (togglePlayback, setTempo, etc.)
-2. Methods update the central state observable
-3. Derived streams react to state changes
-4. Audio synthesis responds to stream events
-5. Events are emitted for external monitoring
+1. User actions call AudioEngine public methods (`togglePlayback`, `setTempo`, etc.)
+2. AudioEngine coordinates updates across specialized modules
+3. AudioStreams manages reactive stream changes and timing
+4. InstrumentManager handles instrument lifecycle and patterns
+5. PresetProcessor applies texture configurations
+6. Events flow through the central events stream for external monitoring
 
 ## Instrument System
 
-The engine supports multiple instrument types from `src/lib/audio.ts`:
+The engine supports multiple instrument types through `src/lib/audio/synth-factory.ts`:
 
-- **Pad**: Harmonic foundation with reverb and chorus
-- **Atmosphere**: Sparse ethereal textures with extended reverb
-- **Lead**: Melodic lines with delay and filtering
-- **Bass**: Low-end foundation with compression
-- **Texture**: Complex ambient layers with multiple effects
-- **Percussion**: Rhythmic elements with compression and reverb
+- Pad: Harmonic foundation with reverb and chorus
+- Atmosphere: Sparse ethereal textures with extended reverb
+- Lead: Melodic lines with delay and filtering
+- Bass: Low-end foundation with compression
+- Texture: Complex ambient layers with multiple effects
+- Percussion: Rhythmic elements with compression and reverb
 
-Each instrument type automatically receives appropriate effect processing through the ambient mixer connection in `ambientMixer.connectSynth()`.
+Each instrument type automatically receives appropriate effect processing through `AmbientMixer.connectSynth()` with effects from `createEffectsChain()`.
 
 ### Ambient Texture Instruments
 
-The engine also manages ambient texture instruments (AmbientPad, Granular, Melodic, HarmonicDrone, RhythmicPulse, FieldRecording, VocalPad, Arpeggiator) through the ambient instrument system. These operate continuously when enabled rather than following step-sequenced patterns.
+The InstrumentManager handles ambient texture instruments (AmbientPad, Granular, Melodic, HarmonicDrone, RhythmicPulse, FieldRecording, VocalPad, Arpeggiator) through the ambient instrument system. These operate continuously when enabled rather than following step-sequenced patterns.
 See [`docs/tone-instruments.md`](./tone-instruments.md) for detailed ambient instrument documentation.
 
 ## Pattern Generation
 
-The `createDefaultPattern` function generates instrument-specific patterns:
+The `createDefaultPattern` function in `src/lib/engines/utilities.ts` generates instrument-specific patterns:
 
 - **Pad**: Sustained chords on downbeats (every 8 steps)
 - **Atmosphere**: Very sparse notes (every 16 steps) with long durations
 - **Bass**: Root note emphasis (every 4 steps)
 - **Default**: Moderate activity (every 4 steps)
 
-Patterns use the current scale and adapt to key/mode changes automatically.
+Patterns use the current scale and adapt to key/mode changes automatically through AudioStreams.
 
 ## Harmonic Processing
 
-The `harmonizeNote` method in src/lib/audio-engine.ts:174 provides intelligent note selection:
+The `harmonizeNote` method in `src/lib/engines/utilities.ts` provides intelligent note selection:
 
 - Pad and Atmosphere instruments use chord tones from the current progression
 - Other instruments play their original pattern notes
-- This creates natural harmonic movement as chord progressions evolve
+- This creates natural harmonic movement as chord progressions evolve through AudioStreams
 
 ## Observable Streams
 
-**Public Observables**:
+### Public Observables (AudioEngine)
 
 - `getState$()`: Complete engine state
 - `getEvents$()`: Audio events (play, pause, chord changes, etc.)
-- `getChordProgression$()`: Current harmonic sequence
+- `getChordProgression$()`: Current harmonic sequence (delegated to AudioStreams)
 - `getCurrentChord$()`: Active chord notes
 
-**Internal Streams**:
+### Internal Streams (AudioStreams)
 
-- `clock$`: Rhythmic timing pulses
-- `chordProgression$`: Generated harmonic sequences
-- `patterns$`: Instrument pattern definitions
+- `chordProgression$`: Generated harmonic sequences from music theory
+- `randomizedPatterns$`: Pattern variations based on randomization parameters
+- Various reactive streams for tempo, volume, instruments, and scale changes
+
+## Module Responsibilities
+
+- `AudioEngine`: Public API coordination and module orchestration
+- `AudioStreams`: Reactive stream management and timing coordination
+- `InstrumentManager`: Instrument lifecycle and pattern management
+- `PresetProcessor`: Texture application and voice configuration
+- Audio Modules: Synthesis, effects, and mixing infrastructure
 
 ## Lifecycle Management
 
-**Initialization**: Constructor sets up all reactive streams and begins monitoring state changes.
+Initialization: AudioEngine constructor initializes all modules and delegates stream setup to AudioStreams.
 Audio context remains suspended until first play action.
 
-**Cleanup**: The `dispose()` method properly cleans up all resources:
+Cleanup: The `dispose()` method properly cleans up all module resources:
 
 - Completes RxJS subscriptions via `destroy$` subject
-- Disposes all Tone.js synthesizer instances
-- Cleans up ambient mixer and transport resources
+- Disposes all Tone.js synthesizer instances through InstrumentManager
+- Cleans up AmbientMixer and transport resources
 
 ## Parameter Automation
 
 The `automateParameter` method provides dynamic sound shaping by targeting nested synthesizer parameters.
-Uses reflection to access parameter paths like "envelope.attack" and applies smooth transitions over specified durations.
+Uses `getNestedParam` from utilities to access parameter paths and applies smooth transitions via `ParameterAutomation`.
 
 ## Usage Pattern
 
@@ -109,4 +123,4 @@ Create engines using factory functions:
 - `new AudioEngine(initialState)`: Custom configuration
 - `createAmbientAudioEngine(initialState)`: Ambient-focused preset with slower tempo, minor mode, and atmospheric instrument selection
 
-The engine maintains reactive state throughout its lifecycle, responding immediately to user interactions while providing smooth audio transitions.
+The modular architecture maintains reactive state throughout its lifecycle, with each module handling its specific domain while responding immediately to user interactions.

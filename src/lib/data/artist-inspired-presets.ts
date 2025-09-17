@@ -47,7 +47,7 @@ const ENO: Preset = {
     structure: { density: 0.4, randomness: 0.3, layering: "medium", generativePattern: "random-walk" },
     mix: { width: 0.8, tapeSaturation: 0.2, volume: 0.8 },
     instruments: {
-      ambientPad: { volume: -8, muted: false, enabled: true, filterFreq: 8000, resonance: 0.4 },
+      ambientPad: { volume: -14, muted: false, enabled: true, filterFreq: 6000, resonance: 0.2 },
       melodic: { volume: -12, muted: false, enabled: true, octave: 4 },
       granular: { volume: -12, muted: false, enabled: false, density: 0.5, grainSize: 0.5, pitch: 0, spread: 0.5 },
       harmonicDrone: {
@@ -113,7 +113,7 @@ const BUDD: Preset = {
     structure: { density: 0.3, randomness: 0.2, layering: "minimal", generativePattern: "static-drone" },
     mix: { width: 0.9, tapeSaturation: 0.15, volume: 0.85 },
     instruments: {
-      ambientPad: { volume: -8, muted: false, enabled: true, filterFreq: 7000, resonance: 0.5 },
+      ambientPad: { volume: -14, muted: false, enabled: true, filterFreq: 5000, resonance: 0.25 },
       melodic: { volume: -10, muted: false, enabled: true, octave: 5 },
       granular: { volume: -12, muted: false, enabled: false, density: 0.5, grainSize: 0.5, pitch: 0, spread: 0.5 },
       harmonicDrone: {

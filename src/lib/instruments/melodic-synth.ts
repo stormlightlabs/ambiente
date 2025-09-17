@@ -1,26 +1,26 @@
 import { Note, NoteUtilities } from "$lib/theory";
+import { BaseInstrument } from "$lib/types/base";
 import type { MelodicParams } from "$lib/types/params";
-import { BehaviorSubject, Observable, Subscription } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 import { map, takeUntil } from "rxjs/operators";
 import * as Tone from "tone";
 
-export class MelodicSynth {
+export class MelodicSynth extends BaseInstrument<MelodicParams> {
   private synth: Tone.PolySynth;
-  private output: Tone.Gain;
   private params$: BehaviorSubject<MelodicParams>;
-  private subscriptions: Subscription[] = [];
   private destroy$ = new BehaviorSubject<void>(undefined);
-  private currentScale: Note[] = [];
 
-  constructor(initialParams: Partial<MelodicParams> = {}) {
-    const defaultParams: MelodicParams = { volume: 0.5, muted: false, enabled: true, octave: 4, ...initialParams };
+  constructor(initial: Partial<MelodicParams> = {}) {
+    super(initial);
+    const defaultParams: MelodicParams = { volume: 0.5, muted: false, enabled: true, octave: 4, ...initial };
 
     this.params$ = new BehaviorSubject(defaultParams);
     this.output = new Tone.Gain(defaultParams.volume);
 
-    this.synth = new Tone.PolySynth(Tone.Synth, {
-      envelope: { attack: 0.1, decay: 1, sustain: 0.3, release: 2 },
-      oscillator: { type: "triangle" },
+    this.synth = new Tone.PolySynth({
+      voice: Tone.Synth,
+      options: { envelope: { attack: 0.1, decay: 1, sustain: 0.3, release: 2 }, oscillator: { type: "triangle" } },
+      maxPolyphony: 8,
     });
 
     this.synth.connect(this.output);

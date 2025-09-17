@@ -1,19 +1,20 @@
 import { Note, NoteUtilities } from "$lib/theory";
+import { BaseInstrument } from "$lib/types/base";
 import type { GranularParams } from "$lib/types/params";
-import { BehaviorSubject, Observable, Subscription } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 import { map, takeUntil } from "rxjs/operators";
 import * as Tone from "tone";
 
-export class GranularSynth {
-  private output: Tone.Gain;
+export class GranularSynth extends BaseInstrument<GranularParams> {
   private grainSynths: { synth: Tone.PolySynth; panner: Tone.Panner }[];
   private params$: BehaviorSubject<GranularParams>;
-  private subscriptions: Subscription[] = [];
   private destroy$ = new BehaviorSubject<void>(undefined);
-  private currentScale: Note[] = [];
   private timeSinceLastGrain = 0;
 
-  constructor(initialParams: Partial<GranularParams> = {}) {
+  PREFIX = "[GranularSynth]";
+
+  constructor(initial: Partial<GranularParams> = {}) {
+    super(initial);
     const defaultParams: GranularParams = {
       volume: 0.35,
       muted: false,
@@ -22,16 +23,18 @@ export class GranularSynth {
       grainSize: 0.15,
       pitch: -1,
       spread: 300,
-      ...initialParams,
+      ...initial,
     };
 
+    this.log(`Creating GranularSynth with params:`, defaultParams);
     this.params$ = new BehaviorSubject(defaultParams);
     this.output = new Tone.Gain(defaultParams.volume);
 
     this.grainSynths = Array.from({ length: 4 }, () => {
-      const synth = new Tone.PolySynth(Tone.Synth, {
-        envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 0.2 },
-        oscillator: { type: "sine" },
+      const synth = new Tone.PolySynth({
+        voice: Tone.Synth,
+        options: { envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 0.2 }, oscillator: { type: "sine" } },
+        maxPolyphony: 4,
       });
 
       const filter = new Tone.Filter({ frequency: 800, type: "lowpass", Q: 1 });
@@ -43,6 +46,7 @@ export class GranularSynth {
 
       return { synth, panner };
     });
+    this.log(`Created ${this.grainSynths.length} grain synths with audio chain`);
 
     this.initializeGrainScheduling();
   }
@@ -99,10 +103,12 @@ export class GranularSynth {
   }
 
   setScale(scale: Note[]): void {
+    this.log(`Setting scale:`, scale?.map(n => Note[n]).join(", ") || "none");
     this.currentScale = [...scale];
   }
 
   updateParams(newParams: Partial<GranularParams>): void {
+    this.log(`Updating params:`, newParams);
     const currentParams = this.params$.value;
     const updatedParams = { ...currentParams, ...newParams };
     this.params$.next(updatedParams);
@@ -117,16 +123,20 @@ export class GranularSynth {
   }
 
   dispose(): void {
+    this.log(`Disposing GranularSynth`);
     this.destroy$.next();
     this.destroy$.complete();
 
     for (const sub of this.subscriptions) sub.unsubscribe();
     this.subscriptions = [];
+    this.log(`Unsubscribed from all parameter changes`);
 
+    this.log(`Disposing ${this.grainSynths.length} grain synths`);
     for (const { synth, panner } of this.grainSynths) {
       synth.dispose();
       panner.dispose();
     }
     this.output.dispose();
+    this.log(`Disposed all audio nodes`);
   }
 }

@@ -1,23 +1,23 @@
 import { StereoImagingEffect } from "$lib/effects/stereo-imaging";
 import { TapeSaturationEffect } from "$lib/effects/tape-saturation";
 import type { FieldRecordingParams } from "$lib/types/params";
-import { BehaviorSubject, Observable, Subscription } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 import { filter, map, takeUntil } from "rxjs/operators";
 import * as Tone from "tone";
+import { BaseInstrument } from "./base";
 
-export class FieldRecordingSynth {
-  private output: Tone.Gain;
+export class FieldRecordingSynth extends BaseInstrument<FieldRecordingParams> {
   private noiseSource: Tone.Noise;
   private filter: Tone.Filter;
   private reverb: Tone.Reverb;
   private tapeSaturation: TapeSaturationEffect;
   private stereoImaging: StereoImagingEffect;
   private params$: BehaviorSubject<FieldRecordingParams>;
-  private subscriptions: Subscription[] = [];
   private destroy$ = new BehaviorSubject<void>(undefined);
   private textureScheduler?: ReturnType<typeof setTimeout>;
 
   constructor(initialParams: Partial<FieldRecordingParams> = {}) {
+    super(initialParams);
     const defaultParams: FieldRecordingParams = {
       volume: 0.3,
       muted: false,
@@ -178,5 +178,9 @@ export class FieldRecordingSynth {
     this.tapeSaturation.dispose();
     this.stereoImaging.dispose();
     this.output.dispose();
+  }
+
+  tick(time: number, tickDuration: number): void {
+    throw new Error("not implemented");
   }
 }

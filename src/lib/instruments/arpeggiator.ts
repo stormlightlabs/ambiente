@@ -2,12 +2,12 @@ import { GranularDelayEffect } from "$lib/effects/granular-delay";
 import { ModulatedFiltersEffect } from "$lib/effects/modulated-filters";
 import { ProbabilityOrnamentsEffect } from "$lib/effects/probability-ornaments";
 import { Note, NoteUtilities } from "$lib/theory";
+import { BaseInstrument } from "$lib/types/base";
 import type { ArpeggiatorParams } from "$lib/types/params";
-import { BehaviorSubject, Observable, Subscription } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 import * as Tone from "tone";
 
-export class ArpeggiatorSynth {
-  private output: Tone.Gain;
+export class ArpeggiatorSynth extends BaseInstrument<ArpeggiatorParams> {
   private synth: Tone.PolySynth;
   private filter: Tone.Filter;
   private delay: Tone.FeedbackDelay;
@@ -15,14 +15,14 @@ export class ArpeggiatorSynth {
   private modulatedFilter: ModulatedFiltersEffect;
   private probabilityOrnaments: ProbabilityOrnamentsEffect;
   private params$: BehaviorSubject<ArpeggiatorParams>;
-  private subscriptions: Subscription[] = [];
   private destroy$ = new BehaviorSubject<void>(undefined);
-  private currentScale: Note[] = [];
   private arpScheduler?: ReturnType<typeof setTimeout>;
   private currentNoteIndex: number = 0;
   private direction: number = 1;
 
-  constructor(initialParams: Partial<ArpeggiatorParams> = {}) {
+  constructor(initial: Partial<ArpeggiatorParams> = {}) {
+    super(initial);
+
     const defaultParams: ArpeggiatorParams = {
       volume: 0.35,
       muted: false,
@@ -33,16 +33,17 @@ export class ArpeggiatorSynth {
       noteDuration: 0.3,
       probability: 0.8,
       swing: 0.1,
-      ...initialParams,
+      ...initial,
     };
 
     this.params$ = new BehaviorSubject(defaultParams);
     this.output = new Tone.Gain(defaultParams.volume);
 
     // Clean, crystalline synth for arpeggiator
-    this.synth = new Tone.PolySynth(Tone.Synth, {
-      envelope: { attack: 0.05, decay: 0.4, sustain: 0.3, release: 1 },
-      oscillator: { type: "triangle" },
+    this.synth = new Tone.PolySynth({
+      voice: Tone.Synth,
+      options: { envelope: { attack: 0.05, decay: 0.4, sustain: 0.3, release: 1 }, oscillator: { type: "triangle" } },
+      maxPolyphony: 8, // Increased polyphony limit for arpeggiator patterns
     });
 
     // High-pass filter for sparkle

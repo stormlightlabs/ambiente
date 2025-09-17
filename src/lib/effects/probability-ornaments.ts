@@ -21,9 +21,10 @@ export class ProbabilityOrnamentsEffect {
 
     this.params$ = new BehaviorSubject(defaultParams);
 
-    this.synth = new Tone.PolySynth(Tone.Synth, {
-      envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 0.3 },
-      oscillator: { type: "sine" },
+    this.synth = new Tone.PolySynth({
+      voice: Tone.Synth,
+      options: { envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 0.3 }, oscillator: { type: "sine" } },
+      maxPolyphony: 4,
     });
 
     this.output = new Tone.Gain(0.3);
