@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import favicon from '$lib/assets/favicon.svg';
@@ -16,13 +17,13 @@
 
 	function toggleDarkMode() {
 		isDarkMode = !isDarkMode;
-		if (typeof document !== 'undefined') {
+		if (browser) {
 			document.documentElement.classList.toggle('dark', isDarkMode);
 		}
 	}
 
 	$effect(() => {
-		if (typeof document !== 'undefined') {
+		if (browser) {
 			document.documentElement.classList.toggle('dark', isDarkMode);
 		}
 	});
@@ -56,7 +57,7 @@
 			href={resolve('/')}
 			class={twMerge(
 				'cursor-pointer border-b-3 px-8 py-4 text-base transition-all duration-200',
-				'flex items-center',
+				'flex items-center gap-2',
 				page.route.id === '/'
 					? 'border-primary-600 bg-primary-50 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400'
 					: [
@@ -64,13 +65,13 @@
 							'dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-surface-100'
 						].join(',')
 			)}>
-			<span class="mr-2 i-bi-play-circle"></span>Player
+			<span class="i-bi-play-circle"></span><span>Player</span>
 		</a>
 		<a
 			href={resolve('/composer')}
 			class={twMerge(
 				'cursor-pointer border-b-3 px-8 py-4 text-base transition-all duration-200',
-				'flex items-center',
+				'flex items-center gap-2',
 				page.route.id === '/composer'
 					? 'border-primary-600 bg-primary-50 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400'
 					: [
@@ -78,12 +79,12 @@
 							'dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-surface-100'
 						].join(',')
 			)}>
-			<span class="mr-2 i-bi-music-note-beamed"></span>Composer
+			<span class="i-bi-music-note-beamed"></span><span>Composer</span>
 		</a>
 		<a
 			href={resolve('/sequencer')}
 			class={twMerge(
-				'flex items-center',
+				'flex items-center gap-2',
 				'cursor-pointer border-b-3 px-8 py-4 text-base transition-all duration-200',
 				page.route.id === '/sequencer'
 					? 'border-primary-600 bg-primary-50 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400'
@@ -93,7 +94,7 @@
 						].join(','),
 				'opacity-75'
 			)}>
-			<span class="mr-2 i-bi-grid-3x3-gap"></span>Sequencer
+			<span class="i-bi-grid-3x3-gap"></span><span>Sequencer</span>
 		</a>
 	</nav>
 

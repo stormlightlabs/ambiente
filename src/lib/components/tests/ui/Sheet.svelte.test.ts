@@ -1,14 +1,13 @@
+import Sheet from "$components/ui/Sheet.svelte";
 import { page, userEvent } from "@vitest/browser/context";
 import { type ComponentProps, createRawSnippet } from "svelte";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-svelte";
-import Sheet from "./Sheet.svelte";
 
 describe("Sheet", () => {
   const onClose = vi.fn();
-  const renderWithProps = (overrides: Partial<ComponentProps<typeof Sheet>> = {}) => {
+  const renderWithProps = (overrides: Partial<ComponentProps<typeof Sheet>> = {}) =>
     render(Sheet, { open: true, onClose, side: "bottom", ...overrides });
-  };
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -89,7 +88,6 @@ describe("Sheet", () => {
 
   it("should not show snap point indicators for single snap point", async () => {
     renderWithProps({ snapPoints: ["400px"] });
-
     const indicators = page.getByRole("button", { name: /set height to/i });
     expect(indicators.elements()).toHaveLength(0);
   });

@@ -1,6 +1,5 @@
 import { Mode, Note } from "$lib/theory";
 import { InstrumentType } from "$lib/types/instruments";
-import { untrack } from "svelte";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock(
@@ -59,12 +58,7 @@ const mockAudioEngine = {
 
 vi.mock("$lib/audio-engine", () => ({ createAmbientAudioEngine: vi.fn(() => mockAudioEngine) }));
 
-import {
-  AppStateManager,
-  ComponentCommunicator,
-  createDerivedAudioState,
-  createParameterBinding,
-} from "$lib/communication.svelte";
+import { AppStateManager, ComponentCommunicator } from "$lib/communication.svelte";
 
 describe("Communication Module", () => {
   beforeEach(() => {
@@ -176,57 +170,6 @@ describe("Communication Module", () => {
         expect(message).toHaveProperty("source");
         expect(message).toHaveProperty("timestamp");
       }
-    });
-  });
-
-  describe("Parameter Binding", () => {
-    it("should create parameter binding with initial value", async () => {
-      const appState = new AppStateManager();
-      const binding = createParameterBinding(appState, "filter.frequency", InstrumentType.Pad, 1000);
-      expect(binding.value).toBe(1000);
-      expect(typeof binding.value).toBe("number");
-    });
-
-    it("should provide value getter and setter", async () => {
-      const appState = new AppStateManager();
-
-      const binding = createParameterBinding(appState, "envelope.attack", InstrumentType.Lead, 0.1);
-
-      expect(typeof binding).toBe("object");
-      expect("value" in binding).toBe(true);
-    });
-  });
-
-  describe("Derived Audio State", () => {
-    it("should create derived state with value accessor", async () => {
-      const appState = new AppStateManager();
-      const tempoBinding = createDerivedAudioState(appState, (state) => state.tempo);
-
-      expect(tempoBinding).toBeTypeOf("object");
-      expect("value" in tempoBinding).toBe(true);
-      expect(tempoBinding.value).toBeTypeOf("number");
-    });
-
-    it("should work with untrack for testing", async () => {
-      const appState = new AppStateManager();
-      const tempoBinding = createDerivedAudioState(appState, (state) => state.tempo);
-      let derivedValue: number;
-
-      untrack(() => {
-        derivedValue = tempoBinding.value;
-        expect(derivedValue).toBeTypeOf("number");
-      });
-    });
-
-    it("should handle different selector types", async () => {
-      const appState = new AppStateManager();
-      const keyModeBinding = createDerivedAudioState(appState, (state) => `${state.key}-${state.mode}`);
-      const isPlayingBinding = createDerivedAudioState(appState, (state) => state.isPlaying);
-      const instrumentCountBinding = createDerivedAudioState(appState, (state) => state.instruments.size);
-
-      expect(typeof keyModeBinding.value).toBe("string");
-      expect(typeof isPlayingBinding.value).toBe("boolean");
-      expect(typeof instrumentCountBinding.value).toBe("number");
     });
   });
 });

@@ -34,22 +34,6 @@ Pure runes approach eliminates mixed paradigms:
 - Direct RxJS subscription management via `Subscription[]`
 - Explicit cleanup in `dispose()` methods
 
-### Parameter Automation
-
-`createParameterBinding()` provides two-way binding between UI controls and audio parameters:
-
-- Immediate UI updates via runes
-- Automated parameter changes via audio engine delegation
-- Type-safe instrument and parameter path targeting
-
-### Derived State
-
-`createDerivedAudioState()` creates computed values from audio state:
-
-- Reactive selectors using `$derived`
-- Automatic updates when source state changes
-- Read-only interface prevents accidental mutations
-
 ## Component Integration
 
 ### Global State Access

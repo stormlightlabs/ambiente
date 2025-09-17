@@ -2,6 +2,8 @@ import type { AudioEngineState } from "$lib/types/audio";
 import type { AmbientInstrumentConfig } from "$lib/types/params";
 import type { EffectType, InstrumentType } from "./instruments";
 
+export type GenerativePattern = "markov" | "random-walk" | "euclidean" | "static-drone";
+export type Layering = "minimal" | "medium" | "dense";
 export type Voice = {
   type: "synth" | "sampler" | "drone" | "granular" | "piano";
   count: number;
@@ -21,12 +23,7 @@ export type Texture = {
     filter?: { type: "lowpass" | "highpass" | "bandpass"; frequency: number; Q?: number };
     chorus?: { wet: number; frequency: number; depth: number };
   };
-  structure: {
-    density: number;
-    randomness: number;
-    layering: "minimal" | "medium" | "dense";
-    generativePattern: "markov" | "random-walk" | "euclidean" | "static-drone";
-  };
+  structure: { density: number; randomness: number; layering: Layering; generativePattern: GenerativePattern };
   mix: { width: number; tapeSaturation: number; volume: number };
   instruments: AmbientInstrumentConfig;
 };

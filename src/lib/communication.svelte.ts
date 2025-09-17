@@ -6,19 +6,7 @@ import { generateProgression, generateScale, Mode, Note, PROGRESSIONS } from "./
 import type { AudioEngineState, AudioEvent, RandomizationParams } from "./types/audio";
 import { InstrumentType } from "./types/instruments";
 import type { Preset } from "./types/presets";
-import type { Optional } from "./types/shared";
-
-type ComponentMessage = { type: string; source: string; data?: unknown; timestamp: number };
-type HistoryState<T> = { past: T[]; present: T; future: T[] };
-type UndoableState = AudioEngineState;
-type View = "composer" | "player" | "sequencer" | "visualizer";
-type UIState = {
-  isInitialized: boolean;
-  selectedPreset?: string;
-  activeView: View;
-  isRecording: boolean;
-  showSettings: boolean;
-};
+import type { ComponentMessage, HistoryState, Optional, UIState } from "./types/shared";
 
 export class AppStateManager {
   private audioEngine: Optional<AudioEngine>;
@@ -51,7 +39,7 @@ export class AppStateManager {
     },
   });
 
-  private history = $state<HistoryState<UndoableState>>({ past: [], present: { ...this.audioState }, future: [] });
+  private history = $state<HistoryState<AudioEngineState>>({ past: [], present: { ...this.audioState }, future: [] });
   private events = $state<AudioEvent[]>([]);
 
   constructor() {
@@ -96,7 +84,7 @@ export class AppStateManager {
     this.uiState.isInitialized = true;
   }
 
-  private pushToHistory(newState: UndoableState): void {
+  private pushToHistory(newState: AudioEngineState): void {
     this.history.past.push(this.history.present);
     this.history.present = { ...newState };
     this.history.future = [];
@@ -276,7 +264,7 @@ export class AppStateManager {
     this.applyHistoryState(next);
   }
 
-  private applyHistoryState(state: UndoableState): void {
+  private applyHistoryState(state: AudioEngineState): void {
     this.ensureAudioEngine();
     this.audioEngine!.setTempo(state.tempo);
     this.audioEngine!.setKeyAndMode(state.key, state.mode);
@@ -357,37 +345,3 @@ export class ComponentCommunicator {
     return this.messages.slice(-20);
   }
 }
-
-export const createParameterBinding = (
-  appState: AppStateManager,
-  paramPath: string,
-  instrumentType: InstrumentType,
-  initialValue: number,
-) => {
-  let value = $state(initialValue);
-
-  const bind = {
-    get value() {
-      return value;
-    },
-    set value(newValue: number) {
-      value = newValue;
-      appState.automateParameter(instrumentType, paramPath, newValue);
-    },
-  };
-
-  return bind;
-};
-
-export const createDerivedAudioState = <T>(
-  appState: AppStateManager,
-  selector: (state: AudioEngineState) => T,
-): { readonly value: T } => {
-  const derivedValue = $derived(selector(appState.audio));
-
-  return {
-    get value() {
-      return derivedValue;
-    },
-  };
-};

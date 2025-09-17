@@ -3,13 +3,15 @@
 	import PlaybackDisplay from '$lib/components/PlaybackDisplay.svelte';
 	import PlayerControls from '$lib/components/PlayerControls.svelte';
 	import PresetPlayer from '$lib/components/PresetPlayer.svelte';
+	import RandomizationControls from '$lib/components/RandomizationControls.svelte';
 	import { playbackStore } from '$lib/stores/playback-store.svelte';
 	import { type Note } from '$lib/theory';
+	import { onMount } from 'svelte';
 
 	const appState = new AppStateManager();
 	let currentChordNotes = $state<Note[]>([]);
 
-	$effect(() => {
+	onMount(() => {
 		appState.setActiveView('player');
 		const subscription = appState.getCurrentChord$().subscribe((notes) => (currentChordNotes = notes));
 		return () => subscription.unsubscribe();
@@ -43,11 +45,16 @@
 	</div>
 
 	<div class="lg:col-span-1">
+		<RandomizationControls
+			randomization={appState.audio.randomization}
+			onSetRandomization={appState.setRandomization.bind(appState)}
+			isVisible={appState.audio.randomization.enabled} />
+
 		<PlaybackDisplay
 			isTracking={playbackStore.isTracking}
-			currentChord={playbackStore.currentChord}
-			activeInstrumentsList={playbackStore.activeInstrumentsList}
-			currentlyPlayingNotes={playbackStore.currentlyPlayingNotes}
+			chord={playbackStore.currentChord}
+			active={playbackStore.activeInstrumentsList}
+			currentlyPlaying={playbackStore.currentlyPlayingNotes}
 			recentEvents={playbackStore.recentEvents} />
 	</div>
 </div>

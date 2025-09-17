@@ -1,14 +1,13 @@
+import Drawer from "$components/ui/Drawer.svelte";
 import { page, userEvent } from "@vitest/browser/context";
 import { type ComponentProps, createRawSnippet } from "svelte";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-svelte";
-import Drawer from "./Drawer.svelte";
 
 describe("Drawer", () => {
   const onClose = vi.fn();
-  const renderWithProps = (overrides: Partial<ComponentProps<typeof Drawer>> = {}) => {
+  const renderWithProps = (overrides: Partial<ComponentProps<typeof Drawer>> = {}) =>
     render(Drawer, { open: true, onClose, side: "right", ...overrides });
-  };
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -107,7 +106,6 @@ describe("Drawer", () => {
 
   it("should call onClose when close button is clicked", async () => {
     renderWithProps();
-
     const closeButton = page.getByRole("button", { name: /close drawer/i });
     await userEvent.click(closeButton);
     expect(onClose).toHaveBeenCalledOnce();

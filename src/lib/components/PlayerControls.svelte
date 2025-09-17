@@ -183,7 +183,7 @@
 				</div>
 			</div>
 
-			<!-- Randomization Control -->
+			<!-- Randomization Toggle -->
 			<div class="flex flex-col items-center gap-2">
 				<span class="text-xs opacity-80">Randomization</span>
 				<div class="flex gap-1">
@@ -198,46 +198,6 @@
 						🎲
 					</button>
 				</div>
-				{#if audioState.randomization.enabled}
-					<div class="flex flex-col gap-1 text-xs">
-						<div class="flex items-center gap-2">
-							<span class="w-12 opacity-80">Rhythm</span>
-							<input
-								type="range"
-								min="0"
-								max="1"
-								step="0.1"
-								value={audioState.randomization.rhythmVariability}
-								oninput={(event_) => onSetRandomization({ rhythmVariability: Number(event_.currentTarget.value) })}
-								class="h-1 w-16 cursor-pointer appearance-none rounded-lg bg-white/20 accent-yellow-300"
-								aria-label="Rhythm variability" />
-						</div>
-						<div class="flex items-center gap-2">
-							<span class="w-12 opacity-80">Melody</span>
-							<input
-								type="range"
-								min="0"
-								max="1"
-								step="0.1"
-								value={audioState.randomization.melodicVariability}
-								oninput={(event_) => onSetRandomization({ melodicVariability: Number(event_.currentTarget.value) })}
-								class="h-1 w-16 cursor-pointer appearance-none rounded-lg bg-white/20 accent-yellow-300"
-								aria-label="Melody variability" />
-						</div>
-						<div class="flex items-center gap-2">
-							<span class="w-12 opacity-80">Chords</span>
-							<input
-								type="range"
-								min="0"
-								max="1"
-								step="0.05"
-								value={audioState.randomization.chordProgression}
-								oninput={(event_) => onSetRandomization({ chordProgression: Number(event_.currentTarget.value) })}
-								class="h-1 w-16 cursor-pointer appearance-none rounded-lg bg-white/20 accent-yellow-300"
-								aria-label="Chord progression variability" />
-						</div>
-					</div>
-				{/if}
 			</div>
 
 			<!-- History Control -->

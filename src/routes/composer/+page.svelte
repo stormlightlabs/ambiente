@@ -3,11 +3,12 @@
 	import CompositionCreator from '$lib/components/CompositionCreator.svelte';
 	import PlayerControls from '$lib/components/PlayerControls.svelte';
 	import { type Note } from '$lib/theory';
+	import { onMount } from 'svelte';
 
 	const appState = new AppStateManager();
 	let currentChordNotes = $state<Note[]>([]);
 
-	$effect(() => {
+	onMount(() => {
 		appState.setActiveView('composer');
 		const subscription = appState.getCurrentChord$().subscribe((notes) => (currentChordNotes = notes));
 		return () => subscription.unsubscribe();

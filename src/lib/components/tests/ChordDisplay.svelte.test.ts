@@ -16,14 +16,10 @@ const currentChord: (overrides: Partial<TCurrentChord>) => TCurrentChord = (over
 const renderWithProps = (
   overrides: Partial<ComponentProps<typeof ChordDisplay>> = {},
   chord: Partial<TCurrentChord> = {},
-) =>
-  render(ChordDisplay, {
-    currentChord: currentChord(chord),
-    key: Note.C,
-    mode: Mode.Ionian,
-    name: "classic" as const,
-    ...overrides,
-  });
+) => {
+  const props = { currentChord: currentChord(chord), key: Note.C, mode: Mode.Ionian, name: "classic" as const };
+  return render(ChordDisplay, { ...props, ...overrides });
+};
 
 describe("ChordDisplay", () => {
   beforeEach(() => {});
@@ -112,12 +108,12 @@ describe("ChordDisplay", () => {
     });
 
     it("should display jazz progression chords", async () => {
+      // Jazz progression has 3 chords, so position should show X/3
       renderWithProps({ name: "jazz" });
 
       const progressionHeader = page.getByTestId("progression-header");
       await expect.element(progressionHeader).toHaveTextContent("Progression (jazz)");
 
-      // Jazz progression has 3 chords, so position should show X/3
       const position = page.getByTestId("progression-position");
       await expect.element(position).toHaveTextContent("1/3");
     });
@@ -193,7 +189,6 @@ describe("ChordDisplay", () => {
 
     it("should recalculate progression when key changes", async () => {
       const props = { key: Note.C, mode: Mode.Ionian, progressionName: "classic" as const };
-
       const component = renderWithProps(props);
       flushSync();
 
