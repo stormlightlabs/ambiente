@@ -4,6 +4,7 @@
 	import { Mode, ModeUtilities, Note, NoteUtilities } from '$lib/theory';
 	import { InstrumentType } from '$lib/types/instruments';
 	import type { Preset } from '$lib/types/presets';
+	import { fade, slide } from 'svelte/transition';
 	import { twMerge } from 'tailwind-merge';
 
 	type Props = {
@@ -163,7 +164,9 @@
 	</div>
 
 	{#if currentPreset}
-		<div class="mt-4 rounded-lg border-2 border-primary-600 bg-surface-50 p-4 dark:bg-surface-900">
+		<div
+			transition:slide={{ duration: 300 }}
+			class="mt-4 rounded-lg border-2 border-primary-600 bg-surface-50 p-4 dark:bg-surface-900">
 			<h3 class="mb-2 text-lg font-medium text-primary-800 dark:text-primary-400">Current: {currentPreset.name}</h3>
 			<p class="mb-4 text-surface-600 dark:text-surface-400">{currentPreset.description}</p>
 
@@ -198,7 +201,7 @@
 			</div>
 
 			{#if currentPreset.texture}
-				<div class="mb-4 rounded bg-blue-50 p-3">
+				<div transition:fade={{ duration: 200 }} class="mb-4 rounded bg-blue-50 p-3">
 					<h4 class="mb-2 font-medium text-blue-800">Ambient Configuration</h4>
 					<div class="grid grid-cols-2 gap-2 text-sm">
 						<div>

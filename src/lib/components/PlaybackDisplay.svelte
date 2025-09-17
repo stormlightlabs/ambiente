@@ -2,6 +2,7 @@
 	import { NoteUtilities, type Note } from '$lib/theory';
 	import { getInstrumentDisplayName } from '$lib/types/instruments';
 	import type { InstrumentActivity, PlaybackEvent } from '$lib/types/playback';
+	import { fade, slide } from 'svelte/transition';
 
 	type Props = {
 		isTracking: boolean;
@@ -41,6 +42,7 @@
 
 {#if isTracking}
 	<div
+		transition:slide={{ duration: 400 }}
 		class="flex flex-col gap-4 rounded-lg bg-gradient-to-br from-surface-800 to-surface-900 p-4 text-surface-contrast-800 shadow-lg">
 		<div class="flex items-center justify-between">
 			<h3 class="font-display text-lg font-semibold">Live Playback</h3>
@@ -51,7 +53,7 @@
 		</div>
 
 		{#if currentPreset}
-			<div class="rounded bg-surface-contrast-800/10 p-2">
+			<div transition:fade={{ duration: 250 }} class="rounded bg-surface-contrast-800/10 p-2">
 				<div class="text-xs opacity-70">Current Preset</div>
 				<div class="font-semibold">{currentPreset}</div>
 			</div>
@@ -59,7 +61,7 @@
 
 		<!-- Current Chord -->
 		{#if currentChord.length > 0}
-			<div class="rounded bg-surface-contrast-800/10 p-3">
+			<div transition:slide={{ duration: 300 }} class="rounded bg-surface-contrast-800/10 p-3">
 				<div class="mb-2 text-xs opacity-70">Current Chord</div>
 				<div class="flex items-center gap-2">
 					{#each currentChord as note, index (note)}
@@ -77,7 +79,7 @@
 
 		<!-- Active Instruments -->
 		{#if activeInstrumentsList.length > 0}
-			<div class="rounded bg-surface-contrast-800/10 p-3">
+			<div transition:slide={{ duration: 300 }} class="rounded bg-surface-contrast-800/10 p-3">
 				<div class="mb-2 text-xs opacity-70">Active Instruments</div>
 				<div class="grid grid-cols-1 gap-2 md:grid-cols-2">
 					{#each activeInstrumentsList as activity (activity.type)}
@@ -106,7 +108,7 @@
 
 		<!-- Currently Playing Notes Summary -->
 		{#if currentlyPlayingNotes.length > 0}
-			<div class="rounded bg-surface-contrast-800/10 p-3">
+			<div transition:slide={{ duration: 300 }} class="rounded bg-surface-contrast-800/10 p-3">
 				<div class="mb-2 text-xs opacity-70">Currently Playing</div>
 				<div class="flex flex-wrap gap-1">
 					{#each currentlyPlayingNotes as note (note)}
@@ -121,7 +123,7 @@
 
 		<!-- Recent Events -->
 		{#if recentEvents.length > 0}
-			<div class="rounded bg-surface-contrast-800/10 p-3">
+			<div transition:slide={{ duration: 300 }} class="rounded bg-surface-contrast-800/10 p-3">
 				<div class="mb-2 text-xs opacity-70">Recent Events</div>
 				<div class="max-h-32 space-y-1 overflow-y-auto">
 					{#each recentEvents.slice(-5) as event (event.id)}
@@ -150,7 +152,7 @@
 
 		<!-- Session Info -->
 		{#if startTime}
-			<div class="rounded bg-surface-contrast-800/5 p-2 text-center">
+			<div transition:fade={{ duration: 200 }} class="rounded bg-surface-contrast-800/5 p-2 text-center">
 				<div class="text-xs opacity-70">
 					Session: {Math.floor((Date.now() - startTime) / 1000)}s • Events: {recentEvents.length}
 				</div>
@@ -158,7 +160,9 @@
 		{/if}
 	</div>
 {:else}
-	<div class="flex items-center justify-center rounded-lg bg-surface-800/50 p-4 text-surface-contrast-800/60">
+	<div
+		transition:fade={{ duration: 300 }}
+		class="flex items-center justify-center rounded-lg bg-surface-800/50 p-4 text-surface-contrast-800/60">
 		<div class="text-center">
 			<div class="text-sm">Playback tracking inactive</div>
 			<div class="text-xs opacity-60">Start playback to see live activity</div>
