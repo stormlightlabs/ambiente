@@ -1,7 +1,6 @@
 import { Mode, Note } from "$lib/theory";
 import { EffectType, InstrumentType } from "$lib/types/instruments";
 import type { Preset } from "$lib/types/presets";
-import { SvelteSet } from "svelte/reactivity";
 
 const ENO: Preset = {
   id: "eno-airports",
@@ -15,7 +14,7 @@ const ENO: Preset = {
     mode: Mode.Ionian,
     currentChord: 0,
     volume: 0.7,
-    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Melodic]),
+    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Melodic]),
     randomization: {
       enabled: true,
       rhythmVariability: 0.2,
@@ -85,7 +84,7 @@ const BUDD: Preset = {
     mode: Mode.Dorian,
     currentChord: 0,
     volume: 0.75,
-    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Melodic]),
+    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Melodic]),
     randomization: {
       enabled: true,
       rhythmVariability: 0.15,
@@ -151,7 +150,7 @@ const GAS: Preset = {
     mode: Mode.Aeolian,
     currentChord: 0,
     volume: 0.8,
-    instruments: new SvelteSet([InstrumentType.HarmonicDrone, InstrumentType.RhythmicPulse]),
+    instruments: new Set([InstrumentType.HarmonicDrone, InstrumentType.RhythmicPulse]),
     randomization: {
       enabled: true,
       rhythmVariability: 0.25,
@@ -219,11 +218,7 @@ const KRANKY: Preset = {
     mode: Mode.Locrian,
     currentChord: 0,
     volume: 0.65,
-    instruments: new SvelteSet([
-      InstrumentType.HarmonicDrone,
-      InstrumentType.AmbientPad,
-      InstrumentType.FieldRecording,
-    ]),
+    instruments: new Set([InstrumentType.HarmonicDrone, InstrumentType.AmbientPad, InstrumentType.FieldRecording]),
     randomization: {
       enabled: true,
       rhythmVariability: 0.05,
@@ -298,7 +293,7 @@ const DiscreetMusic: Preset = {
     key: Note.C,
     mode: Mode.Aeolian,
     volume: 0.7,
-    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.Melodic]),
+    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.Melodic]),
   },
   texture: {
     name: "Brian Eno – Discreet Music",
@@ -354,7 +349,7 @@ const StarsOfTheLid: Preset = {
     key: Note.C,
     mode: Mode.Aeolian,
     volume: 0.8,
-    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.HarmonicDrone]),
+    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.HarmonicDrone]),
   },
   texture: {
     name: "Stars of the Lid – Drone",
@@ -406,7 +401,7 @@ const LovelyThunder: Preset = {
     key: Note.F,
     mode: Mode.Ionian,
     volume: 0.6,
-    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Melodic, InstrumentType.HarmonicDrone]),
+    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Melodic, InstrumentType.HarmonicDrone]),
   },
   texture: {
     name: "Harold Budd – Lovely Thunder",

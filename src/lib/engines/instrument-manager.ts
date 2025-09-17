@@ -21,7 +21,6 @@ import { InstrumentType } from "$lib/types/instruments";
 import type { Params } from "$lib/types/params";
 import { RhythmicPulseSynth } from "$lib/types/rhythmic-pulse-synth";
 import { BehaviorSubject, Subject } from "rxjs";
-import { SvelteSet } from "svelte/reactivity";
 import * as Tone from "tone";
 
 export class InstrumentManager {
@@ -198,7 +197,7 @@ export class InstrumentManager {
 
   toggleInstrument(kind: InstrumentType): void {
     const currentState = this.state$.value;
-    const newInstruments = new SvelteSet(currentState.instruments);
+    const newInstruments = new Set(currentState.instruments);
     const wasEnabled = newInstruments.has(kind);
 
     if (wasEnabled) {

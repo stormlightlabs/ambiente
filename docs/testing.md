@@ -2,13 +2,12 @@
 
 ## Overview
 
-Ambiente uses a comprehensive testing strategy with Vitest and vitest-browser-svelte for both component and logic testing. The testing setup supports both browser-based component tests and server-side logic tests.
+Ambiente uses a comprehensive testing strategy with Vitest and vitest-browser-svelte for both component and logic testing.
+The testing setup supports both browser-based component tests and basic logic/domain layer tests.
 
 ## Testing Setup
 
 The project uses a dual-environment testing setup configured in `vite.config.ts`. Component tests run in a browser environment using Playwright with Chromium for Svelte component testing, while logic tests run in a Node environment for utility testing.
-
-Test file patterns distinguish between these environments: component tests use `*.svelte.{test,spec}.{js,ts}` and run in browser, while logic tests use `*.{test,spec}.{js,ts}` and run in Node.
 
 Core dependencies include `vitest` for test running and assertions, `vitest-browser-svelte` for Svelte component testing utilities, `@vitest/browser` for browser testing context and user interactions, and `playwright` for browser automation.
 
@@ -16,23 +15,64 @@ Core dependencies include `vitest` for test running and assertions, `vitest-brow
 
 ### Test Structure and Setup
 
-All component tests follow a consistent pattern with mock functions, helper functions for rendering with props, and proper cleanup between tests. The setup includes importing browser context utilities, Svelte component types, and testing framework functions.
+All component tests should follow a consistent pattern with mock functions, helper functions for rendering with props, and proper cleanup between tests.
+The setup includes importing browser context utilities, Svelte component types, and testing framework functions.
 
-Components are rendered using a helper function that applies default props and allows overrides. Mock functions are reset between tests using `beforeEach` to ensure test isolation.
+Components are rendered using a helper function that applies default props and allows overrides.
+Mock functions are reset between tests using `beforeEach` to ensure test isolation.
 
 ### Testing Utilities and Querying
 
-Component rendering leverages `render()` from vitest-browser-svelte with TypeScript component props. The `renderWithProps()` helper function provides consistent prop application across tests.
+Component rendering uses `render()` from vitest-browser-svelte with TypeScript component props.
+The `renderWithProps()` helper function provides consistent prop application across tests.
 
-DOM querying prioritizes semantic queries using `page.getByRole()` as the preferred method, followed by `page.getByText()` for text content queries. Non-throwing variants like `page.queryByRole()` return null when elements aren't found, while `page.getByLabelText()` works well for form elements.
+DOM querying should follow a strict hierarchy of semantic selectors for reliability and accessibility:
+
+1. Semantic Selectors
+   - `page.getByTestId()` - Most reliable for component-specific elements
+   - `page.getByRole()` - Preferred for interactive elements with proper ARIA roles
+   - `page.getByLabelText()` - Ideal for form elements with proper labels
+
+2. Content-Based Selectors
+   - `page.getByText()` - For unique text content (avoid when text appears multiple times)
+   - `page.getByAltText()` - For images with descriptive alt text
+
+3. Implementation-Based Selectors
+   - CSS class selectors (`.class-name`) - Brittle and tied to styling
+   - Element type selectors - Not semantic or user-focused
+   - Complex DOM traversal - Breaks when structure changes
 
 User interactions are simulated through `userEvent.click()` for mouse clicks, `userEvent.keyboard()` for keyboard input, and `userEvent.type()` for text input in fields.
 
-Assertions use `await expect.element()` for async element assertions, with common checks including `.toBeInTheDocument()` for presence, `.toHaveClass()` for CSS classes, `.toHaveAttribute()` for HTML attributes, and `.toHaveStyle()` for inline styles.
+Assertions use `await expect.element()` for async element assertions, with common checks including `.toBeInTheDocument()` for presence, `.toHaveTextContent()` for text content verification, and `.toHaveAttribute()` for HTML attributes
 
 ### Svelte-Specific Testing
 
-Components accepting Svelte snippets are tested using `createRawSnippet()` to create test content. Mock functions handle callbacks, with proper reset between tests to maintain isolation.
+Components accepting Svelte snippets are tested using `createRawSnippet()` to create test content.
+
+#### Reactive Testing
+
+- Use `flushSync()` from svelte to ensure derived state calculations are complete
+- Use `untrack()` when accessing `$derived` values in test assertions
+- Test reactive state changes by updating props and verifying derived computations
+- Verify component re-renders correctly when reactive dependencies change
+
+#### Identifier Implementation
+
+Components should include proper test identifiers for reliable selection:
+
+- `data-testid` attributes for component-specific elements
+- `role` attributes for semantic meaning (list, listitem, region, etc.)
+- `aria-label` attributes for descriptive context
+- `aria-current` for highlighting active states
+- Avoid relying solely on CSS classes for test selection
+
+#### Test Implementation
+
+- Test actual implementation behavior rather than ideal expectations
+- When business logic has limitations (e.g., chord analysis inversions), document the limitation in test comments and test the actual output
+- Group related tests logically: rendering, analysis, state changes, edge cases
+- Use consistent helper functions for component rendering with prop overrides
 
 ## Component Test Categories
 
@@ -46,33 +86,20 @@ Prop-driven behavior testing ensures components apply correct classes and styles
 
 ### User Interactions
 
-Interaction testing covers all user-triggered events including button clicks, keyboard shortcuts, and backdrop interactions. Each interaction should trigger appropriate callbacks and handle edge cases like disabled features.
+Interaction testing covers all user-triggered events including button clicks, keyboard shortcuts, and backdrop interactions.
+Each interaction should trigger appropriate callbacks and handle edge cases like disabled features.
 
 Common interaction patterns include close button clicks, escape key presses, backdrop clicks for dismissal, and specialized interactions like drag handles or snap point controls.
 
 ### Accessibility Features
 
-Accessibility testing verifies proper ARIA attributes, keyboard navigation support, and semantic markup. Components should have correct roles, labels, and descriptions for screen readers.
+Accessibility testing verifies proper ARIA attributes, keyboard navigation support, and semantic markup.
+ Components should have correct roles, labels, and descriptions for screen readers.
 
 ### Conditional Behavior
 
-Tests verify feature toggles work correctly, such as disabled close mechanisms, hidden buttons, or modified behavior based on boolean props. These tests ensure components respect user preferences and configuration.
-
-## UI Component Testing Patterns
-
-Dialog-based components including Dialog, Modal, Drawer, and Sheet share common testing patterns across visibility states, close mechanisms, accessibility features, content rendering, and styling applications.
-
-### Modal Components
-
-Modal testing focuses on size variant application with proper responsive behavior and layout centering. Size variants should apply appropriate max-width classes while maintaining centered positioning and proper spacing.
-
-### Drawer Components
-
-Drawer testing emphasizes direction-specific positioning with proper side class application. Each side (left, right, top, bottom) should apply correct positioning classes and appropriate width or height constraints. Slide animation triggers should be testable through class presence.
-
-### Sheet Components
-
-Sheet testing covers snap point functionality with drag handle interactions and height management. Multiple snap points should cycle correctly through user interactions, with proper height updates and visual indicators.
+Tests verify feature toggles work correctly, such as disabled close mechanisms, hidden buttons, or modified behavior based on boolean props.
+These tests ensure components respect user preferences and configuration.
 
 ## Logic Testing
 
@@ -81,6 +108,38 @@ Sheet testing covers snap point functionality with drag handle interactions and 
 Pure function testing covers music theory utilities like chord analysis, scale generation, and harmonic progression logic. Tests should verify correct chord identification, scale degree calculations, and modal harmony generation.
 
 State management testing focuses on reactive updates and history management. Tests should verify state changes propagate correctly through the system and that undo/redo functionality maintains proper history.
+
+### Complex Component Testing
+
+Components with multiple derived states require comprehensive test coverage:
+
+#### State Calculation
+
+```typescript
+describe("Derived State Calculations", () => {
+  it("should correctly derive scale from key and mode", async () => {
+    renderWithProps({ key: Note.C, mode: Mode.Ionian });
+    flushSync(); // Critical for derived state
+
+    const keyInfo = page.getByTestId("key-mode-info");
+    await expect.element(keyInfo).toHaveTextContent("Key: C ionian");
+  });
+});
+```
+
+#### Multi-State Interaction
+
+- Test how derived states interact when multiple props change
+- Verify proper re-computation order and dependencies
+- Test edge cases where state calculations might fail
+- Validate complex data transformations (progressions, chord analysis, etc.)
+
+#### Implementation Testing
+
+- Document known limitations in test comments
+- Test actual behavior rather than idealized expectations
+- Handle cases where business logic has constraints (e.g., chord inversions)
+- Maintain tests even when output isn't perfect but represents current implementation
 
 ## Testing Best Practices
 
@@ -104,20 +163,6 @@ Tests should be organized into logical groups covering rendering, interactions, 
 
 Error conditions and edge cases should be tested explicitly, including missing props, invalid states, and boundary conditions. Components should handle these scenarios gracefully with appropriate fallback behavior.
 
-## Test Execution
-
-### Running Tests
-
-Tests can be run using `pnpm test` for all tests or `pnpm test path/to/file` for specific test files. Watch mode is not configured by default and would require manual vitest configuration adjustment.
-
-### Test Categories
-
-The testing strategy encompasses unit tests for individual functions and utilities, component tests for Svelte component behavior, and integration tests for component interaction and state flow.
-
-### Performance Considerations
-
-Component tests run in browser environment and are slower than logic tests which run in the faster Node environment. Choosing the appropriate test environment for each test type optimizes overall test suite performance.
-
 ## Debugging Tests
 
 ### Browser-Based Debugging
@@ -127,5 +172,3 @@ Component tests running in actual browser environments enable console logging in
 ### Common Testing Issues
 
 Timing issues require careful attention to awaiting async operations throughout tests. Proper cleanup between tests demands resetting mocks and state to maintain isolation. Element specificity requires using unique identifiers and ensuring proper ARIA attributes for reliable queries.
-
-This testing approach ensures comprehensive coverage while maintaining fast, reliable, and maintainable test suites that accurately reflect user interactions and component behavior.

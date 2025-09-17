@@ -83,20 +83,18 @@ export const generateAllModes = (root: Note): Record<Mode, Note[]> => {
   return modes;
 };
 
-export const generateChord = (root: Note, type: ChordType): Note[] => {
-  const pattern = CHORD_PATTERNS[type];
-  return pattern.map((interval) => (root + interval) % 12);
-};
+export const generateChord = (root: Note, type: ChordType): Note[] =>
+  CHORD_PATTERNS[type].map((interval) => (root + interval) % 12);
 
-export const generateDiatonicChords = (scale: Note[]): Note[][] => {
-  return scale.map((root, index) => {
+export const generateDiatonicChords = (scale: Note[]): Note[][] =>
+  scale.map((root, index) => {
     const third = scale[(index + 2) % 7];
     const fifth = scale[(index + 4) % 7];
     return [root, third, fifth];
   });
-};
 
-export const AMBIENT_PROGRESSIONS = {
+/** Common Ambient Progressions */
+export const PROGRESSIONS = {
   /** I - vi - IV - V */
   classic: [0, 5, 3, 4],
   /** vi - IV - I - V */
@@ -338,3 +336,5 @@ export const ChordAnalysis = {
     }
   },
 };
+
+export type NamedProgression = "classic" | "emotional" | "pop" | "jazz" | "modal";

@@ -32,7 +32,9 @@
 		selectedPreset
 	}: Props = $props();
 
-	// NOTE: User gesture triggered - safe to initialize audio context
+	const currentChord = $derived({ notes: currentChordNotes, index: audioState.currentChord });
+
+	/** NOTE: User gesture triggered - safe to initialize audio context */
 	async function togglePlayback() {
 		if (!selectedPreset) return;
 
@@ -299,11 +301,7 @@
 		<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
 			<!-- Chord Display spans 2 columns on large screens -->
 			<div class="lg:col-span-2">
-				<ChordDisplay
-					{currentChordNotes}
-					currentChordIndex={audioState.currentChord}
-					key={audioState.key}
-					mode={audioState.mode} />
+				<ChordDisplay {currentChord} key={audioState.key} mode={audioState.mode} />
 			</div>
 
 			<!-- Harmony & Rhythm Visualization -->

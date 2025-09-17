@@ -1,43 +1,44 @@
 <script lang="ts">
-	import type { Mode } from '$lib/theory';
-	import {
-		AMBIENT_PROGRESSIONS,
-		ChordAnalysis,
-		generateProgression,
-		generateScale,
-		NoteUtilities,
-		type Note
-	} from '$lib/theory';
+	import type { Mode, NamedProgression, Note } from '$lib/theory';
+	import { ChordAnalysis, generateProgression, generateScale, NoteUtilities, PROGRESSIONS } from '$lib/theory';
 
-	type Props = {
-		currentChordNotes: Note[];
-		currentChordIndex: number;
-		key: Note;
-		mode: Mode;
-		progressionName?: 'classic' | 'emotional' | 'pop' | 'jazz' | 'modal';
-	};
+	type Props = { currentChord: { notes: Note[]; index: number }; key: Note; mode: Mode; name?: NamedProgression };
 
-	const { currentChordNotes, currentChordIndex, key, mode, progressionName = 'classic' }: Props = $props();
+	const { currentChord, key, mode, name: progressionName = 'classic' }: Props = $props();
 
-	const currentChord = $derived(ChordAnalysis.analyzeChord(currentChordNotes));
+	const chord = $derived(ChordAnalysis.analyzeChord(currentChord.notes));
 	const scale = $derived(generateScale(key, mode));
-	const progression = $derived(generateProgression(scale, [...AMBIENT_PROGRESSIONS[progressionName]]));
-	const progressionChords = $derived(progression.map((chordNotes) => ChordAnalysis.analyzeChord(chordNotes)));
+	const progression = $derived.by(() => {
+		const base = generateProgression(scale, [...PROGRESSIONS[progressionName]]);
+		const chords = base.map((chordNotes) => ChordAnalysis.analyzeChord(chordNotes));
+		return { name: progressionName, base, chords };
+	});
 </script>
 
-<div class="rounded-lg bg-gradient-to-br from-blue-500 to-primary-600 p-4 text-white shadow-lg">
+<div
+	class="rounded-lg bg-gradient-to-br from-blue-500 to-primary-600 p-4 text-white shadow-lg"
+	role="region"
+	aria-label="Chord Display">
 	<div class="mb-3 text-center">
 		<h3 class="text-sm font-medium opacity-80">Current Chord</h3>
-		<div class="text-2xl font-bold">{currentChord.name}</div>
+		<div class="text-2xl font-bold" data-testid="current-chord-name" aria-label="Current chord: {chord.name}">
+			{chord.name}
+		</div>
 	</div>
 
 	<div class="mb-3">
-		<div class="mb-2 text-xs font-medium opacity-80">Progression ({progressionName})</div>
-		<div class="flex gap-1">
-			{#each progressionChords as chord, index (index)}
+		<div class="mb-2 text-xs font-medium opacity-80" data-testid="progression-header">
+			Progression ({progression.name})
+		</div>
+		<div class="flex gap-1" role="list" aria-label="Chord progression">
+			{#each progression.chords as chord, index (index)}
 				<div
+					role="listitem"
+					data-testid="progression-chord-{index}"
+					aria-label="Chord {index + 1}: {chord.name}"
+					aria-current={index === currentChord.index ? 'true' : 'false'}
 					class="flex-1 rounded px-2 py-1 text-center text-xs font-medium transition-all duration-300 {index ===
-					currentChordIndex
+					currentChord.index
 						? 'bg-white text-blue-600'
 						: 'bg-white/20 text-white'}">
 					{chord.name}
@@ -47,7 +48,14 @@
 	</div>
 
 	<div class="flex justify-between text-xs opacity-80">
-		<span>Key: {NoteUtilities.toString(key)} {mode}</span>
-		<span>{currentChordIndex + 1}/{progressionChords.length}</span>
+		<span data-testid="key-mode-info" aria-label="Key and mode: {NoteUtilities.toString(key)} {mode}">
+			Key: {NoteUtilities.toString(key)}
+			{mode}
+		</span>
+		<span
+			data-testid="progression-position"
+			aria-label="Chord position: {currentChord.index + 1} of {progression.chords.length}">
+			{currentChord.index + 1}/{progression.chords.length}
+		</span>
 	</div>
 </div>

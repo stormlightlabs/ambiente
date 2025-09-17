@@ -3,7 +3,6 @@ import { createDefaultPattern } from "$lib/engines/utilities";
 import { Mode, Note } from "$lib/theory";
 import type { AudioEngineState, InstrumentPattern } from "$lib/types/audio";
 import { InstrumentType } from "$lib/types/instruments";
-import { SvelteSet } from "svelte/reactivity";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockTransport = { start: vi.fn(), pause: vi.fn(), stop: vi.fn(), dispose: vi.fn() };
@@ -135,7 +134,7 @@ describe("AudioEngine", () => {
     });
 
     it("should merge initial state with defaults", () => {
-      const initialState = { tempo: 120, key: Note.G, instruments: new SvelteSet([InstrumentType.Lead]) };
+      const initialState = { tempo: 120, key: Note.G, instruments: new Set([InstrumentType.Lead]) };
 
       const engine = new AudioEngine(initialState);
       const state = engine.getState$();
@@ -267,7 +266,7 @@ describe("AudioEngine", () => {
     });
 
     it("should get synth instance", () => {
-      const engine = new AudioEngine({ instruments: new SvelteSet([InstrumentType.Pad]) });
+      const engine = new AudioEngine({ instruments: new Set([InstrumentType.Pad]) });
 
       const synth = engine.getSynth(InstrumentType.Pad);
       expect(synth).toBeDefined();
@@ -301,7 +300,7 @@ describe("AudioEngine", () => {
   describe("parameter automation", () => {
     it("should automate synth parameters", async () => {
       const mockSynth = { get: vi.fn().mockReturnValue({ envelope: { attack: { value: 0.1 } } }), dispose: vi.fn() };
-      const engine = new AudioEngine({ instruments: new SvelteSet([InstrumentType.Pad]) });
+      const engine = new AudioEngine({ instruments: new Set([InstrumentType.Pad]) });
 
       const { createSynth } = await import("$lib/audio");
       vi.mocked(createSynth).mockReturnValue(mockSynth as any);
@@ -326,7 +325,7 @@ describe("AudioEngine", () => {
 
   describe("disposal", () => {
     it("should clean up all resources", () => {
-      const engine = new AudioEngine({ instruments: new SvelteSet([InstrumentType.Pad, InstrumentType.Lead]) });
+      const engine = new AudioEngine({ instruments: new Set([InstrumentType.Pad, InstrumentType.Lead]) });
       engine.dispose();
       expect(mockTransport.dispose).toHaveBeenCalled();
     });

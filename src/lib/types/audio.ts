@@ -1,6 +1,5 @@
 import type { Mode, Note } from "$lib/theory";
 import type { InstrumentType } from "$lib/types/instruments";
-import type { SvelteSet } from "svelte/reactivity";
 
 export interface AudioEngineState {
   isPlaying: boolean;
@@ -9,11 +8,19 @@ export interface AudioEngineState {
   mode: Mode;
   currentChord: number;
   volume: number;
-  instruments: SvelteSet<InstrumentType>;
+  instruments: Set<InstrumentType>;
   randomization: RandomizationParams;
 }
 
-export type AudioEventKind = "play" | "pause" | "stop" | "chord-change" | "parameter-change" | "instrument-toggle" | "note-played" | "instrument-tick";
+export type AudioEventKind =
+  | "play"
+  | "pause"
+  | "stop"
+  | "chord-change"
+  | "parameter-change"
+  | "instrument-toggle"
+  | "note-played"
+  | "instrument-tick";
 export type AudioEventData = {
   chord?: Note[];
   index?: number;

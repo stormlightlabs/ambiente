@@ -1,5 +1,4 @@
 import {
-  AMBIENT_PROGRESSIONS,
   ChordType,
   generateAllModes,
   generateChord,
@@ -11,6 +10,7 @@ import {
   Note,
   NoteRelations,
   NoteUtilities,
+  PROGRESSIONS,
 } from "$lib/theory";
 import { describe, expect, it } from "vitest";
 
@@ -125,7 +125,7 @@ describe("Chord Generation", () => {
 describe("Chord Progressions", () => {
   it("should generate classic progression (I-vi-IV-V)", () => {
     const cMajorScale = generateScale(Note.C, Mode.Ionian);
-    const progression = generateProgression(cMajorScale, [...AMBIENT_PROGRESSIONS.classic]);
+    const progression = generateProgression(cMajorScale, [...PROGRESSIONS.classic]);
 
     expect(progression).toHaveLength(4);
     expect(progression[0]).toEqual([Note.C, Note.E, Note.G]);
@@ -136,7 +136,7 @@ describe("Chord Progressions", () => {
 
   it("should generate emotional progression (vi-IV-I-V)", () => {
     const cMajorScale = generateScale(Note.C, Mode.Ionian);
-    const progression = generateProgression(cMajorScale, [...AMBIENT_PROGRESSIONS.emotional]);
+    const progression = generateProgression(cMajorScale, [...PROGRESSIONS.emotional]);
 
     expect(progression).toHaveLength(4);
     expect(progression[0]).toEqual([Note.A, Note.C, Note.E]);
@@ -147,7 +147,7 @@ describe("Chord Progressions", () => {
 
   it("should generate jazz progression (ii-V-I)", () => {
     const cMajorScale = generateScale(Note.C, Mode.Ionian);
-    const progression = generateProgression(cMajorScale, [...AMBIENT_PROGRESSIONS.jazz]);
+    const progression = generateProgression(cMajorScale, [...PROGRESSIONS.jazz]);
 
     expect(progression).toHaveLength(3);
     expect(progression[0]).toEqual([Note.D, Note.F, Note.A]);

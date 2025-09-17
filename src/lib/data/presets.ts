@@ -2,7 +2,6 @@ import { Note, NoteUtilities } from "$lib/theory";
 import { InstrumentType } from "$lib/types/instruments";
 import { type Preset, TextureType } from "$lib/types/presets";
 import type { Optional } from "$lib/types/shared";
-import { SvelteSet } from "svelte/reactivity";
 import { INSPIRED } from "./artist-inspired-presets";
 import { THEMED } from "./themed";
 
@@ -26,4 +25,4 @@ export const getPreset = (id: string): Optional<Preset> => PRESETS.find(preset =
 export const getPresetsByTheme = (theme: string): Preset[] =>
   PRESETS.filter(preset => preset.theme.toLowerCase().includes(theme.toLowerCase()));
 
-export const getThemes = (): string[] => ["All", ...new SvelteSet(PRESETS.map(preset => preset.theme))];
+export const getThemes = (): string[] => ["All", ...new Set(PRESETS.map(preset => preset.theme))];

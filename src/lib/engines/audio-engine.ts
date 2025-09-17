@@ -16,7 +16,6 @@ import { RhythmicPulseSynth } from "$lib/types/rhythmic-pulse-synth";
 import type { Optional } from "$lib/types/shared";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { distinctUntilChanged, map } from "rxjs/operators";
-import { SvelteSet } from "svelte/reactivity";
 import * as Tone from "tone";
 import { AudioStreams } from "./audio-streams";
 import { InstrumentManager } from "./instrument-manager";
@@ -56,7 +55,7 @@ export class AudioEngine {
       mode: Mode.Ionian,
       currentChord: -1,
       volume: 0.7,
-      instruments: new SvelteSet([InstrumentType.Pad, InstrumentType.Atmosphere]),
+      instruments: new Set([InstrumentType.Pad, InstrumentType.Atmosphere]),
       randomization: {
         enabled: false,
         rhythmVariability: 0.3,
@@ -386,7 +385,7 @@ export const createAmbientAudioEngine = (initial?: Partial<AudioEngineState>): A
     key: Note.C,
     mode: Mode.Aeolian,
     volume: 0.6,
-    instruments: new SvelteSet([
+    instruments: new Set([
       InstrumentType.AmbientPad,
       InstrumentType.Granular,
       InstrumentType.Melodic,

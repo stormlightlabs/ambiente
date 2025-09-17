@@ -8,7 +8,7 @@ import { HarmonicDroneSynth } from "$lib/instruments/harmonic-drone-synth";
 import { MelodicSynth } from "$lib/instruments/melodic-synth";
 import { VocalPadSynth } from "$lib/instruments/vocal-pads";
 import { PatternRandomizer } from "$lib/seed/pattern-randomizer";
-import { AMBIENT_PROGRESSIONS, generateProgression, generateScale, Note } from "$lib/theory";
+import { generateProgression, generateScale, Note, PROGRESSIONS } from "$lib/theory";
 import type { AudioEngineState, AudioEvent, InstrumentPattern } from "$lib/types/audio";
 import { InstrumentType } from "$lib/types/instruments";
 import { RhythmicPulseSynth } from "$lib/types/rhythmic-pulse-synth";
@@ -58,7 +58,7 @@ export class AudioStreams {
       map(({ key, mode, randomization }) => {
         const scale = generateScale(key, mode);
         this.currentScale$.next(scale);
-        const baseProgression = generateProgression(scale, [...AMBIENT_PROGRESSIONS.emotional]);
+        const baseProgression = generateProgression(scale, [...PROGRESSIONS.emotional]);
 
         if (randomization.enabled && randomization.chordProgression > 0) {
           return PatternRandomizer.randomizeProgression(
@@ -229,13 +229,7 @@ export class AudioStreams {
               instrument.tick(time, tickDuration);
 
               // Emit instrument tick event for tracking
-              this.events$.next({
-                type: "instrument-tick",
-                timestamp: time,
-                data: {
-                  instrument: instrumentType,
-                },
-              });
+              this.events$.next({ type: "instrument-tick", timestamp: time, data: { instrument: instrumentType } });
             }
           }
         },
@@ -269,12 +263,7 @@ export class AudioStreams {
           this.events$.next({
             type: "note-played",
             timestamp: time,
-            data: {
-              instrument: instrumentType,
-              notes: [note],
-              velocity: step.velocity,
-              duration: step.duration,
-            },
+            data: { instrument: instrumentType, notes: [note], velocity: step.velocity, duration: step.duration },
           });
         }
       }

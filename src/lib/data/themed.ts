@@ -1,7 +1,6 @@
 import { Mode, Note } from "$lib/theory";
 import { EffectType, InstrumentType } from "$lib/types/instruments";
 import type { Preset } from "$lib/types/presets";
-import { SvelteSet } from "svelte/reactivity";
 
 const Arctic: Preset = {
   id: "arctic-winds",
@@ -15,7 +14,7 @@ const Arctic: Preset = {
     mode: Mode.Dorian,
     currentChord: 0,
     volume: -8,
-    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Melodic, InstrumentType.FieldRecording]),
+    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Melodic, InstrumentType.FieldRecording]),
     randomization: {
       enabled: true,
       rhythmVariability: 0.3,
@@ -98,7 +97,7 @@ const Crystal: Preset = {
     mode: Mode.Lydian,
     currentChord: 0,
     volume: -7,
-    instruments: new SvelteSet([InstrumentType.Granular, InstrumentType.AmbientPad, InstrumentType.VocalPad]),
+    instruments: new Set([InstrumentType.Granular, InstrumentType.AmbientPad, InstrumentType.VocalPad]),
     randomization: {
       enabled: true,
       rhythmVariability: 0.25,
@@ -186,7 +185,7 @@ const DeepOcean: Preset = {
     mode: Mode.Dorian,
     currentChord: 0,
     volume: 0.6,
-    instruments: new SvelteSet([InstrumentType.HarmonicDrone, InstrumentType.Texture, InstrumentType.FieldRecording]),
+    instruments: new Set([InstrumentType.HarmonicDrone, InstrumentType.Texture, InstrumentType.FieldRecording]),
     randomization: {
       enabled: true,
       rhythmVariability: 0.1,
@@ -262,7 +261,7 @@ const CosmicDawn: Preset = {
     mode: Mode.Lydian,
     currentChord: 0,
     volume: 0.75,
-    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Arpeggiator, InstrumentType.Atmosphere]),
+    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Arpeggiator, InstrumentType.Atmosphere]),
     randomization: {
       enabled: true,
       rhythmVariability: 0.3,
@@ -343,7 +342,7 @@ const RitualEchoes: Preset = {
     mode: Mode.Phrygian,
     currentChord: 0,
     volume: 0.7,
-    instruments: new SvelteSet([InstrumentType.HarmonicDrone, InstrumentType.Percussion, InstrumentType.VocalPad]),
+    instruments: new Set([InstrumentType.HarmonicDrone, InstrumentType.Percussion, InstrumentType.VocalPad]),
     randomization: {
       enabled: true,
       rhythmVariability: 0.25,
@@ -423,7 +422,7 @@ const FrozenWasteland: Preset = {
     mode: Mode.Locrian,
     currentChord: 0,
     volume: 0.6,
-    instruments: new SvelteSet([InstrumentType.Texture, InstrumentType.AmbientPad, InstrumentType.Granular]),
+    instruments: new Set([InstrumentType.Texture, InstrumentType.AmbientPad, InstrumentType.Granular]),
     randomization: {
       enabled: true,
       rhythmVariability: 0.1,
@@ -492,7 +491,7 @@ const DesertMirage: Preset = {
     mode: Mode.Mixolydian,
     currentChord: 0,
     volume: 0.7,
-    instruments: new SvelteSet([InstrumentType.RhythmicPulse, InstrumentType.AmbientPad, InstrumentType.Atmosphere]),
+    instruments: new Set([InstrumentType.RhythmicPulse, InstrumentType.AmbientPad, InstrumentType.Atmosphere]),
     randomization: {
       enabled: true,
       rhythmVariability: 0.35,
@@ -558,7 +557,7 @@ const NeonCity: Preset = {
     mode: Mode.Aeolian,
     currentChord: 0,
     volume: 0.8,
-    instruments: new SvelteSet([InstrumentType.Arpeggiator, InstrumentType.AmbientPad, InstrumentType.Texture]),
+    instruments: new Set([InstrumentType.Arpeggiator, InstrumentType.AmbientPad, InstrumentType.Texture]),
     randomization: {
       enabled: true,
       rhythmVariability: 0.4,
@@ -637,7 +636,7 @@ const GentleCurrent: Preset = {
     key: Note.G,
     mode: Mode.Ionian,
     volume: 0.65,
-    instruments: new SvelteSet([
+    instruments: new Set([
       InstrumentType.AmbientPad,
       InstrumentType.Melodic,
       InstrumentType.HarmonicDrone,
@@ -709,7 +708,7 @@ const SteelCathedral: Preset = {
     key: Note.F,
     mode: Mode.Phrygian,
     volume: 0.75,
-    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.RhythmicPulse]),
+    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.RhythmicPulse]),
   },
   texture: {
     name: "Steel Cathedral",
@@ -765,7 +764,7 @@ const LucidDreams: Preset = {
     key: Note.E,
     mode: Mode.Lydian,
     volume: 0.55,
-    instruments: new SvelteSet([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.Melodic]),
+    instruments: new Set([InstrumentType.AmbientPad, InstrumentType.Granular, InstrumentType.Melodic]),
   },
   texture: {
     name: "Lucid Dreams",
@@ -822,7 +821,7 @@ const AncientForest: Preset = {
     key: Note.D,
     mode: Mode.Dorian,
     volume: 0.6,
-    instruments: new SvelteSet([
+    instruments: new Set([
       InstrumentType.AmbientPad,
       InstrumentType.Granular,
       InstrumentType.HarmonicDrone,
@@ -893,7 +892,7 @@ const CosmicVoyage: Preset = {
     key: Note.A,
     mode: Mode.Aeolian,
     volume: 0.65,
-    instruments: new SvelteSet([
+    instruments: new Set([
       InstrumentType.AmbientPad,
       InstrumentType.Granular,
       InstrumentType.Melodic,

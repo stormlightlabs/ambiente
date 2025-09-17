@@ -2,7 +2,7 @@ import { BehaviorSubject, type Observable, type Subscription } from "rxjs";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
 import { AudioEngine, createAmbientAudioEngine } from "./engines/audio-engine";
 import { playbackBridge } from "./services/playback-bridge";
-import { AMBIENT_PROGRESSIONS, generateProgression, generateScale, Mode, Note } from "./theory";
+import { generateProgression, generateScale, Mode, Note, PROGRESSIONS } from "./theory";
 import type { AudioEngineState, AudioEvent, RandomizationParams } from "./types/audio";
 import { InstrumentType } from "./types/instruments";
 import type { Preset } from "./types/presets";
@@ -60,7 +60,7 @@ export class AppStateManager {
 
   private updateChordProgression(): void {
     const scale = generateScale(this.audioState.key, this.audioState.mode);
-    const progression = generateProgression(scale, [...AMBIENT_PROGRESSIONS.emotional]);
+    const progression = generateProgression(scale, [...PROGRESSIONS.emotional]);
     if (progression.length > 0) {
       this.currentChordSubject.next(progression[0]);
     }
