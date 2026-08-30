@@ -1209,7 +1209,8 @@ impl Document {
 }
 
 /// A bounded semantic change to a document.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(tag = "kind", content = "payload", rename_all = "snake_case")]
 pub enum Operation {
     /// Replaces document metadata.
     SetMetadata(Metadata),
@@ -1267,7 +1268,8 @@ pub enum Operation {
 }
 
 /// An exact metric or absolute-time grid used to quantize phrase notes.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(tag = "clock", content = "value", rename_all = "snake_case")]
 pub enum QuantizationGrid {
     /// A grid measured in quarter-note beats.
     Metric(Beats),

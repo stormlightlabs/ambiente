@@ -13,7 +13,7 @@ const solidConfig = /** @type {FlatConfig} */ (/** @type {unknown} */ (solid));
 const unicornConfig = /** @type {FlatConfig} */ (/** @type {unknown} */ (unicorn.configs['flat/recommended']));
 
 export default defineConfig(
-	{ ignores: ['**/dist/**', '**/node_modules/**', '**/target/**', '**/public/pagefind/**'] },
+	{ ignores: ['**/dist/**', '**/generated/**', '**/node_modules/**', '**/target/**', '**/public/pagefind/**'] },
 	eslint.configs.recommended,
 	tseslint.configs.recommended,
 	unicornConfig,

@@ -1,0 +1,30 @@
+[
+	{
+		"span": { "start": { "clock": "metric", "value": "0/1" }, "end": { "clock": "metric", "value": "1/2" } },
+		"target": { "type": "voice", "id": "826b8913-4c23-43e1-b150-594737909a58" },
+		"kind": { "type": "note", "note": { "pitch": 60, "velocity": 100 } },
+		"source": { "type": "step_cell", "material_id": "313b2f8d-8c00-4d82-82f6-cdb7aeb112de", "row": 0, "step": 0 },
+		"properties": {}
+	},
+	{
+		"span": { "start": { "clock": "metric", "value": "1/2" }, "end": { "clock": "metric", "value": "1/1" } },
+		"target": { "type": "voice", "id": "826b8913-4c23-43e1-b150-594737909a58" },
+		"kind": { "type": "note", "note": { "pitch": 67, "velocity": 100 } },
+		"source": { "type": "step_cell", "material_id": "313b2f8d-8c00-4d82-82f6-cdb7aeb112de", "row": 1, "step": 1 },
+		"properties": {}
+	},
+	{
+		"span": { "start": { "clock": "metric", "value": "1/1" }, "end": { "clock": "metric", "value": "3/2" } },
+		"target": { "type": "voice", "id": "826b8913-4c23-43e1-b150-594737909a58" },
+		"kind": { "type": "note", "note": { "pitch": 60, "velocity": 100 } },
+		"source": { "type": "step_cell", "material_id": "313b2f8d-8c00-4d82-82f6-cdb7aeb112de", "row": 0, "step": 2 },
+		"properties": {}
+	},
+	{
+		"span": { "start": { "clock": "metric", "value": "3/2" }, "end": { "clock": "metric", "value": "2/1" } },
+		"target": { "type": "voice", "id": "826b8913-4c23-43e1-b150-594737909a58" },
+		"kind": { "type": "note", "note": { "pitch": 67, "velocity": 100 } },
+		"source": { "type": "step_cell", "material_id": "313b2f8d-8c00-4d82-82f6-cdb7aeb112de", "row": 1, "step": 3 },
+		"properties": {}
+	}
+]

@@ -15,7 +15,7 @@ describe('prerendered output', () => {
 	test('emits the landing page and documentation as static HTML', async () => {
 		await expect(builtPage('')).resolves.toContain('Compose the system.');
 		const architecture = await builtPage('docs/architecture');
-		expect(architecture).toContain('Ambiente uses one Rust model');
+		expect(architecture).toContain('Ambiente keeps persisted musical state');
 		expect(architecture).toContain('href="/docs/document-format"');
 		await expect(builtPage('docs/solid-components')).resolves.toContain('Interactive documentation');
 	});

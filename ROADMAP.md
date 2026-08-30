@@ -306,24 +306,23 @@ Document -> StepPattern -> pattern query -> Events
                          Vike + Solid application
 ```
 
-The next slice should complete browser playback in this order:
+The TypeScript facade and WASM implementation now expose canonical document
+operations and deterministic events with native/WASM conformance fixtures. The
+next slice should complete browser playback in this order:
 
 ```text
-TypeScript facade
-        ↓
-WASM implementation
-        ↓
+WASM events
+     ↓
 Tone.js scheduler
-        ↓
+     ↓
 Matrix UI
-        ↓
+     ↓
 sound
 ```
 
-Let `ambiente-wasm` implement the browser operations that the existing Studio
-and documentation consumers need. Do not fill the gap with a TypeScript
-composition engine. After matrix playback works, repeat the path with piano
-recording into a canonical `Phrase`.
+Use the existing WASM facade for Studio and documentation consumers. Do not fill
+remaining browser gaps with a TypeScript composition engine. After matrix
+playback works, repeat the path with piano recording into a canonical `Phrase`.
 
 ## Non-goals for the reboot
 

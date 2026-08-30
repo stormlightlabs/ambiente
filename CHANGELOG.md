@@ -34,6 +34,11 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   embedded in prerendered MDX.
 - Added the narrow TypeScript application facade and a read-only shell fixture
   that leaves document semantics and event generation in Rust.
+- Added the `ambiente-wasm` crate and `@ambiente/wasm` wrapper with generated
+  TypeScript bindings for canonical loading, serialization, operations,
+  validation, event queries, and document inspection.
+- Added shared event fixtures that verify identical normalized output through
+  native Rust and WebAssembly runtimes.
 - Added Pagefind indexing, in-page search, and scroll-aware section navigation
   for the prerendered documentation.
 

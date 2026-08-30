@@ -55,11 +55,11 @@ Two toolchains share the repository:
 - pnpm owns browser applications and TypeScript packages under `apps/` and
   `packages/`.
 
-The current implementation lives in `crates/core`, `crates/cli`, and the Vike
-application in `apps/web`. The web application publishes the documentation from
-`apps/web/content/docs/` and defines the TypeScript facade that `crates/wasm` will
-implement. A new crate or package needs a concrete responsibility before it is
-added.
+The current implementation lives in `crates/core`, `crates/cli`, `crates/wasm`,
+the TypeScript wrapper in `packages/wasm`, and the Vike application in
+`apps/web`. The web application publishes the documentation from
+`apps/web/content/docs/` and imports the WASM-backed TypeScript facade. A new
+crate or package needs a concrete responsibility before it is added.
 
 The supported development versions are:
 
@@ -170,25 +170,26 @@ play an event.[^supercollider-events]
 
 ## WebAssembly boundary
 
-`ambiente-wasm` will compile the core for browser use. Its command/query surface
-should remain narrow:
+`ambiente-wasm` compiles the core for browser use. Its command/query surface is
+narrow:
 
 ```text
 load(document)
-save()
+serialize()
 apply(operation)
 validate()
-query(span)
-inspect(...)
+query_events(span)
+inspect()
 ```
 
 JavaScript receives serializable commands, query results, diagnostics, and small
-projections of document state—not a mutable Rust object graph. A TypeScript facade
-turns the generated bindings into a browser API. `wasm-bindgen` can emit
-TypeScript declarations for its exports.[^wasm-bindgen]
+projections of document state—not a mutable Rust object graph. The
+`@ambiente/wasm` package turns generated `wasm-bindgen` bindings and TypeScript
+declarations into the browser API.[^wasm-bindgen]
 
-Native Rust and WebAssembly must return identical normalized events for the same
-document, seed, and time span. Shared fixtures will test this property.
+Native Rust and WebAssembly return identical normalized events for the same
+document, seed, and time span. Shared fixtures test both runtimes against one
+expected event stream.
 
 ## Web and desktop
 
@@ -215,10 +216,10 @@ runtime through `jsxImportSource: "solid-js/h"`.[^satteri-vite] Sätteri is also
 Astro 7's native Markdown and MDX processor.[^astro-satteri] [^satteri]
 `satteri-expressive-code` adds highlighted, annotated code blocks.[^satteri-expressive-code]
 
-The Studio and interactive guides will share the same WASM facade and audio
-package. A guide can expose fewer controls, but it cannot carry a separate
-pattern engine. Before the WASM implementation is available, the web shell uses
-fixtures or a small test adapter behind the same facade.
+The Studio and interactive guides share the same WASM facade and will share the
+audio package. A guide can expose fewer controls, but it cannot carry a separate
+pattern engine. The web shell keeps its small fixture adapter for shell-only
+tests.
 
 The Tauri application will host the shared Studio. Platform features sit behind
 capability adapters, for example:

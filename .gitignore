@@ -169,6 +169,9 @@ dist
 # Generated Pagefind development index
 apps/web/public/pagefind/
 
+# Generated WebAssembly bindings
+packages/wasm/generated/
+
 # Vite files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*

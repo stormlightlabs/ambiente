@@ -1,0 +1,41 @@
+{
+	"format": "ambiente",
+	"schema_version": 2,
+	"id": "9f8d76b0-0dd1-4fea-9ad9-43ae8f94f860",
+	"metadata": { "title": "Cross-runtime study", "composer": null, "description": null },
+	"seed": "000000000000002a",
+	"piece": {
+		"id": "98d4060e-3f83-4299-8932-9cf757a16a76",
+		"transport": { "tempo": "120/1", "meter": { "numerator": 4, "denominator": 4 } },
+		"materials": {
+			"313b2f8d-8c00-4d82-82f6-cdb7aeb112de": {
+				"type": "step_pattern",
+				"id": "313b2f8d-8c00-4d82-82f6-cdb7aeb112de",
+				"name": "Pulse",
+				"pattern": {
+					"steps": 4,
+					"subdivision": "1/2",
+					"rows": [
+						{
+							"pitch": 60,
+							"cells": [{ "active": true }, { "active": false }, { "active": true }, { "active": false }]
+						},
+						{ "pitch": 67, "cells": [{ "active": false }, { "active": true }, { "active": false }, { "active": true }] }
+					]
+				}
+			}
+		},
+		"voices": {
+			"826b8913-4c23-43e1-b150-594737909a58": {
+				"id": "826b8913-4c23-43e1-b150-594737909a58",
+				"settings": {
+					"name": "Piano",
+					"pattern": { "type": "material", "material_id": "313b2f8d-8c00-4d82-82f6-cdb7aeb112de" },
+					"sound": "felt-piano",
+					"enabled": true,
+					"parameters": {}
+				}
+			}
+		}
+	}
+}

@@ -7,6 +7,7 @@
 		"pnpm": ">=11 <12"
 	},
 	"scripts": {
+		"build:wasm": "pnpm --filter @ambiente/wasm build",
 		"format": "pnpm format:rust && pnpm format:web",
 		"format:check": "pnpm format:rust:check && pnpm format:web:check",
 		"format:rust": "cargo fmt --all",
@@ -18,7 +19,8 @@
 		"lint:web": "eslint . --max-warnings=0",
 		"test": "pnpm test:rust && pnpm test:web",
 		"test:rust": "cargo test --workspace --all-features",
-		"test:web": "pnpm --filter @ambiente/web test:types && pnpm --filter @ambiente/web test",
+		"test:wasm": "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER=wasm-bindgen-test-runner cargo test --package ambiente-wasm --test conformance --target wasm32-unknown-unknown",
+		"test:web": "pnpm build:wasm && pnpm --filter @ambiente/wasm test:types && pnpm --filter @ambiente/wasm test && pnpm --filter @ambiente/web test:types && pnpm --filter @ambiente/web test",
 		"check": "pnpm format:check && pnpm lint && pnpm test"
 	},
 	"devDependencies": {

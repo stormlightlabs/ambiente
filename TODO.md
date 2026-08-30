@@ -8,30 +8,6 @@ rationale live with the web documentation source under `apps/web/content/docs/`.
 
 ## M5 — WASM and browser audio
 
-### WASM
-
-- [ ] Compile `ambiente-core` through `ambiente-wasm`.
-- [ ] Expose a narrow command/query boundary.
-- [ ] Generate TypeScript definitions.
-- [ ] Add ergonomic TypeScript wrapper package.
-- [ ] Avoid exposing the entire mutable Rust object graph directly.
-
-Required browser operations:
-
-- [ ] load document
-- [ ] serialize document
-- [ ] apply operation
-- [ ] validate
-- [ ] query events
-- [ ] inspect useful document state
-
-### Cross-runtime conformance
-
-- [ ] Create shared event fixtures.
-- [ ] Run fixtures through native Rust.
-- [ ] Run fixtures through WASM.
-- [ ] Assert identical normalized event output.
-
 ### Audio package
 
 - [ ] Create browser audio package.
@@ -62,7 +38,6 @@ Build a small, useful palette.
 
 - [ ] A Rust document plays continuously in a browser.
 - [ ] No pattern-generation code is duplicated in TypeScript.
-- [ ] Native and WASM event fixtures agree.
 
 ## M6 — Instrument Studio
 
