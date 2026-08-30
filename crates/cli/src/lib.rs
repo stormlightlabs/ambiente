@@ -32,7 +32,7 @@ const EXIT_INVALID: u8 = 2;
     color = clap::ColorChoice::Never,
     about = "Compose and inspect deterministic generative music",
     arg_required_else_help = true,
-    after_help = "Examples:\n  ambiente new study.ambiente.json --title \"Phase Study\"\n  ambiente check study.ambiente.json\n  ambiente events study.ambiente.json --end 16/1 --plain\n\nDocumentation: https://github.com/StormlightLabs/ambiente/tree/main/docs"
+    after_help = "Examples:\n  ambiente new study.ambiente.json --title \"Phase Study\"\n  ambiente check study.ambiente.json\n  ambiente events study.ambiente.json --end 16/1 --plain\n\nDocumentation: https://github.com/StormlightLabs/ambiente/tree/main/apps/web/content/docs"
 )]
 pub struct Cli {
     /// Emit structured JSON where the command supports it.
@@ -115,6 +115,14 @@ struct EventArgs {
     /// Time domain used by start and end.
     #[arg(long, value_enum, default_value_t = ClockArg::Metric)]
     clock: ClockArg,
+
+    /// Include only events targeting this voice ID.
+    #[arg(long)]
+    voice: Option<VoiceId>,
+
+    /// Include only events originating from this material ID.
+    #[arg(long)]
+    material: Option<MaterialId>,
 }
 
 #[derive(Debug, Args)]
@@ -419,39 +427,120 @@ fn write_diagnostics(
 
 fn inspect_document(path: &Path, mode: OutputMode, stdout: &mut dyn Write) -> Result<()> {
     let document = load_document(path)?;
-    let metadata = document.metadata();
-    let piece = document.piece();
-    let output = InspectOutput {
-        id: document.id().to_string(),
-        schema_version: document.schema_version(),
-        title: metadata.title(),
-        composer: metadata.composer(),
-        seed: document.seed().to_string(),
-        materials: piece.materials().len(),
-        voices: piece.voices().len(),
-    };
-    if mode.format == OutputFormat::Json {
-        write_json(stdout, &output)?;
-    } else if mode.format == OutputFormat::Plain {
-        writeln!(stdout, "id\t{}", output.id)?;
-        writeln!(stdout, "schema\t{}", output.schema_version)?;
-        writeln!(stdout, "title\t{}", output.title.unwrap_or(""))?;
-        writeln!(stdout, "composer\t{}", output.composer.unwrap_or(""))?;
-        writeln!(stdout, "seed\t{}", output.seed)?;
-        writeln!(stdout, "materials\t{}", output.materials)?;
-        writeln!(stdout, "voices\t{}", output.voices)?;
-    } else {
-        writeln!(stdout, "Document {}", output.id)?;
-        writeln!(stdout, "  Schema: {}", output.schema_version)?;
-        writeln!(stdout, "  Title: {}", output.title.unwrap_or("Untitled"))?;
+    let output = inspect_output(&document);
+    match mode.format {
+        OutputFormat::Json => write_json(stdout, &output),
+        OutputFormat::Plain => write_plain_inspect(stdout, &output),
+        OutputFormat::Human => write_human_inspect(stdout, &output),
+    }
+}
+
+fn write_plain_inspect(stdout: &mut dyn Write, output: &InspectOutput<'_>) -> Result<()> {
+    writeln!(stdout, "document.id\t{}", output.id)?;
+    writeln!(stdout, "document.schema\t{}", output.schema_version)?;
+    writeln!(
+        stdout,
+        "document.title\t{}",
+        output.metadata.title.unwrap_or("")
+    )?;
+    writeln!(
+        stdout,
+        "document.composer\t{}",
+        output.metadata.composer.unwrap_or("")
+    )?;
+    writeln!(
+        stdout,
+        "document.description\t{}",
+        output.metadata.description.unwrap_or("")
+    )?;
+    writeln!(stdout, "document.seed\t{}", output.seed)?;
+    writeln!(stdout, "piece.id\t{}", output.piece_id)?;
+    writeln!(stdout, "transport.tempo\t{}", output.tempo)?;
+    writeln!(
+        stdout,
+        "transport.meter\t{}",
+        output.meter.as_deref().unwrap_or("")
+    )?;
+    for material in &output.materials {
         writeln!(
             stdout,
-            "  Composer: {}",
-            output.composer.unwrap_or("Unknown")
+            "material\t{}\t{}\t{}\t{}\t{}",
+            material.id,
+            material.kind,
+            material.name,
+            material.activity.as_deref().unwrap_or(""),
+            material.register.as_deref().unwrap_or("")
         )?;
-        writeln!(stdout, "  Seed: {}", output.seed)?;
-        writeln!(stdout, "  Materials: {}", output.materials)?;
-        writeln!(stdout, "  Voices: {}", output.voices)?;
+    }
+    for voice in &output.voices {
+        writeln!(
+            stdout,
+            "voice\t{}\t{}\t{}\t{}\t{}",
+            voice.id,
+            voice.name,
+            voice.enabled,
+            voice.sound,
+            voice.pattern_chain.join(" -> ")
+        )?;
+    }
+    Ok(())
+}
+
+fn write_human_inspect(stdout: &mut dyn Write, output: &InspectOutput<'_>) -> Result<()> {
+    writeln!(stdout, "Document {}", output.id)?;
+    writeln!(stdout, "  Schema: {}", output.schema_version)?;
+    writeln!(
+        stdout,
+        "  Title: {}",
+        output.metadata.title.unwrap_or("Untitled")
+    )?;
+    writeln!(
+        stdout,
+        "  Composer: {}",
+        output.metadata.composer.unwrap_or("Unknown")
+    )?;
+    if let Some(description) = output.metadata.description {
+        writeln!(stdout, "  Description: {description}")?;
+    }
+    writeln!(stdout, "  Seed: {}", output.seed)?;
+    writeln!(stdout, "Piece {}", output.piece_id)?;
+    writeln!(
+        stdout,
+        "  Transport: {} BPM, {}",
+        output.tempo,
+        output.meter.as_deref().unwrap_or("no meter")
+    )?;
+    writeln!(stdout, "Materials ({})", output.materials.len())?;
+    for material in &output.materials {
+        write!(
+            stdout,
+            "  {}  {} [{}]",
+            material.id, material.name, material.kind
+        )?;
+        if let Some(activity) = &material.activity {
+            write!(stdout, "  {activity}")?;
+        }
+        if let Some(register) = &material.register {
+            write!(stdout, "  register {register}")?;
+        }
+        writeln!(stdout)?;
+    }
+    writeln!(stdout, "Voices ({})", output.voices.len())?;
+    for voice in &output.voices {
+        let state = if voice.enabled { "enabled" } else { "disabled" };
+        let parameters = if voice.parameters == 1 {
+            "1 parameter".to_owned()
+        } else {
+            format!("{} parameters", voice.parameters)
+        };
+        writeln!(
+            stdout,
+            "  {}  {} [{state}; {}; {parameters}]",
+            voice.id, voice.name, voice.sound
+        )?;
+        if !voice.pattern_chain.is_empty() {
+            writeln!(stdout, "    Pattern: {}", voice.pattern_chain.join(" -> "))?;
+        }
     }
     Ok(())
 }
@@ -459,7 +548,8 @@ fn inspect_document(path: &Path, mode: OutputMode, stdout: &mut dyn Write) -> Re
 fn events(args: &EventArgs, mode: OutputMode, stdout: &mut dyn Write) -> Result<()> {
     let document = load_document(&args.path)?;
     let span = parse_span(args.clock, &args.start, &args.end)?;
-    let events = document.query_events(span)?;
+    let mut events = document.query_events(span)?;
+    filter_events(&mut events, args.voice, args.material);
     if mode.format == OutputFormat::Json {
         write_json(stdout, &events)?;
     } else {
@@ -467,21 +557,22 @@ fn events(args: &EventArgs, mode: OutputMode, stdout: &mut dyn Write) -> Result<
             if mode.format == OutputFormat::Plain {
                 writeln!(
                     stdout,
-                    "{}\t{}\t{}\t{:?}\t{:?}",
+                    "{}\t{}\t{}\t{}\t{}",
                     time_point(event.span().start()),
                     time_point(event.span().end()),
                     target_name(event.target()),
-                    event.kind(),
-                    event.source()
+                    event_description(event.kind()),
+                    source_name(event.source())
                 )?;
             } else {
                 writeln!(
                     stdout,
-                    "{}..{}  {}  {:?}",
+                    "{}..{}  {}  {}  source {}",
                     time_point(event.span().start()),
                     time_point(event.span().end()),
                     target_name(event.target()),
-                    event.kind()
+                    event_description(event.kind()),
+                    source_name(event.source())
                 )?;
             }
         }
@@ -623,6 +714,9 @@ fn event_tick(document: &Document, point: TimePoint) -> Result<u32> {
                 .duration_to_beats(duration)?
         }
     };
+    if beats.is_negative() {
+        bail!("MIDI export does not support negative event times");
+    }
     let ticks = rational_to_integer(
         beats.numerator(),
         beats.denominator(),
@@ -676,6 +770,47 @@ fn target_name(target: &EventTarget) -> String {
     }
 }
 
+fn filter_events(events: &mut Vec<Event>, voice: Option<VoiceId>, material: Option<MaterialId>) {
+    events.retain(|event| {
+        let matches_voice = voice.is_none_or(|id| event.target() == &EventTarget::Voice(id));
+        let matches_material = material.is_none_or(|id| event_material(event.source()) == id);
+        matches_voice && matches_material
+    });
+}
+
+fn event_material(source: &EventSource) -> MaterialId {
+    match source {
+        EventSource::PhraseNote { material_id, .. } | EventSource::StepCell { material_id, .. } => {
+            *material_id
+        }
+    }
+}
+
+fn event_description(kind: &EventKind) -> String {
+    match kind {
+        EventKind::Note { note } => format!(
+            "note pitch={} velocity={}",
+            note.pitch().semitones_from_c0(),
+            note.velocity()
+        ),
+        EventKind::Named { name } => format!("named {name}"),
+    }
+}
+
+fn source_name(source: &EventSource) -> String {
+    match source {
+        EventSource::PhraseNote {
+            material_id,
+            note_id,
+        } => format!("phrase_note:{material_id}:{note_id}"),
+        EventSource::StepCell {
+            material_id,
+            row,
+            step,
+        } => format!("step_cell:{material_id}:{row}:{step}"),
+    }
+}
+
 fn diagnostic_code(code: DiagnosticCode) -> String {
     serde_json::to_value(code)
         .ok()
@@ -715,11 +850,214 @@ struct CheckOutput<'a> {
 struct InspectOutput<'a> {
     id: String,
     schema_version: u32,
+    metadata: MetadataOutput<'a>,
+    seed: String,
+    piece_id: String,
+    tempo: String,
+    meter: Option<String>,
+    materials: Vec<MaterialOutput<'a>>,
+    voices: Vec<VoiceOutput<'a>>,
+}
+
+#[derive(Serialize)]
+struct MetadataOutput<'a> {
     title: Option<&'a str>,
     composer: Option<&'a str>,
-    seed: String,
-    materials: usize,
-    voices: usize,
+    description: Option<&'a str>,
+}
+
+#[derive(Serialize)]
+struct MaterialOutput<'a> {
+    id: String,
+    name: &'a str,
+    kind: &'static str,
+    activity: Option<String>,
+    register: Option<String>,
+}
+
+#[derive(Serialize)]
+struct VoiceOutput<'a> {
+    id: String,
+    name: &'a str,
+    enabled: bool,
+    sound: &'a str,
+    parameters: usize,
+    pattern: Option<&'a Pattern>,
+    pattern_chain: Vec<String>,
+}
+
+fn inspect_output(document: &Document) -> InspectOutput<'_> {
+    let metadata = document.metadata();
+    let piece = document.piece();
+    let materials = piece.materials().values().map(material_output).collect();
+    let voices = piece
+        .voices()
+        .values()
+        .map(|voice| {
+            let settings = voice.settings();
+            let mut pattern_chain = Vec::new();
+            if let Some(pattern) = settings.pattern() {
+                describe_pattern(pattern, &mut pattern_chain);
+            }
+            VoiceOutput {
+                id: voice.id().to_string(),
+                name: settings.name(),
+                enabled: settings.enabled(),
+                sound: settings.sound().as_str(),
+                parameters: settings.parameters().len(),
+                pattern: settings.pattern(),
+                pattern_chain,
+            }
+        })
+        .collect();
+    InspectOutput {
+        id: document.id().to_string(),
+        schema_version: document.schema_version(),
+        metadata: MetadataOutput {
+            title: metadata.title(),
+            composer: metadata.composer(),
+            description: metadata.description(),
+        },
+        seed: document.seed().to_string(),
+        piece_id: piece.id().to_string(),
+        tempo: piece.transport().tempo().to_string(),
+        meter: piece
+            .transport()
+            .meter()
+            .map(|meter| format!("{}/{}", meter.numerator(), meter.denominator())),
+        materials,
+        voices,
+    }
+}
+
+fn material_output(material: &Material) -> MaterialOutput<'_> {
+    let (kind, activity, pitches): (&str, Option<String>, Vec<Pitch>) = match material {
+        Material::Phrase { phrase, .. } => (
+            "phrase",
+            Some(format!("{} notes", phrase.notes().len())),
+            phrase.notes().values().map(Note::pitch).collect(),
+        ),
+        Material::StepPattern { pattern, .. } => {
+            let active = pattern
+                .rows()
+                .iter()
+                .flat_map(StepRow::cells)
+                .filter(|cell| cell.active())
+                .count();
+            let cells = pattern.steps() * pattern.rows().len();
+            (
+                "step_pattern",
+                Some(format!("{active}/{cells} active cells")),
+                pattern.rows().iter().map(StepRow::pitch).collect(),
+            )
+        }
+        Material::PitchSet { pitches, .. } => (
+            "pitch_set",
+            Some(format!("{} pitches", pitches.pitches().len())),
+            pitches.pitches().to_vec(),
+        ),
+    };
+    let register = pitches
+        .iter()
+        .map(|pitch| pitch.register().value())
+        .min()
+        .zip(pitches.iter().map(|pitch| pitch.register().value()).max())
+        .map(|(min, max)| {
+            if min == max {
+                min.to_string()
+            } else {
+                format!("{min}..{max}")
+            }
+        });
+    MaterialOutput {
+        id: material.id().to_string(),
+        name: material.name(),
+        kind,
+        activity,
+        register,
+    }
+}
+
+fn describe_pattern(pattern: &Pattern, output: &mut Vec<String>) {
+    match pattern {
+        Pattern::Material { material_id } => output.push(format!("material {material_id}")),
+        Pattern::Sequence { patterns } => describe_children("sequence", patterns, output),
+        Pattern::Stack { patterns } => describe_children("stack", patterns, output),
+        Pattern::Repeat { pattern, count } => {
+            output.push(count.map_or_else(
+                || "repeat forever".to_owned(),
+                |value| format!("repeat {value}"),
+            ));
+            describe_pattern(pattern, output);
+        }
+        Pattern::Transform {
+            transformation,
+            pattern,
+        } => {
+            output.push(transformation_name(transformation));
+            describe_pattern(pattern, output);
+        }
+        Pattern::Choose { patterns, .. } => describe_children("choose", patterns, output),
+        Pattern::WeightedChoose { patterns, .. } => {
+            output.push(format!("weighted_choose {} branches", patterns.len()));
+            for branch in patterns {
+                output.push(format!("weight {}", branch.weight()));
+                describe_pattern(branch.pattern(), output);
+            }
+        }
+        Pattern::Omit {
+            probability,
+            pattern,
+            ..
+        } => {
+            output.push(format!(
+                "omit {}/{}",
+                probability.numerator(),
+                probability.denominator()
+            ));
+            describe_pattern(pattern, output);
+        }
+        Pattern::Sometimes {
+            probability,
+            transformation,
+            pattern,
+            ..
+        } => {
+            output.push(format!(
+                "sometimes {}/{} {}",
+                probability.numerator(),
+                probability.denominator(),
+                transformation_name(transformation)
+            ));
+            describe_pattern(pattern, output);
+        }
+    }
+}
+
+fn describe_children(label: &str, patterns: &[Pattern], output: &mut Vec<String>) {
+    output.push(format!("{label} {} branches", patterns.len()));
+    for pattern in patterns {
+        describe_pattern(pattern, output);
+    }
+}
+
+fn transformation_name(transformation: &Transformation) -> String {
+    match transformation {
+        Transformation::Shift { offset } => format!("shift {}", offset_name(*offset)),
+        Transformation::Stretch { factor } => format!("stretch {factor}"),
+        Transformation::Rotate { offset } => format!("rotate {}", offset_name(*offset)),
+        Transformation::Reverse => "reverse".to_owned(),
+        Transformation::Transpose { interval } => {
+            format!("transpose {} semitones", interval.value())
+        }
+    }
+}
+
+fn offset_name(offset: TimeOffset) -> String {
+    match offset {
+        TimeOffset::Metric(value) => format!("metric:{value}"),
+        TimeOffset::Absolute(value) => format!("absolute:{value}"),
+    }
 }
 
 #[derive(Serialize)]
@@ -747,7 +1085,7 @@ mod tests {
             "--quiet",
             "--no-input",
             "--no-color",
-            "https://github.com/StormlightLabs/ambiente/tree/main/docs",
+            "https://github.com/StormlightLabs/ambiente/tree/main/apps/web/content/docs",
         ] {
             assert!(help.contains(expected), "help omitted {expected}");
         }
@@ -767,5 +1105,42 @@ mod tests {
     fn invalid_span_is_rejected() {
         let error = parse_span(ClockArg::Metric, "2/1", "1/1").unwrap_err();
         assert!(error.downcast_ref::<PatternError>().is_some());
+    }
+
+    #[test]
+    fn midi_export_rejects_non_note_events() {
+        let document = Document::new(
+            "9f8d76b0-0dd1-4fea-9ad9-43ae8f94f860".parse().unwrap(),
+            Metadata::new(),
+            Seed::default(),
+            Piece::new(
+                "98d4060e-3f83-4299-8932-9cf757a16a76".parse().unwrap(),
+                Transport::new(Tempo::new(120, 1).unwrap(), None),
+            ),
+        );
+        let event: Event = serde_json::from_value(serde_json::json!({
+            "span": {
+                "start": { "clock": "metric", "value": "0/1" },
+                "end": { "clock": "metric", "value": "1/1" }
+            },
+            "target": {
+                "type": "voice",
+                "id": "826b8913-4c23-43e1-b150-594737909a58"
+            },
+            "kind": { "type": "named", "name": "control" },
+            "source": {
+                "type": "phrase_note",
+                "material_id": "313b2f8d-8c00-4d82-82f6-cdb7aeb112de",
+                "note_id": "92b8d664-2b27-45ca-a7c2-f816124fe813"
+            },
+            "properties": {}
+        }))
+        .unwrap();
+
+        let error = midi_file(&document, &[event]).unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "MIDI export does not support named events"
+        );
     }
 }

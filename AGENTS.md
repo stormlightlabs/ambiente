@@ -16,9 +16,15 @@
 ## Documentation
 
 - Use the writing skill for all prose.
-- Keep `docs/roadmap.md` focused on product direction and sequencing.
-- Keep `TODO.md` as an implementation checklist. Put architecture and rationale in the
-  relevant document instead of repeating them in the checklist.
+- Keep `ROADMAP.md` focused on product direction and sequencing.
+- Treat `apps/web/content/docs/` as the canonical source for documentation that the
+  web application will publish.
+- Keep `TODO.md` as an outstanding-work checklist. Remove completed tasks instead of
+  accumulating checked boxes.
+- Summarize completed work under `CHANGELOG.md`'s `Unreleased` section using Keep a
+  Changelog categories; do not turn the changelog into a task-by-task transcript.
+- Put architecture and rationale in the relevant document instead of repeating them
+  in `TODO.md`.
 
 ## Architecture
 

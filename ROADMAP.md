@@ -2,7 +2,7 @@
 
 > Status: reboot with a replacement architecture  
 > Primary platforms: web, macOS desktop, and CLI  
-> Core stack: Rust, WebAssembly, Solid, Vike, Tauri, Web Audio, and Tone.js
+> Core stack: Rust, WebAssembly, Solid, Vike, Sätteri, Tauri, Web Audio, and Tone.js
 
 Ambiente is a system for composing, performing, exploring, and listening to
 generative music. It sits between a conventional composition tool, a live
@@ -17,10 +17,12 @@ A musician should be able to play a phrase on a piano, draw notes into a matrix,
 transform that material into a generative system, perform it live, capture a
 realization, and later open the same piece in Listen mode.
 
-The [composition model](composition-model.md), [architecture](architecture.md),
-[document format](document-format.md), and [audio design](audio.md) own the
-rationale and system details behind this sequence. `TODO.md` tracks
-implementation work.
+The [composition model](apps/web/content/docs/composition-model.md),
+[architecture](apps/web/content/docs/architecture.md),
+[document format](apps/web/content/docs/document-format.md), and
+[audio design](apps/web/content/docs/audio.md) own the
+rationale and system details behind this sequence. The repository-root `TODO.md`
+tracks outstanding implementation work; `CHANGELOG.md` summarizes completed work.
 
 ## Product direction
 
@@ -132,40 +134,67 @@ meaningful, and styling TTY-aware.
 Exit when a developer can explain and debug a fixture from the terminal, and the
 same commands work in scripts without prompts or mixed streams.
 
-### M4 — WASM and browser audio
+### M4 — Web shell and documentation
 
-Produce reliable real-time browser sound from Rust events.
+Build the actual browser product container before defining the WASM package.
+
+Deliver:
+
+- the Vike + `vike-solid` application under `apps/web`;
+- prerendered landing, documentation, learning, and example routes;
+- `/studio/**` as a prerendered SPA shell;
+- the canonical documentation source under `apps/web/content/docs/`;
+- Markdown and MDX processing through Sätteri and `vite-plugin-satteri`;
+- Solid-capable MDX (`jsxImportSource: "solid-js/h"`), GFM/frontmatter, and
+  Expressive Code integration;
+- site/documentation layout, navigation, typography, and browser smoke tests;
+- a narrow TypeScript application/document facade that can initially run against
+  fixtures without reimplementing musical semantics.
+
+Astro 7 uses Sätteri as its default Markdown processor. Ambiente uses the same
+processor family directly in Vite rather than adopting Astro or maintaining a
+second documentation application.
+
+Exit when the current project documentation prerenders from the web app, the
+Studio shell builds without WASM, and the frontend has a concrete boundary ready
+for the Rust implementation. No TypeScript code may become authoritative for
+composition, theory, or pattern generation.
+
+### M5 — WASM and browser audio
+
+Produce reliable real-time browser sound from Rust events inside the existing web
+shell.
 
 Deliver:
 
 - `ambiente-wasm` and generated TypeScript declarations;
-- a narrow TypeScript facade;
+- an implementation of the M4 TypeScript facade over the WASM bindings;
 - shared native/WASM event fixtures;
 - a look-ahead scheduler over Tone.js and Web Audio;
 - transport and audio lifecycle handling;
 - a small palette for felt piano, glass, drone, pluck, air, and percussion.
 
-Exit when a browser can load a Rust-authored document and play continuously with
-no pattern generation duplicated in TypeScript. Native and WASM fixtures must
-produce identical events.
+Exit when `/studio` can load a Rust-authored document through the facade and play
+continuously with no pattern generation duplicated in TypeScript. Native and
+WASM fixtures must produce identical events.
 
-### M5 — Instrument Studio
+### M6 — Instrument Studio
 
 Make Ambiente playable without requiring code.
 
 Deliver:
 
-- a Vike and Solid site with prerendered public routes and a Studio SPA;
 - transport, seed control, and browser project persistence;
 - material and voice browsing, sound selection, and an inspector;
 - a pointer, touch, and keyboard piano with phrase recording;
 - a Tone-Matrix-inspired editor over canonical `StepPattern` data;
-- Matrix, Phrase, and basic System views.
+- Matrix, Phrase, and basic System views;
+- documentation examples that use the same production WASM/audio runtime.
 
 Exit when a new user can choose a sound, play and record a phrase, create a
 matrix pattern, play both, save the project, reopen it, and hear the same system.
 
-### M6 — Three Studies
+### M7 — Three Studies
 
 Prove musical value before broadening the product.
 
@@ -179,13 +208,15 @@ Create three first-party pieces:
 
 Each study should usually use no more than five voices, develop from a small
 amount of authored structure for 5–10 minutes or longer where suitable, vary
-meaningfully by seed, and retain its identity across seeds.
+meaningfully by seed, and retain its identity across seeds. Once stable, use the
+studies as the basis for focused learning material rather than maintaining
+separate demo compositions.
 
 Exit when the team would listen to the pieces outside development and each study
 shows a different strength. If this fails, improve sounds, primitives, defaults,
 constraints, and composition workflow instead of adding features.
 
-### M7 — Listen
+### M8 — Listen
 
 Make completed pieces useful as listener-facing music.
 
@@ -197,7 +228,7 @@ macro and scene values, not global neuroscience claims.
 Exit when one study works credibly as an extended soundtrack for work, reading,
 creative activity, or rest.
 
-### M8 — Generative Create
+### M9 — Generative Create
 
 Expose process composition graphically.
 
@@ -209,7 +240,7 @@ relationships rather than an unconstrained node graph.
 Exit when a user can turn a recorded phrase or step pattern into a nontrivial,
 evolving piece without code.
 
-### M9 — Code and Perform
+### M10 — Code and Perform
 
 Add a textual frontend after Rust semantics are stable.
 
@@ -221,7 +252,7 @@ source must leave the previous valid pattern running.
 Exit when a performer can alter an active piece without stopping playback or
 writing JavaScript or Rust.
 
-### M10 — Capture and production
+### M11 — Capture and production
 
 Preserve and render emergent performances.
 
@@ -232,20 +263,6 @@ permits.
 
 Exit when a musician can mark an interesting realization, reopen the project,
 and recreate or render it.
-
-### M11 — Public web product
-
-Ship the web experience as one static distribution.
-
-Deliver the landing site, prerendered documentation and learning routes,
-interactive examples, Studio and Listen shells, first-party pieces, and a
-sharing/export strategy. Documentation will cover phrases, matrix composition,
-piano recording, voices, patterns, probability, seeds, independent clocks,
-phasing, signals, scenes, macros, sound, CLI use, and live coding.
-
-Examples must share the production WASM and audio runtime. Exit when a new user
-can understand Ambiente, run examples, and create a small piece without a
-production application server.
 
 ### M12 — Desktop
 
@@ -278,32 +295,36 @@ device, or production limitation.
 Do not build a second sound engine solely because the Rust ecosystem makes it
 interesting.
 
-## First implementation slice
+## Next implementation slice
 
-The first vertical slice establishes the central architectural property:
+The Rust side of the first vertical slice now reaches deterministic events:
 
 ```text
-Document
-  ↓
-StepPattern
-  ↓
-pattern query
-  ↓
-Events
-  ↓
-WASM
-  ↓
-Tone.js
-  ↓
+Document -> StepPattern -> pattern query -> Events
+```
+
+The next slice should prove the browser integration in this order:
+
+```text
+Vike + Solid shell
+        ↓
+Sätteri docs + /studio shell
+        ↓
+TypeScript facade
+        ↓
+WASM implementation
+        ↓
+Tone.js scheduler
+        ↓
 Matrix UI
-  ↓
+        ↓
 sound
 ```
 
-Implement one document, piece, voice, and step pattern; represent pitch and
-time; query note events; compile the core to WASM; schedule through Tone.js;
-edit the step pattern in Solid; and prove deterministic save/load. Repeat with a
-piano recording into a `Phrase` before adding broad transformations.
+Build the shell and facade first, then let `ambiente-wasm` implement the browser
+operations those real consumers need. Do not fill the gap with a TypeScript
+composition engine. After matrix playback works, repeat the path with piano
+recording into a canonical `Phrase`.
 
 ## Non-goals for the reboot
 
@@ -343,5 +364,9 @@ choices matter more than framework machinery.
 - [Tone.js](https://tonejs.github.io/)
 - [`wasm-bindgen` Guide](https://wasm-bindgen.github.io/wasm-bindgen/)
 - [Vike, _Pre-rendering (SSG)_](https://vike.dev/pre-rendering)
+- [Astro 7.0, _Sätteri: native Markdown parsing_](https://astro.build/blog/astro-7/#sätteri-native-markdown-parsing)
+- [Sätteri documentation](https://satteri.bruits.org/docs/)
+- [`vite-plugin-satteri`](https://github.com/bruits/satteri/tree/main/packages/vite-plugin-satteri)
+- [`satteri-expressive-code`](https://github.com/bruits/satteri/tree/main/packages/satteri-expressive-code)
 - [Tauri 2, _Frontend Configuration_](https://v2.tauri.app/start/frontend/)
 - [Command Line Interface Guidelines](https://clig.dev/)

@@ -3,14 +3,16 @@
 Ambiente is a system for composing, performing, exploring, and listening to
 generative music.
 
-The reboot is in its foundation phase. Start with:
+The reboot is building the product shell around a deterministic Rust composition
+core. Start with:
 
-- [roadmap](docs/ROADMAP.md)
-- [architecture](docs/architecture.md)
-- [document format](docs/document-format.md)
-- [composition model and glossary](docs/composition-model.md)
-- [audio architecture](docs/audio.md)
+- [roadmap](ROADMAP.md)
+- [architecture](apps/web/content/docs/architecture.md)
+- [document format](apps/web/content/docs/document-format.md)
+- [composition model and glossary](apps/web/content/docs/composition-model.md)
+- [audio architecture](apps/web/content/docs/audio.md)
 - [implementation checklist](TODO.md)
+- [changelog](CHANGELOG.md)
 
 ## Development
 
@@ -22,5 +24,6 @@ pnpm install
 pnpm check
 ```
 
-See [Architecture: Repository and workspace](docs/architecture.md#repository-and-workspace)
+See
+[Architecture: Repository and workspace](apps/web/content/docs/architecture.md#repository-and-workspace)
 for individual formatting, linting, and test commands.

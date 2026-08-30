@@ -8,7 +8,7 @@ This page records the system boundaries and invariants. See the
 [document format](document-format.md) for identity, persistence, and migration;
 the [composition model](composition-model.md) for musical concepts, time, and
 deterministic randomness; [audio](audio.md) for playback; and the
-[roadmap](ROADMAP.md) for sequencing.
+[roadmap](../../../../ROADMAP.md) for sequencing.
 
 ## System shape
 
@@ -48,8 +48,11 @@ The repository has two workspaces:
 - pnpm owns browser applications and TypeScript packages under `apps/` and
   `packages/`.
 
-Only `crates/core` and `crates/cli` exist at the reboot boundary. Add
-`crates/wasm` after the core has an API worth exposing. Add other crates and
+Only `crates/core` and `crates/cli` exist as implemented code packages at the
+current reboot boundary. The canonical documentation source already lives under
+`apps/web/content/docs/`, but the Vike application itself has not been scaffolded.
+Build that shell before `crates/wasm` so the TypeScript facade is shaped by real
+browser routes and consumers as well as the core API. Add other crates and
 packages only when implemented behavior gives them a clear boundary.
 
 The supported development versions are:
@@ -203,9 +206,19 @@ Vike supports render modes per page and can prerender an SPA shell. If all
 routes are prerendered, production consists of static assets and requires no
 application server.[^vike-render-modes] [^vike-prerender]
 
+Documentation is part of this application rather than a separate site or build.
+Canonical Markdown and MDX live in `apps/web/content/docs/`. The Vite build will
+process both through Sätteri using `vite-plugin-satteri`,[^satteri-vite] with GFM and
+frontmatter enabled and MDX compiled with `jsxImportSource: "solid-js/h"`. Sätteri is the native
+Markdown/MDX processor that Astro 7 uses by default; using it directly preserves
+that parser and plugin model without adopting Astro itself.[^astro-satteri] [^satteri]
+`satteri-expressive-code` provides the corresponding Sätteri HAST
+integration for highlighted, annotated code blocks.[^satteri-expressive-code]
+
 The Studio and interactive documentation examples must use the same WASM facade
-and audio package. A documentation example may be smaller than the Studio, but
-it must not contain a demo-only pattern engine.
+and audio package once those exist. A documentation example may be smaller than
+the Studio, but it must not contain a demo-only pattern engine. Until M5 lands,
+the web shell may use fixtures or a narrow test adapter behind the same facade.
 
 The Tauri application will host the shared Studio. Platform features sit behind
 capability adapters, for example:
@@ -270,3 +283,11 @@ A design that violates several invariants needs revision before implementation.
 [^vike-render-modes]: [Vike, _Render Modes_](https://vike.dev/render-modes)
 
 [^vike-prerender]: [Vike, _Pre-rendering (SSG)_](https://vike.dev/pre-rendering)
+
+[^astro-satteri]: [Astro 7.0, _Sätteri: native Markdown parsing_](https://astro.build/blog/astro-7/#sätteri-native-markdown-parsing)
+
+[^satteri]: [Sätteri documentation](https://satteri.bruits.org/docs/)
+
+[^satteri-vite]: [`vite-plugin-satteri`](https://github.com/bruits/satteri/tree/main/packages/vite-plugin-satteri)
+
+[^satteri-expressive-code]: [`satteri-expressive-code`](https://github.com/bruits/satteri/tree/main/packages/satteri-expressive-code)
