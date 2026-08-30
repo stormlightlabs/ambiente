@@ -308,22 +308,13 @@ interesting.
 
 ## Next implementation slice
 
-Instrument Studio now has transport and local persistence, voice and material
-controls, sound settings, and a playable piano that records canonical phrases.
-The next slice adds canonical matrix editing:
+Instrument Studio now completes the first no-code composition workflow: Phrase,
+Matrix, and System views edit and play the same canonical document, local pieces
+survive reopen, and focused guides use the production WASM and audio runtime.
 
-```text
-StepPattern document operations
-             ↓
-         Matrix UI
-             ↓
-      running audio
-```
-
-Use the existing WASM facade and audio package in Studio and playable guides.
-Do not fill browser gaps with a TypeScript composition engine. After matrix
-editing, add the remaining Phrase and System views and make focused production
-examples playable in the documentation.
+The next slice begins the Three Studies quality gate with the Phase study. Add
+only the independent-clock and noncommensurate-cycle behavior the piece needs,
+then verify event timing over long queries before expanding its visualization.
 
 ## Non-goals for the reboot
 

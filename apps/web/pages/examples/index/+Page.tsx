@@ -8,11 +8,11 @@ export default function Page() {
 				Recognizable identity.
 			</h1>
 			<p>
-				Playable pieces are not published yet. For now, explore a small interactive guide component and the ideas behind
-				Ambiente's composition model.
+				Hear focused Phrase, Matrix, piano, voice, and sound examples built with the same Rust and browser audio runtime
+				as Studio.
 			</p>
 			<a class="button button--primary" href="/docs/solid-components">
-				Open interactive documentation
+				Open playable examples
 			</a>
 		</section>
 	);

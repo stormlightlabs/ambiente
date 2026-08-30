@@ -34,6 +34,20 @@ Leave **Quantize to 1/16 notes** selected to move recorded notes to the nearest
 sixteenth-note grid. Clear it to keep the performed timing. You can quantize a
 phrase later from the phrase display or Materials view.
 
+## Create a matrix pattern
+
+Select **Matrix**, then add or select a matrix in the Materials list. Select a
+cell to turn its pitch on or off for that step. The moving column marker follows
+the transport playhead.
+
+Use **Steps** to set the pattern length and **Subdivision** to set the duration
+of each step. Edit a row's MIDI pitch directly, or add and remove pitch rows.
+Matrix edits change canonical `StepPattern` material and become audible during
+running playback.
+
+To play a new matrix, select a voice and choose the matrix from its **Material**
+control. Select **Play** in the transport.
+
 ## Work with voices and materials
 
 A voice connects musical material to a sound. Select a voice to edit its name,

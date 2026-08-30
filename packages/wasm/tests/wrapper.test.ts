@@ -39,7 +39,25 @@ describe('WASM application', () => {
 		expect(repeated[0]?.span.start.value).toBe('2/1');
 		expect(application.apply({ kind: 'set_seed', payload: '000000000000002b' })).toEqual([]);
 		expect(application.apply({ kind: 'set_tempo', payload: '96/1' })).toEqual([]);
-		expect(application.inspect()).toMatchObject({ seed: '000000000000002b', tempo: '96/1' });
+		expect(
+			application.apply({
+				kind: 'configure_step_pattern',
+				payload: {
+					material_id: '313b2f8d-8c00-4d82-82f6-cdb7aeb112de',
+					pitches: [72, 67, 60],
+					steps: 16,
+					subdivision: '1/4'
+				}
+			})
+		).toEqual([]);
+		const configured = application.inspect();
+		expect(configured).toMatchObject({ seed: '000000000000002b', tempo: '96/1' });
+		const configuredMaterial = configured.materials[0];
+		expect(configuredMaterial?.type).toBe('step_pattern');
+		if (configuredMaterial?.type === 'step_pattern') {
+			expect(configuredMaterial.pattern).toMatchObject({ steps: 16, subdivision: '1/4' });
+			expect(configuredMaterial.pattern.rows.map((row) => row.pitch)).toEqual([72, 67, 60]);
+		}
 
 		const created = await WasmApplication.createNew('Fresh piece');
 		expect(created.inspect()).toMatchObject({ materialCount: 0, tempo: '120/1', title: 'Fresh piece', voiceCount: 0 });

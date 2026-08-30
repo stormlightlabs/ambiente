@@ -304,37 +304,135 @@
 	.studio-canvas .kicker {
 		margin-bottom: 0.2rem;
 	}
-	.matrix-preview {
-		display: grid;
-		gap: 0.7rem;
-		grid-template-columns: 2rem 1fr;
-		margin-bottom: 2.5rem;
-		opacity: 0.58;
+	.matrix-editor {
+		background: var(--white);
+		border: 1px solid var(--line);
+		border-radius: var(--radius-md);
+		overflow: hidden;
 	}
-	.matrix-preview__labels {
+	.matrix-editor--empty {
+		padding: clamp(1.25rem, 3vw, 2.5rem);
+	}
+	.matrix-editor--empty h2,
+	.matrix-editor__header h2 {
+		font: 550 clamp(1.4rem, 3vw, 2.1rem) var(--font-display);
+		margin: 0;
+	}
+	.matrix-editor--empty p {
 		color: var(--ink-soft);
+		font-size: 0.8rem;
+	}
+	.matrix-editor__header {
+		align-items: end;
+		border-bottom: 1px solid var(--line);
+		display: flex;
+		gap: 1rem;
+		justify-content: space-between;
+		padding: 1rem 1.25rem;
+	}
+	.matrix-editor__settings {
+		display: flex;
+		gap: 0.65rem;
+	}
+	.matrix-editor__settings label {
 		display: grid;
-		font-family: var(--font-mono);
+		gap: 0.25rem;
+	}
+	.matrix-editor__settings label > span {
+		color: var(--ink-soft);
 		font-size: 0.58rem;
-		grid-template-rows: repeat(5, 1fr);
 	}
-	.matrix-preview__labels span {
-		align-content: center;
+	.matrix-editor__settings select {
+		background: var(--paper);
+		border: 1px solid var(--line);
+		border-radius: var(--radius-sm);
+		color: var(--ink);
+		font: 0.68rem var(--font-ui);
+		min-height: 2.5rem;
+		padding-inline: 0.5rem;
 	}
-	.matrix-preview__grid {
+	.matrix-editor__scroll {
+		overflow-x: auto;
+		padding: 1.25rem;
+	}
+	.matrix-grid {
+		display: grid;
+		gap: 0.4rem 0.65rem;
+		grid-template-columns: 4.5rem minmax(calc(var(--matrix-steps) * 2.2rem), 1fr);
+		min-width: max-content;
+	}
+	.matrix-grid__steps,
+	.matrix-grid__row {
 		display: grid;
 		gap: 0.35rem;
-		grid-template-columns: repeat(8, 1fr);
-		grid-template-rows: repeat(5, 1fr);
+		grid-template-columns: repeat(var(--matrix-steps), minmax(1.85rem, 1fr));
 	}
-	.matrix-preview__grid span {
-		aspect-ratio: 2.4;
+	.matrix-grid__steps span {
+		color: var(--ink-soft);
+		font: 0.52rem var(--font-mono);
+		text-align: center;
+	}
+	.matrix-grid__steps span.is-current {
+		color: var(--forest);
+		font-weight: 800;
+	}
+	.matrix-grid__pitch {
+		align-items: center;
+		display: grid;
+		grid-template-columns: 2.6rem 1fr;
+	}
+	.matrix-grid__pitch input {
+		background: var(--paper);
 		border: 1px solid var(--line);
-		border-radius: 0.2rem;
+		border-radius: var(--radius-sm);
+		color: var(--ink);
+		font: 0.6rem var(--font-mono);
+		min-height: 2rem;
+		padding-inline: 0.3rem;
+		width: 100%;
 	}
-	.matrix-preview__grid span.is-on {
+	.matrix-grid__pitch small {
+		color: var(--ink-soft);
+		font: 0.55rem var(--font-mono);
+		padding-left: 0.3rem;
+	}
+	.matrix-grid__row button {
+		aspect-ratio: 1.2;
+		background: var(--paper);
+		border: 1px solid var(--line);
+		border-radius: 0.22rem;
+		min-height: 2rem;
+		padding: 0;
+	}
+	.matrix-grid__row button:hover {
+		border-color: var(--moss);
+	}
+	.matrix-grid__row button.is-active {
 		background: var(--moss);
 		border-color: var(--moss);
+	}
+	.matrix-grid__row button.is-current {
+		box-shadow: inset 0 -3px var(--gold);
+	}
+	.matrix-grid__row button:focus-visible {
+		outline: 3px solid var(--gold);
+		outline-offset: 1px;
+	}
+	.matrix-editor__rows {
+		border-top: 1px solid var(--line);
+		display: flex;
+		gap: 0.5rem;
+		justify-content: end;
+		padding: 0.8rem 1.25rem;
+	}
+	.matrix-editor__rows button {
+		background: transparent;
+		border: 1px solid var(--line);
+		border-radius: var(--radius-sm);
+		color: var(--ink);
+		font-size: 0.68rem;
+		min-height: 2.5rem;
+		padding-inline: 0.75rem;
 	}
 	.studio-empty {
 		align-items: center;
@@ -904,8 +1002,9 @@
 	.transport__tempo input {
 		width: 3rem;
 	}
-	.matrix-preview__grid {
-		gap: 0.2rem;
+	.matrix-editor__header {
+		align-items: start;
+		flex-direction: column;
 	}
 	.studio-canvas > header > span {
 		display: none;

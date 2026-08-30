@@ -21,10 +21,11 @@ import type {
 	StoredPieceDocument
 } from '../../src/application/piece-storage';
 import { createShellFixtureApplication } from '../../src/application/shell-fixture';
+import { MatrixEditor } from '../../src/components/MatrixEditor';
 import { PianoKeyboard, pitchName } from '../../src/components/PianoKeyboard';
 
 const initialInspection = createShellFixtureApplication().inspect();
-const views = ['Piano', 'Materials', 'System'] as const;
+const views = ['Phrase', 'Matrix', 'System'] as const;
 const keyboardPitches: Readonly<Record<string, number>> = {
 	KeyA: 0,
 	KeyW: 1,
@@ -65,7 +66,7 @@ export default function Page() {
 	const [persistence, setPersistence] = createSignal<PersistenceStatus>();
 	const [seedDraft, setSeedDraft] = createSignal(initialInspection.seed);
 	const [tempoDraft, setTempoDraft] = createSignal(exactToDisplay(initialInspection.tempo));
-	const [activeView, setActiveView] = createSignal<StudioView>('Piano');
+	const [activeView, setActiveView] = createSignal<StudioView>('Phrase');
 	const [selectedVoiceId, setSelectedVoiceId] = createSignal<string>();
 	const [selectedMaterialId, setSelectedMaterialId] = createSignal<string>();
 	const [baseOctave, setBaseOctave] = createSignal(4);
@@ -77,6 +78,10 @@ export default function Page() {
 	const selectedMaterial = createMemo(() =>
 		inspection().materials.find((material) => material.id === selectedMaterialId())
 	);
+	const selectedMatrix = createMemo(() => {
+		const material = selectedMaterial();
+		return material?.type === 'step_pattern' ? material : undefined;
+	});
 	let application: WasmApplication | undefined;
 	let audio: LookAheadScheduler | undefined;
 	let storage: BrowserPieceStorage | undefined;
@@ -446,7 +451,7 @@ export default function Page() {
 		if (
 			offset === undefined ||
 			event.repeat ||
-			activeView() !== 'Piano' ||
+			activeView() !== 'Phrase' ||
 			isTextInput(event.target) ||
 			event.metaKey ||
 			event.ctrlKey ||
@@ -708,7 +713,7 @@ export default function Page() {
 						/>
 
 						<main class="instrument-surface">
-							<Show when={activeView() === 'Piano'}>
+							<Show when={activeView() === 'Phrase'}>
 								<div class="piano-toolbar">
 									<div>
 										<p>Computer keys</p>
@@ -769,8 +774,13 @@ export default function Page() {
 									onQuantize={quantizePhrase}
 								/>
 							</Show>
-							<Show when={activeView() === 'Materials'}>
-								<MaterialDetail material={selectedMaterial()} onQuantize={quantizePhrase} />
+							<Show when={activeView() === 'Matrix'}>
+								<MatrixEditor
+									material={selectedMatrix()}
+									onOperation={applyOperation}
+									positionSeconds={position()}
+									tempo={inspection().tempo}
+								/>
 							</Show>
 							<Show when={activeView() === 'System'}>
 								<section class="system-summary">
@@ -1077,53 +1087,6 @@ function PhraseDisplay(props: PhraseDisplayProps) {
 	);
 }
 
-function MaterialDetail(
-	props: Readonly<{ material: ApplicationMaterial | undefined; onQuantize: (id: string) => void }>
-) {
-	return (
-		<Show
-			when={props.material}
-			fallback={
-				<section class="material-detail">
-					<h2>No material selected</h2>
-					<p>Add a phrase or matrix from the material browser.</p>
-				</section>
-			}>
-			{(material) => (
-				<section class="material-detail">
-					<p class="kicker">{materialTypeLabel(material())}</p>
-					<h2>{material().name}</h2>
-					{materialSummary(material(), props.onQuantize)}
-				</section>
-			)}
-		</Show>
-	);
-}
-
-function materialSummary(material: ApplicationMaterial, onQuantize: (id: string) => void) {
-	if (material.type === 'phrase') {
-		const notes = Object.values(material.phrase.notes);
-		return (
-			<>
-				<p>{notes.length} recorded notes with exact onset and duration.</p>
-				<PhraseRoll notes={notes.map((note) => noteToDisplay(note))} />
-				<button type="button" class="button button--quiet" onClick={() => onQuantize(material.id)}>
-					Quantize to 1/16 notes
-				</button>
-			</>
-		);
-	}
-	if (material.type === 'step_pattern') {
-		return (
-			<p>
-				{material.pattern.rows.length} pitch rows · {material.pattern.steps} steps · {material.pattern.subdivision} beat
-				subdivision
-			</p>
-		);
-	}
-	return <p>{material.pitches.length} pitches.</p>;
-}
-
 function PhraseRoll(props: Readonly<{ notes: readonly RecordedNote[] }>) {
 	const length = () => Math.max(1, ...props.notes.map((note) => note.onset + note.duration));
 	return (
@@ -1215,7 +1178,7 @@ function integerParameter(voice: ApplicationVoice, name: string, fallback: numbe
 }
 
 function viewTitle(view: StudioView): string {
-	if (view === 'Materials') return 'Musical material';
+	if (view === 'Matrix') return 'Build a matrix pattern';
 	if (view === 'System') return 'Piece overview';
 	return 'Play and record';
 }

@@ -54,6 +54,11 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added a responsive pointer, touch, and computer-keyboard piano with octave
   navigation, immediate sound preview, canonical phrase recording, phrase
   display, and optional sixteenth-note quantization.
+- Added canonical matrix reconfiguration, a playable Matrix editor with cell,
+  pitch-row, length, subdivision, and transport-playhead controls, and live audio
+  refresh after edits.
+- Added focused Phrase, Matrix, piano, voice, and sound guide examples that use
+  the production WASM document runtime and browser audio package.
 - Added Pagefind indexing, in-page search, and scroll-aware section navigation
   for the prerendered documentation.
 

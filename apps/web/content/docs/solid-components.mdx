@@ -1,21 +1,51 @@
 ---
-title: Interactive documentation
-description: How guides can add focused controls without creating a second music engine.
+title: Playable examples
+description: Focused Phrase, Matrix, piano, voice, and sound examples using Ambiente's production runtime.
 order: 6
 ---
 
-import { ProcessPulse } from '../../src/components/ProcessPulse';
+import { PlayableExample } from '../../src/components/PlayableExample';
 
-# Interactive documentation
+# Playable examples
 
-A guide can include a focused control without building a second version of Ambiente. The example below demonstrates an interactive guide component.
+Each example below uses the production `ambiente-wasm` document runtime and
+`@ambiente/audio` browser scheduler from Studio. The controls are smaller than
+Studio, but the examples do not have a separate music engine.
 
-## Try the control
+Browser audio starts only after you select a play button.
 
-Rotate the sequence below. This example changes only its presentation; it does not generate events or edit an Ambiente document.
+## Phrase
 
-<ProcessPulse />
+A Phrase keeps notes with exact onset and duration. This example creates the
+material through Rust document operations, connects it to a voice, and queries
+its events through WASM.
 
-## Playable guides
+<PlayableExample kind="phrase" />
 
-A playable guide uses the same document and audio behavior as Studio. It can show fewer controls, but it must edit and play the same piece model. This keeps an example useful after a reader moves from the guide into Studio.
+## Matrix
+
+A Matrix is canonical `StepPattern` material. Its active cells become Rust
+events before the browser scheduler plays them.
+
+<PlayableExample kind="matrix" />
+
+## Piano
+
+The piano preview path plays a voice directly without starting the piece
+transport. Studio uses the same path for pointer, touch, and computer-key input.
+
+<PlayableExample kind="piano" />
+
+## Voice
+
+A voice connects material or direct input to a sound and persisted playback
+settings.
+
+<PlayableExample kind="voice" />
+
+## Sound
+
+Sound names in a piece are stable semantic references. The browser audio package
+maps each reference to its production Tone.js preset.
+
+<PlayableExample kind="sound" />

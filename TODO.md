@@ -6,45 +6,6 @@ summarized in `CHANGELOG.md`.
 See `ROADMAP.md` for product direction and sequencing. Architecture and design
 rationale live with the web documentation source under `apps/web/content/docs/`.
 
-## M6 — Instrument Studio
-
-### Tone Matrix editor
-
-- [ ] Render configurable matrix.
-- [ ] Toggle cells.
-- [ ] Show playhead.
-- [ ] Map rows to pitches.
-- [ ] Configure step length.
-- [ ] Configure subdivision.
-- [ ] Edit canonical `StepPattern` through Rust operations.
-- [ ] Make playback changes audible without rebuilding the application.
-
-### Initial editor modes
-
-- [ ] Matrix
-- [ ] Phrase
-- [ ] basic System/voice inspector
-
-### Interactive documentation
-
-- [ ] Share the production WASM/audio runtime with documentation examples.
-- [ ] Make focused Phrase, Matrix, piano, voice, and sound examples playable.
-- [ ] Avoid separate demo-only musical implementations.
-
-### Done when
-
-A user with no code knowledge can:
-
-- [ ] create a piece
-- [ ] select a sound
-- [ ] play the piano
-- [ ] record a phrase
-- [ ] create a matrix pattern
-- [ ] play both
-- [ ] save
-- [ ] close/reopen
-- [ ] hear the same musical system again
-
 ## M7 — Three Studies quality gate
 
 Do not proceed by adding broad product surface until these studies work musically.

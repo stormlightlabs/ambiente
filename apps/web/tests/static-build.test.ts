@@ -13,11 +13,11 @@ async function builtPage(path: string): Promise<string> {
 
 describe('prerendered output', () => {
 	test('emits the landing page and documentation as static HTML', async () => {
-		await expect(builtPage('')).resolves.toContain('Compose the system.');
+		await expect(builtPage('')).resolves.toContain('Algorithmic Composition');
 		const architecture = await builtPage('docs/architecture');
 		expect(architecture).toContain('Ambiente keeps persisted musical state');
 		expect(architecture).toContain('href="/docs/document-format"');
-		await expect(builtPage('docs/solid-components')).resolves.toContain('Interactive documentation');
+		await expect(builtPage('docs/solid-components')).resolves.toContain('Playable examples');
 	});
 
 	test('emits the Pagefind documentation index', async () => {

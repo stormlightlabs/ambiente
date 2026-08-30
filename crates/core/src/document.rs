@@ -512,6 +512,28 @@ impl StepPattern {
     pub fn rows(&self) -> &[StepRow] {
         &self.rows
     }
+
+    /// Changes the matrix dimensions, subdivision, and row pitches while preserving
+    /// overlapping cells by row and step position.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when steps or pitches are empty or subdivision is not positive.
+    pub fn reconfigure(
+        &mut self,
+        steps: usize,
+        subdivision: Beats,
+        pitches: impl IntoIterator<Item = Pitch>,
+    ) -> Result<(), DocumentValueError> {
+        let mut replacement = Self::new(steps, subdivision, pitches)?;
+        for (old_row, new_row) in self.rows.iter().zip(&mut replacement.rows) {
+            for (old_cell, new_cell) in old_row.cells.iter().zip(&mut new_row.cells) {
+                new_cell.active = old_cell.active;
+            }
+        }
+        *self = replacement;
+        Ok(())
+    }
 }
 
 /// One authored material object.
@@ -1170,18 +1192,7 @@ impl Document {
                 step,
                 active,
             } => {
-                let material = self.piece.materials.get_mut(&material_id).ok_or_else(|| {
-                    OperationError::NotFound {
-                        entity: "material",
-                        id: material_id.to_string(),
-                    }
-                })?;
-                let Material::StepPattern { pattern, .. } = material else {
-                    return Err(OperationError::WrongMaterialKind {
-                        id: material_id.to_string(),
-                        expected: "step_pattern",
-                    });
-                };
+                let pattern = self.step_pattern_mut(material_id)?;
                 let cell = pattern
                     .rows
                     .get_mut(row)
@@ -1189,6 +1200,14 @@ impl Document {
                     .ok_or(OperationError::CellOutOfBounds { row, step })?;
                 cell.active = active;
             }
+            Operation::ConfigureStepPattern {
+                material_id,
+                steps,
+                subdivision,
+                pitches,
+            } => self
+                .step_pattern_mut(material_id)?
+                .reconfigure(steps, subdivision, pitches)?,
             Operation::QuantizePhrase { material_id, grid } => {
                 let material = self.piece.materials.get_mut(&material_id).ok_or_else(|| {
                     OperationError::NotFound {
@@ -1206,6 +1225,27 @@ impl Document {
             }
         }
         Ok(())
+    }
+
+    fn step_pattern_mut(
+        &mut self,
+        material_id: MaterialId,
+    ) -> Result<&mut StepPattern, OperationError> {
+        let material =
+            self.piece
+                .materials
+                .get_mut(&material_id)
+                .ok_or_else(|| OperationError::NotFound {
+                    entity: "material",
+                    id: material_id.to_string(),
+                })?;
+        let Material::StepPattern { pattern, .. } = material else {
+            return Err(OperationError::WrongMaterialKind {
+                id: material_id.to_string(),
+                expected: "step_pattern",
+            });
+        };
+        Ok(pattern)
     }
 }
 
@@ -1261,6 +1301,17 @@ pub enum Operation {
         /// New cell state.
         active: bool,
     },
+    /// Changes step count, subdivision, and row pitches while retaining overlapping cells.
+    ConfigureStepPattern {
+        /// Target step-pattern material.
+        material_id: MaterialId,
+        /// New positive step count.
+        steps: usize,
+        /// New positive duration for each step in quarter-note beats.
+        subdivision: Beats,
+        /// Pitch rows in display order.
+        pitches: Vec<Pitch>,
+    },
     /// Quantizes phrase notes that use the grid's clock domain.
     QuantizePhrase {
         /// Target phrase material.
@@ -1315,6 +1366,9 @@ pub enum OperationError {
         /// Requested step.
         step: usize,
     },
+    /// A requested document value was outside its permitted range.
+    #[error("invalid document value: {0}")]
+    Value(#[from] DocumentValueError),
     /// Exact time arithmetic failed while applying a transformation.
     #[error("could not transform note timing: {0}")]
     Time(#[from] TimeError),
@@ -2151,6 +2205,39 @@ mod tests {
             panic!("fixture material must be a step pattern");
         };
         pattern
+    }
+
+    #[test]
+    fn step_pattern_configuration_preserves_overlapping_cells() {
+        let mut document = fixture();
+        let matrix_id = id("313b2f8d-8c00-4d82-82f6-cdb7aeb112de");
+        let mut pattern = StepPattern::new(
+            4,
+            Beats::new(1, 4).unwrap(),
+            [Pitch::from_semitones(48), Pitch::from_semitones(55)],
+        )
+        .unwrap();
+        pattern.rows[1].cells[3].active = true;
+        document
+            .apply(Operation::AddMaterial(Material::step_pattern(
+                matrix_id, "Matrix", pattern,
+            )))
+            .unwrap();
+
+        document
+            .apply(Operation::ConfigureStepPattern {
+                material_id: matrix_id,
+                steps: 6,
+                subdivision: Beats::new(1, 2).unwrap(),
+                pitches: vec![Pitch::from_semitones(50), Pitch::from_semitones(57)],
+            })
+            .unwrap();
+
+        let configured = step_pattern(&document, matrix_id);
+        assert_eq!(configured.steps(), 6);
+        assert_eq!(configured.subdivision(), Beats::new(1, 2).unwrap());
+        assert_eq!(configured.rows()[0].pitch(), Pitch::from_semitones(50));
+        assert!(configured.rows()[1].cells()[3].active());
     }
 
     #[test]

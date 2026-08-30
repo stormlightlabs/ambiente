@@ -265,6 +265,55 @@
 	.process-pulse button:hover {
 		background: var(--paper-deep);
 	}
+	.playable-example {
+		align-items: center;
+		background: var(--paper-deep);
+		border: 1px solid var(--line);
+		border-radius: var(--radius-md);
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: minmax(0, 1fr) auto auto;
+		margin: 1.5rem 0 2rem;
+		padding: 1rem 1.25rem;
+	}
+	.playable-example strong {
+		font-size: 0.88rem;
+	}
+	.prose .playable-example p {
+		color: var(--ink-soft);
+		font-size: 0.74rem;
+		line-height: 1.45;
+		margin: 0.15rem 0 0;
+	}
+	.playable-example label {
+		display: grid;
+		gap: 0.2rem;
+	}
+	.playable-example label span {
+		color: var(--ink-soft);
+		font-size: 0.58rem;
+	}
+	.playable-example select,
+	.playable-example button {
+		background: var(--white);
+		border: 1px solid var(--line);
+		border-radius: var(--radius-sm);
+		color: var(--ink);
+		font: 0.72rem var(--font-ui);
+		min-height: 2.75rem;
+		padding-inline: 0.75rem;
+	}
+	.playable-example button {
+		background: var(--forest);
+		border-color: var(--forest);
+		color: var(--white);
+		font-weight: 700;
+		min-width: 6.5rem;
+	}
+	.prose .playable-example .playable-example__error {
+		color: var(--error, #a83d32);
+		grid-column: 1 / -1;
+	}
 }
 
 @media (max-width: 68rem) {
@@ -307,5 +356,13 @@
 		margin: 0;
 		text-decoration: underline;
 		text-underline-offset: 0.3em;
+	}
+	.playable-example {
+		align-items: stretch;
+		grid-template-columns: 1fr;
+	}
+	.playable-example button,
+	.playable-example select {
+		width: 100%;
 	}
 }
