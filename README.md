@@ -5,8 +5,9 @@ generative music.
 
 The reboot is in its foundation phase. Start with:
 
-- [roadmap](docs/roadmap.md)
+- [roadmap](docs/ROADMAP.md)
 - [architecture](docs/architecture.md)
+- [document format](docs/document-format.md)
 - [composition model and glossary](docs/composition-model.md)
 - [audio architecture](docs/audio.md)
 - [implementation checklist](TODO.md)

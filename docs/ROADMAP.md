@@ -18,8 +18,9 @@ transform that material into a generative system, perform it live, capture a
 realization, and later open the same piece in Listen mode.
 
 The [composition model](composition-model.md), [architecture](architecture.md),
-and [audio design](audio.md) own the rationale and system details behind this
-sequence. `TODO.md` tracks implementation work.
+[document format](document-format.md), and [audio design](audio.md) own the
+rationale and system details behind this sequence. `TODO.md` tracks
+implementation work.
 
 ## Product direction
 
@@ -71,8 +72,8 @@ Deliver:
 - CI plus formatting, linting, and test commands;
 - documented toolchain versions;
 - a minimal versioned `Document`;
-- decisions for IDs, serialization, migration, time, deterministic randomness,
-  and diagnostics.
+- documented contracts for IDs, serialization, migration, time, deterministic
+  randomness, and diagnostics.
 
 Exit when a minimal document can be created, serialized, loaded, migrated,
 validated, and round-tripped without information loss. CI must test the round

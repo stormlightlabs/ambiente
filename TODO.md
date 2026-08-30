@@ -2,7 +2,7 @@
 
 Implementation checklist for the Ambiente reboot.
 
-See `docs/roadmap.md` for product direction and sequencing. The other files in
+See `docs/ROADMAP.md` for product direction and sequencing. The other files in
 `docs/` own architecture and design rationale.
 
 ## M0 — Reboot foundation
@@ -20,22 +20,23 @@ See `docs/roadmap.md` for product direction and sequencing. The other files in
 
 ### Documentation
 
-- [x] Add `docs/roadmap.md`.
+- [x] Add `docs/ROADMAP.md`.
 - [x] Add `docs/architecture.md`.
 - [x] Add `docs/composition-model.md`.
 - [x] Add `docs/audio.md`.
+- [x] Add `docs/document-format.md`.
 - [x] Document architectural invariants from the roadmap.
 - [x] Add a glossary for `Document`, `Piece`, `Material`, `Voice`, `Pattern`, `Event`,
       `Scene`, `Macro`, and `Capture`.
 
-### Core decisions
+### Foundation contracts
 
-- [ ] Choose stable ID representation.
-- [ ] Choose versioned document serialization format.
-- [ ] Define schema versioning/migration strategy.
-- [ ] Choose deterministic PRNG implementation and seed representation.
-- [ ] Define error/diagnostic types.
-- [ ] Define musical and absolute time representations.
+- [x] Choose stable ID representation.
+- [x] Choose versioned document serialization format.
+- [x] Define schema versioning/migration strategy.
+- [x] Choose deterministic PRNG implementation and seed representation.
+- [x] Define error/diagnostic types.
+- [x] Define musical and absolute time representations.
 
 ### Done when
 

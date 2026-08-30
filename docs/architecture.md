@@ -5,8 +5,10 @@ piano, matrix, graphical editors, future language, CLI, and future Model Context
 Protocol (MCP) server are interfaces over that model.
 
 This page records the system boundaries and invariants. See the
-[composition model](composition-model.md) for musical concepts, [audio](audio.md)
-for playback, and the [roadmap](roadmap.md) for sequencing.
+[document format](document-format.md) for identity, persistence, and migration;
+the [composition model](composition-model.md) for musical concepts, time, and
+deterministic randomness; [audio](audio.md) for playback; and the
+[roadmap](ROADMAP.md) for sequencing.
 
 ## System shape
 
@@ -94,6 +96,48 @@ framework. It may expose generalized concepts that those systems can interpret.
 A persisted document is changed through operations rather than arbitrary mutable
 access. This gives the Studio, CLI, language, and MCP server the same edit
 semantics and validation behavior.
+
+## Errors and diagnostics
+
+The core separates operational Rust errors from user-facing document
+diagnostics. An operation that cannot complete returns a typed error such as
+`LoadError`, `MigrationError`, `OperationError`, or `TimeError`. Public core APIs
+do not return `anyhow::Error`.
+
+`thiserror` may derive `std::error::Error` and `Display` implementations. It does
+not become part of the public API shape.[^thiserror]
+
+Validation reports independent problems in one pass as structured diagnostics:
+
+```rust,ignore
+struct Diagnostic {
+    code: DiagnosticCode,
+    severity: Severity,
+    message: String,
+    location: Option<DiagnosticLocation>,
+    help: Option<String>,
+}
+```
+
+A diagnostic location identifies a semantic object and, when relevant, one of
+its fields. It does not expose a Rust source span or require a JSON Pointer. A
+future language frontend owns locations in DSL source.
+
+Diagnostic behavior follows these rules:
+
+- Codes are stable, machine-readable strings such as `reference.missing` and
+  `time.invalid`.
+- `Severity` starts with `error` and `warning`. Add another severity only when a
+  workflow needs it.
+- Human-readable messages may change without changing the meaning of a code.
+- A known correction belongs in `help`, separate from data used by machine
+  consumers.
+- Parse errors retain line and column information when available.
+- Validation aggregates independent failures.
+- Mutation operations are atomic. A failed operation does not leave a partially
+  changed document.
+- The CLI, WASM facade, Studio, and MCP adapt the same diagnostic data for their
+  users. Terminal rendering does not belong in the core.
 
 ## Event boundary
 
@@ -216,6 +260,8 @@ A design that violates several invariants needs revision before implementation.
 
 [node-releases]: https://nodejs.org/en/about/previous-releases
 [pnpm-install]: https://pnpm.io/installation#compatibility
+
+[^thiserror]: [`thiserror`](https://docs.rs/thiserror/latest/thiserror/)
 
 [^supercollider-events]: [SuperCollider, _Understanding the difference between Pattern, Stream and Event_](https://doc.sccode.org/Tutorials/A-Practical-Guide/PG_01_Introduction.html#What%20is%20a%20Pattern?)
 

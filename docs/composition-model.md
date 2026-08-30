@@ -65,30 +65,128 @@ returns events that intersect it. Its scheduler repeatedly queries future spans,
 which also permits replacing a live pattern while preserving the running
 clock.[^strudel-patterns]
 
-### Time is not always metric
+### Time uses exact domains
 
-The transport supports beats, cycles, tempo, and meter where the music needs
-them. It must also support absolute durations such as 17.2 seconds, 23.8
-seconds, or four minutes. A drone or phasing process does not need to pretend
-that every duration is synchronized to a beat grid.
+Musical time and absolute time are separate exact rational domains. Neither is
+an `f64` in the core or the persisted document. Domain types wrap an exact
+rational implementation such as `num_rational::Ratio<i64>`:[^num-rational]
 
-Metric and absolute-time processes can coexist. Conversion requires an explicit
-transport context; absolute time does not silently acquire a tempo.
+```rust,ignore
+struct Beats(Ratio<i64>);
+struct Seconds(Ratio<i64>);
+
+struct MetricSpan {
+    start: Beats,
+    end: Beats,
+}
+
+struct AbsoluteSpan {
+    start: Seconds,
+    end: Seconds,
+}
+```
+
+`Seconds` measures elapsed time from the piece or transport origin. It is not
+wall-clock time and never contains a Unix timestamp.
+
+The document stores rational values in an Ambiente-owned string format:
+
+```json
+{
+  "onset": "3/2",
+  "duration": "1/4"
+}
+```
+
+Fractions are reduced, denominators are positive, and whole values retain their
+denominator (`"4/1"`). The format does not expose `num-rational`'s Serde
+representation because the crate is an implementation detail.
+
+Time follows these rules:
+
+- Metric time uses quarter-note beats unless a later musical need requires
+  another unit. Meter groups beats; it does not redefine the unit.
+- A pattern cycle is structure, not a third implicit clock. Its length is stated
+  in beats or seconds, and cycle phase or count may use another exact rational
+  type. There is no global `1 cycle = 4 beats` rule.
+- Absolute time uses exact rational seconds. For example, 17.2 seconds is
+  represented as `86/5`, not approximated as a binary float.
+- Tempo is a positive rational BPM value. At constant tempo, conversion is
+  exact: `seconds = beats * 60 / bpm`.
+- Metric and absolute time convert only through an explicit transport or tempo
+  context.
+- Time arithmetic is checked. Invalid denominators, overflow, negative
+  durations, and reversed spans return errors on document input instead of
+  wrapping or panicking.
+- The core has no implicit `f64 -> time` constructor. Recording and device
+  adapters define a quantization policy when they convert browser or hardware
+  timestamps to exact time.
+- `Seconds` becomes a floating-point value only at an audio or visualization
+  boundary. Web Audio schedules against double-valued seconds, so that
+  approximation belongs to the backend.[^web-audio-time]
+
+Exact time gives native Rust and WASM the same query boundaries. It does not
+claim that audio devices have infinite precision.
 
 ### Randomness is reproducible
 
-Every stochastic choice derives from an explicit seed hierarchy. Given the same
-document, root seed, and queried time span, every supported runtime returns the
-same normalized events.
+The composition seed is a dedicated `Seed(u64)`. Its canonical representation
+is a 16-character lowercase hexadecimal string:
 
-Sub-seeds should isolate unrelated choices. Adding a visual property or editing
-one voice should not scramble all random decisions in another voice unless the
-composition explicitly couples them. A seed selects a realization; it does not
-replace authored structure.
+```json
+"seed": "000000000000002a"
+```
 
-Sonic Pi's tutorial uses deterministic random streams so that repeated runs can
-reproduce musical choices, while changing the seed explores another sequence.
-That behavior is valuable for both composition and performance.[^sonic-pi-rand]
+This form preserves all 64 bits across JavaScript, where `Number` represents
+integers exactly only through `2^53 - 1`.[^js-safe-integer] Interfaces may accept
+decimal or hexadecimal input, but serialization always writes the canonical
+form.
+
+Use ChaCha8 as the deterministic byte generator. Rand recommends `ChaCha8Rng`
+for fast, portable fixed-seed work and warns against `SmallRng` and `StdRng`
+when reproducibility matters.[^rand-fixed] The ChaCha generators are portable,
+deterministic, and checked against reference vectors.[^rand-chacha]
+
+Do not run the whole piece from one mutable random stream. Each stochastic
+choice receives a 32-byte seed derived with BLAKE3 and the fixed Ambiente
+context `ambiente-random-v1`:[^blake3]
+
+```text
+root seed
+  + semantic object ID
+  + operator identity
+  + decision coordinate
+  + operator-local decision key
+        |
+        v
+BLAKE3 derive-key, ambiente-random-v1
+        |
+        v
+32-byte ChaCha8 seed
+```
+
+The tuple encoding must be specified and covered by test vectors before
+stochastic operators ship. Components are fixed-width or length-prefixed;
+concatenated strings are not a valid encoding.
+
+Keying each choice by semantic identity and time isolates unrelated edits and
+query order. Editing one voice need not scramble another, and querying `[0, 4)`
+plus `[4, 8)` can agree with querying `[0, 8)`. A composition may still couple
+choices explicitly. The seed selects a realization; it does not replace
+authored structure.
+
+The deterministic format includes the derivation context, tuple encoding,
+ChaCha8 variant, byte order, and the mapping from random bits to bounded choices
+and probabilities. Ambiente owns the small stable sampling functions used by
+its operators. Rand's higher-level distributions are not persisted musical
+semantics because their algorithms may change between compatible releases and
+floating-point distributions can vary by platform.[^rand-repro]
+
+Changing `ambiente-random-v1` for an existing document is a breaking semantic
+change even when the Rust API remains source-compatible.
+
+Sonic Pi also uses deterministic random streams so repeated runs reproduce
+musical choices while another seed explores another sequence.[^sonic-pi-rand]
 
 ## Document hierarchy
 
@@ -243,6 +341,20 @@ identify the object and field, explain the violated rule, and include a
 correction when one is known. Persisted sound references and parameter names
 remain symbolic so validation does not depend on a particular audio runtime.
 
+## Determinism tests
+
+The composition model requires tests that prove:
+
+- seed parsing and formatting preserve all 64 bits;
+- BLAKE3 derivation and ChaCha8 sampling match fixed golden vectors;
+- native Rust and WASM pass the same random vectors once WASM exists;
+- rational time normalizes equivalent fractions and rejects invalid values; and
+- tempo conversion and adjacent span boundaries remain exact before audio
+  conversion.
+
+A dependency update that changes a golden vector is a semantic change to
+investigate, not a snapshot to refresh without review.
+
 ## Glossary
 
 `Document`
@@ -275,6 +387,20 @@ parameters.
 : The state needed to replay a particular realization of a piece.
 
 [^strudel-patterns]: [Strudel technical manual, _Patterns_](https://strudel.cc/technical-manual/patterns/)
+
+[^num-rational]: [`num-rational`](https://docs.rs/num-rational/latest/num_rational/)
+
+[^web-audio-time]: [MDN, `BaseAudioContext.currentTime`](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/currentTime)
+
+[^js-safe-integer]: [MDN, `Number.MAX_SAFE_INTEGER`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER)
+
+[^rand-fixed]: [The Rust Rand Book, _Fixed seed RNGs_](https://rust-random.github.io/book/quick-start.html#fixed-seed-rngs)
+
+[^rand-chacha]: [`rand_chacha`](https://docs.rs/rand_chacha/latest/rand_chacha/)
+
+[^blake3]: [`blake3::derive_key`](https://docs.rs/blake3/latest/blake3/fn.derive_key.html)
+
+[^rand-repro]: [The Rust Rand Book, _Reproducibility_](https://rust-random.github.io/book/crate-reprod.html)
 
 [^sonic-pi-rand]: [Sonic Pi tutorial, _Randomisation_](https://sonic-pi.net/tutorial.html#section-8)
 
