@@ -12,7 +12,7 @@
 		"test:e2e": "playwright test",
 		"test:static": "vitest run tests/static-build.test.ts",
 		"test:types": "tsc --noEmit",
-		"test:unit": "vitest run tests/content.test.ts tests/facade.test.ts"
+		"test:unit": "vitest run tests/content.test.ts tests/facade.test.ts tests/scroll-spy.test.ts"
 	},
 	"dependencies": {
 		"@fontsource-variable/instrument-sans": "^5.3.0",

@@ -9,11 +9,14 @@ export default function Page() {
 			<header class="content-index__intro">
 				<p class="kicker">Documentation</p>
 				<h1>
-					See how the parts
+					Understand
 					<br />
-					fit together.
+					Ambiente.
 				</h1>
-				<p>These guides explain the document model, event engine, browser boundary, and audio runtime.</p>
+				<p>
+					Learn how Ambiente represents a piece, produces repeatable variation, stores documents, and turns events into
+					sound.
+				</p>
 				<DocsSearch />
 			</header>
 			<div class="content-index__list">

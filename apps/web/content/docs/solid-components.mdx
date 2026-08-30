@@ -1,6 +1,6 @@
 ---
 title: Interactive documentation
-description: How focused Solid controls enter guides without duplicating musical behavior.
+description: How interactive examples share code with Studio instead of reimplementing music.
 order: 5
 ---
 
@@ -8,14 +8,14 @@ import { ProcessPulse } from '../../src/components/ProcessPulse';
 
 # Interactive documentation
 
-Guides can include focused controls without creating a second musical implementation. Sätteri compiles this MDX page with Solid's JSX runtime.
+A guide can include a working control without building a second version of Ambiente. Sätteri compiles MDX with Solid's JSX runtime, so examples use the same components as the application.
 
-## A presentation-only example
+## Try the control
 
-This control rotates a visual sequence. It does not generate events or change an Ambiente document.
+Rotate the sequence below. This example changes only its presentation; it does not generate events or edit an Ambiente document.
 
 <ProcessPulse />
 
 ## Shared application code
 
-Playable guides will call the same application facade, WASM package, and audio runtime as Studio. A guide may expose fewer controls, but composition and pattern behavior remain in Rust.
+Playable guides use the same application facade, WASM package, and audio runtime as Studio. A guide can show fewer controls, but composition and pattern behavior remain in Rust.

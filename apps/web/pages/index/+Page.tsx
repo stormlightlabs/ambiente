@@ -79,8 +79,13 @@ export default function Page() {
 
 			<section class="principle-band">
 				<blockquote>
-					“A musician should be able to author recognizable material, let it evolve, and return to the same realization
-					later.”
+					<p>
+						“The considerations that are important, then, become questions of how the system works and most important of
+						all what you feed into the system.”
+					</p>
+					<cite>
+						Brian Eno, <a href="https://www.inmotionmagazine.com/eno1.html">“Generative Music” (1996)</a>
+					</cite>
 				</blockquote>
 				<a class="text-link text-link--light" href="/docs/architecture">
 					Explore the architecture

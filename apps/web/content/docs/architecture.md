@@ -1,21 +1,21 @@
 ---
 title: Architecture
-description: System boundaries across Rust, WebAssembly, browser interfaces, and audio adapters.
+description: How Rust, WebAssembly, browser code, and audio adapters divide responsibility.
 order: 1
 ---
 
 # Architecture
 
-Ambiente uses one Rust model for persisted musical state and event generation. The
-piano, matrix, graphical editors, future language, CLI, and future Model Context
+Ambiente keeps persisted musical state and event generation in one Rust model.
+The piano, matrix, graphical editors, CLI, and planned language and Model Context
 Protocol (MCP) server are interfaces over that model.
 
-This page records the system boundaries and invariants. See the
-[document format](document-format.md) for identity, persistence, and migration;
-the [composition model](composition-model.md) for musical concepts, time, and
-deterministic randomness; [audio](audio.md) for playback; and the
-[roadmap](https://github.com/stormlightlabs/ambiente/blob/main/ROADMAP.md) for
-sequencing.
+This guide explains where each part of the system belongs. Read the
+[document format](document-format.md) for persistence and migration, the
+[composition model](composition-model.md) for musical concepts and deterministic
+variation, and [audio](audio.md) for playback. The
+[roadmap](https://github.com/stormlightlabs/ambiente/blob/main/ROADMAP.md) tracks
+implementation order.
 
 ## System shape
 
@@ -43,23 +43,23 @@ sequencing.
           Vike web    Tauri
 ```
 
-`ambiente-core` answers what happens and when. A playback adapter decides how an
-event sounds or how another target, such as MIDI or a visualization, handles it.
-TypeScript must not implement a parallel composition engine.
+`ambiente-core` decides what happens and when. Adapters decide how to play,
+transmit, or display each event. TypeScript does not reimplement composition
+rules.
 
 ## Repository and workspace
 
-The repository has two workspaces:
+Two toolchains share the repository:
 
 - Cargo owns Rust crates under `crates/`.
 - pnpm owns browser applications and TypeScript packages under `apps/` and
   `packages/`.
 
-The implemented packages are `crates/core`, `crates/cli`, and the Vike
-application in `apps/web`. The web application serves the canonical documentation
-from `apps/web/content/docs/` and defines the TypeScript facade that
-`crates/wasm` will implement. Add other crates and packages only when implemented
-behavior gives them a clear boundary.
+The current implementation lives in `crates/core`, `crates/cli`, and the Vike
+application in `apps/web`. The web application publishes the documentation from
+`apps/web/content/docs/` and defines the TypeScript facade that `crates/wasm` will
+implement. A new crate or package needs a concrete responsibility before it is
+added.
 
 The supported development versions are:
 
@@ -67,10 +67,9 @@ The supported development versions are:
 - Node.js 24 LTS, with versions 24 through 26 accepted by `package.json`;
 - pnpm 11, pinned to 11.14.0 by the `packageManager` field.
 
-Node recommends an Active or Maintenance LTS release for production. Node 24 is
-LTS, while Node 26 is Current at the time of this decision. pnpm 11 supports
-Node 22 and newer. See the [Node release table][node-releases] and
-[pnpm compatibility table][pnpm-install].
+Node 24 is the supported LTS release. The workspace also accepts Node 25 and 26,
+and pnpm 11 supports Node 22 or newer. See the [Node release table][node-releases]
+and [pnpm compatibility table][pnpm-install].
 
 Use the root commands for local checks:
 
@@ -82,10 +81,9 @@ pnpm test
 pnpm check
 ```
 
-`pnpm check` runs formatting, linting, and tests for both workspaces. The CI
-workflow runs the same checks as separate Rust and web jobs. Rust formatting and
-linting use `rustfmt` and Clippy. TypeScript formatting, linting, and tests use
-Prettier, ESLint, and Vitest. Markdown is checked with markdownlint-cli2.
+`pnpm check` formats, lints, and tests both workspaces. CI splits the same work
+into Rust and web jobs. Rust uses rustfmt and Clippy; TypeScript uses Prettier,
+ESLint, and Vitest. Run markdownlint-cli2 locally when checking documentation.
 
 ## Rust core
 
@@ -102,9 +100,8 @@ Prettier, ESLint, and Vitest. Markdown is checked with markdownlint-cli2.
 The core must not depend on a browser, an audio device, Tone.js, MIDI, or a UI
 framework. It may expose generalized concepts that those systems can interpret.
 
-A persisted document is changed through operations rather than arbitrary mutable
-access. This gives the Studio, CLI, language, and MCP server the same edit
-semantics and validation behavior.
+Named operations are the only way to change a persisted document. The Studio,
+CLI, language, and MCP server therefore share the same edits and validation.
 
 ## Errors and diagnostics
 
@@ -150,8 +147,8 @@ Diagnostic behavior follows these rules:
 
 ## Event boundary
 
-The core emits backend-independent events. An event conceptually contains a time
-span, target, kind, and properties:
+The core emits events without assuming a playback backend. Each event contains a
+time span, target, kind, and properties:
 
 ```rust
 Event {
@@ -185,11 +182,10 @@ query(span)
 inspect(...)
 ```
 
-JavaScript should receive serializable commands, query results, diagnostics, and
-selected projections. It should not receive an enormous mutable Rust object
-graph. A small TypeScript facade can translate generated bindings into an
-idiomatic browser API. `wasm-bindgen` can emit TypeScript declarations for its
-exports.[^wasm-bindgen]
+JavaScript receives serializable commands, query results, diagnostics, and small
+projections of document state—not a mutable Rust object graph. A TypeScript facade
+turns the generated bindings into a browser API. `wasm-bindgen` can emit
+TypeScript declarations for its exports.[^wasm-bindgen]
 
 Native Rust and WebAssembly must return identical normalized events for the same
 document, seed, and time span. Shared fixtures will test this property.
@@ -212,19 +208,17 @@ Vike supports render modes per page and can prerender an SPA shell. If all
 routes are prerendered, production consists of static assets and requires no
 application server.[^vike-render-modes] [^vike-prerender]
 
-Documentation is part of this application rather than a separate site or build.
-Canonical Markdown and MDX live in `apps/web/content/docs/`. The Vite build
-processes both through Sätteri using `vite-plugin-satteri`,[^satteri-vite] with GFM and
-frontmatter enabled and MDX compiled with `jsxImportSource: "solid-js/h"`. Sätteri is the native
-Markdown/MDX processor that Astro 7 uses by default; using it directly preserves
-that parser and plugin model without adopting Astro itself.[^astro-satteri] [^satteri]
-`satteri-expressive-code` provides the corresponding Sätteri HAST
-integration for highlighted, annotated code blocks.[^satteri-expressive-code]
+The documentation ships with the web application. Its Markdown and MDX source
+lives in `apps/web/content/docs/`. Vite processes both formats through Sätteri and
+`vite-plugin-satteri`, with GFM and frontmatter enabled. MDX uses Solid's JSX
+runtime through `jsxImportSource: "solid-js/h"`.[^satteri-vite] Sätteri is also
+Astro 7's native Markdown and MDX processor.[^astro-satteri] [^satteri]
+`satteri-expressive-code` adds highlighted, annotated code blocks.[^satteri-expressive-code]
 
-The Studio and interactive documentation examples must use the same WASM facade
-and audio package once those exist. A documentation example may be smaller than
-the Studio, but it must not contain a demo-only pattern engine. Until M5 lands,
-the web shell may use fixtures or a narrow test adapter behind the same facade.
+The Studio and interactive guides will share the same WASM facade and audio
+package. A guide can expose fewer controls, but it cannot carry a separate
+pattern engine. Before the WASM implementation is available, the web shell uses
+fixtures or a small test adapter behind the same facade.
 
 The Tauri application will host the shared Studio. Platform features sit behind
 capability adapters, for example:
@@ -275,7 +269,7 @@ or mutate source strings.
 11. Listen, Create, and Perform are views of one piece.
 12. New complexity must enable a concrete musical workflow.
 
-A design that violates several invariants needs revision before implementation.
+Revise any design that conflicts with these invariants before implementing it.
 
 [node-releases]: https://nodejs.org/en/about/previous-releases
 [pnpm-install]: https://pnpm.io/installation#compatibility

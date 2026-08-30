@@ -1,15 +1,15 @@
 ---
 title: Document format
-description: Stable IDs, canonical JSON, schema migration, and compatibility rules.
+description: How Ambiente identifies, stores, migrates, and validates a piece.
 order: 3
 ---
 
 # Document format
 
-Ambiente stores musical state in a versioned UTF-8 JSON document. The format
-owns object identity, serialization, migration, and validation rules. Musical
-concepts belong to the [composition model](composition-model.md), while audio
-runtime state belongs to the [audio design](audio.md).
+Ambiente stores each piece as a versioned UTF-8 JSON document. The format defines
+identity, serialization, migration, and validation. Read the
+[composition model](composition-model.md) for musical concepts and
+[audio](audio.md) for runtime state that never enters the document.
 
 ## Stable IDs
 
@@ -27,10 +27,10 @@ The document stores IDs as lowercase, hyphenated UUID strings:
 "9f8d76b0-0dd1-4fea-9ad9-43ae8f94f860"
 ```
 
-Ambiente needs decentralized uniqueness, not sortable IDs. The `uuid` project
-recommends v4 when an application only needs unique identifiers and v7 when
-sorting or database locality matters.[^uuid] Creation time is not part of an
-Ambiente object's identity, so v7 adds semantics that the model does not need.
+Ambiente needs IDs that can be created independently; it does not need IDs that
+sort by creation time. The `uuid` project recommends v4 for uniqueness and v7
+when sorting or database locality matters.[^uuid] Because creation time is not
+part of an Ambiente object's identity, UUIDv7 would add unwanted meaning.
 
 The following rules apply:
 
@@ -60,10 +60,10 @@ starts with a format sentinel and an integer schema version:
 { "format": "ambiente", "schema_version": 2, "id": "9f8d76b0-0dd1-4fea-9ad9-43ae8f94f860", "piece": {} }
 ```
 
-JSON works in browsers, has mature Serde support, remains readable in source
-control, and supports migration through `serde_json::Value`.[^serde] A future
-`.ambiente` project container may bundle assets, but it must contain or refer to
-this versioned document instead of defining another musical schema.
+JSON works in browsers, has mature Serde support, is readable in source control,
+and can be migrated through `serde_json::Value`.[^serde] A future `.ambiente`
+container may bundle assets, but the versioned JSON document remains the musical
+schema.
 
 Schema 2 replaces each voice's optional `material` field with an optional
 `pattern`. Loading schema 1 wraps a non-null material ID in a `material` source
@@ -90,9 +90,8 @@ The following rules define the canonical representation:
 - IDs, seeds, time, and other exact semantic values are not stored as JSON
   floating-point numbers.
 
-Ambiente exposes one canonical encoder. Code outside that API does not call
-Serde directly to write project files. This keeps formatting and wire-format
-choices in one place.
+One canonical encoder writes project files. Other code does not call Serde
+directly for this job, so formatting and wire-format decisions stay in one place.
 
 ## Schema migration
 
@@ -135,10 +134,9 @@ Migration follows these rules:
   or randomness semantics cannot reproduce existing behavior, the old semantic
   version remains representable.
 
-Start with `serde_json::Value` transformations instead of maintaining complete
-Rust models for every historical schema. If one migration becomes easier to
-write and review with a typed historical wire struct, add that struct for the
-migration alone.
+Migrations normally transform `serde_json::Value`, which avoids maintaining a
+complete Rust model for every old schema. A migration can use a typed historical
+wire struct when that makes the transformation easier to review.
 
 ## Compatibility tests
 
@@ -151,8 +149,9 @@ The document format requires tests that prove:
 - unknown fields and future schema versions are rejected; and
 - each migration advances one version without changing its input fixture.
 
-These tests protect the file format. Do not refresh a fixture after a dependency
-update until the resulting format change has been understood and accepted.
+These tests protect saved work from accidental format changes. If a dependency
+update changes a fixture, understand and accept the format change before updating
+the expected file.
 
 [^uuid]: [`uuid`, _Working with different UUID versions_](https://docs.rs/uuid/latest/uuid/#working-with-different-uuid-versions)
 

@@ -1,9 +1,10 @@
 import { Dynamic } from 'solid-js/web';
-import { For, Show, type JSX } from 'solid-js';
+import { createEffect, createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
 import { usePageContext } from 'vike-solid/usePageContext';
 
 import { DocsSearch } from '../../../src/components/DocsSearch';
 import { documentation, findDocumentation } from '../../../src/content/docs';
+import { startScrollSpy } from '../../../src/content/scroll-spy';
 
 const mdxComponents = {
 	a: (props: JSX.IntrinsicElements['a']) => <a {...props} />,
@@ -36,6 +37,15 @@ export default function Page() {
 	const pageContext = usePageContext();
 	const document = () => findDocumentation(pageContext.routeParams.slug ?? '');
 	const pageHeadings = () => document()?.headings.filter((heading) => heading.depth > 1) ?? [];
+	const [activeHeading, setActiveHeading] = createSignal<string | null>(null);
+
+	createEffect(() => {
+		const elements = pageHeadings()
+			.map((heading) => globalThis.document.getElementById(heading.id))
+			.filter((heading): heading is HTMLElement => heading instanceof HTMLElement);
+		const stop = startScrollSpy(elements, setActiveHeading);
+		onCleanup(stop);
+	});
 
 	return (
 		<Show when={document()} fallback={<p class="not-found">Documentation page not found.</p>}>
@@ -69,7 +79,10 @@ export default function Page() {
 							<nav aria-label="On this page">
 								<For each={pageHeadings()}>
 									{(heading) => (
-										<a classList={{ 'page-nav__nested': heading.depth > 2 }} href={`#${heading.id}`}>
+										<a
+											classList={{ 'page-nav__nested': heading.depth > 2 }}
+											href={`#${heading.id}`}
+											aria-current={heading.id === activeHeading() ? 'location' : undefined}>
 											{heading.text}
 										</a>
 									)}

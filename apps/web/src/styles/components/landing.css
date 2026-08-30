@@ -167,12 +167,25 @@
 		padding: clamp(3rem, 7vw, 6rem) var(--page-pad);
 	}
 	.principle-band blockquote {
+		margin: 0;
+		max-width: 65rem;
+	}
+	.principle-band blockquote p {
 		font-family: var(--font-display);
 		font-size: clamp(2rem, 4vw, 4rem);
 		letter-spacing: -0.035em;
 		line-height: 1.08;
 		margin: 0;
-		max-width: 65rem;
+	}
+	.principle-band cite {
+		display: block;
+		font-size: 0.78rem;
+		font-style: normal;
+		margin-top: 1.5rem;
+	}
+	.principle-band cite a {
+		color: inherit;
+		text-underline-offset: 0.2em;
 	}
 }
 

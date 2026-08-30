@@ -1,14 +1,14 @@
 ---
 title: Composition model
-description: Authored material, deterministic processes, exact time, and the canonical musical vocabulary.
+description: How Ambiente represents material, time, variation, and musical structure.
 order: 2
 ---
 
 # Composition model
 
-Ambiente represents a human-authored musical system that can produce many
-performances. The model preserves authored identity while allowing controlled,
-repeatable variation.
+An Ambiente piece combines material written by a musician with rules that can
+produce many performances. The material stays recognizable while controlled,
+repeatable variation changes each realization.
 
 ```text
 authored material
@@ -22,17 +22,17 @@ event stream
 sound / MIDI / visualization
 ```
 
-The model is not a canonical `Song → Track → MIDI notes` hierarchy. That shape
-would make sequenced note music primary and force drones, unpitched sound,
+Ambiente does not reduce every piece to `Song → Track → MIDI notes`. That
+hierarchy treats sequenced notes as the default and turns drones, unpitched sound,
 continuous control, field recordings, and independent clocks into exceptions.
 
 ## Principles
 
 ### Authorship comes before generation
 
-The musician supplies phrases, steps, pitch sets, samples, sounds, process
-choices, and limits. Processes develop that material rather than inventing an
-entire song from a scale, genre, chord progression, or prompt.
+The musician writes the phrases and steps, chooses the pitches and sounds, and
+sets the processes and their limits. Ambiente develops that material instead of
+inventing a song from a genre, chord progression, or prompt.
 
 A restrained process chain is a useful default:
 
@@ -43,28 +43,27 @@ phrase
   → transpose(sometimes(0.04), octave)
 ```
 
-This preserves more identity than independently generating a random melody,
-bass line, harmony, and rhythm.
+Because each change starts from written material, the result keeps more of the
+piece's identity than independently generated melody, bass, harmony, and rhythm.
 
 ### Theory is a set of tools
 
-Pitch, pitch class, interval, tuning, scale, chord, voicing, pitch set, register,
-and voice leading help processes make meaningful decisions. They do not define
-the document hierarchy. A piece with no conventional harmony must fit the same
-model as a pitched piece.
+Pitch, interval, tuning, scale, chord, voicing, register, and voice leading give
+processes useful musical information. They do not dictate the document hierarchy.
+The same model must fit both pitched music and work without conventional harmony.
 
 ### Patterns describe behavior over time
 
-A pattern can be queried rather than run as a hidden mutable sequencer:
+A pattern answers a query; it does not run as a hidden mutable sequencer:
 
 ```text
 Pattern + TimeSpan + Seed → Events
 ```
 
-The result for a given input is deterministic. The pattern does not know whether
-the events will reach Web Audio, MIDI, OSC, an offline renderer, or a
-visualization. Querying a span also lets tools inspect and test music without
-real-time playback.
+The same input always returns the same result. A pattern does not know whether
+its events will reach Web Audio, MIDI, OSC, an offline renderer, or a
+visualization. Span queries also let tools inspect and test music without playing
+it in real time.
 
 Strudel uses a related model in which a pattern is a function of a time span and
 returns events that intersect it. Its scheduler repeatedly queries future spans,
@@ -73,9 +72,9 @@ clock.[^strudel-patterns]
 
 ### Time uses exact domains
 
-Musical time and absolute time are separate exact rational domains. Neither is
-an `f64` in the core or the persisted document. Domain types wrap an exact
-rational implementation such as `num_rational::Ratio<i64>`:[^num-rational]
+Musical time and elapsed time use separate exact rational types. Neither appears
+as an `f64` in the core or the document. Each domain wraps an exact rational
+implementation such as `num_rational::Ratio<i64>`:[^num-rational]
 
 ```rust
 struct Beats(Ratio<i64>);
@@ -150,9 +149,9 @@ for fast, portable fixed-seed work and warns against `SmallRng` and `StdRng`
 when reproducibility matters.[^rand-fixed] The ChaCha generators are portable,
 deterministic, and checked against reference vectors.[^rand-chacha]
 
-Do not run the whole piece from one mutable random stream. Each stochastic
-choice receives a 32-byte seed derived with BLAKE3 and the fixed Ambiente
-context `ambiente-random-v1`:[^blake3]
+A single mutable random stream would let one edit change unrelated choices.
+Instead, each stochastic decision receives a 32-byte seed derived with BLAKE3
+and the fixed Ambiente context `ambiente-random-v1`:[^blake3]
 
 ```text
 root seed
@@ -211,9 +210,8 @@ Document
     └── Captures
 ```
 
-A document initially contains one piece. Keeping the persisted wrapper distinct
-from the playable piece leaves room for schema and project concerns without
-putting them into musical state.
+A document contains one piece. The document wrapper owns file-format concerns so
+they do not leak into the playable musical state.
 
 ### Document
 
@@ -252,14 +250,13 @@ editors do not own private playback models in JavaScript.
 ### Voice
 
 A playable role such as Piano, Halo, Tape, Rain, Kick, or Field Recording. A
-voice references material or patterns, a symbolic sound, parameters, and routing
-information. An interface may display voices as tracks when that layout helps,
-but `Track` is not a canonical persisted type.
+voice connects material or patterns to a symbolic sound, parameters, and routing.
+An interface can display voices as tracks, but `Track` is not a persisted type.
 
 ### Pattern
 
-Composable behavior that maps source material and time into events. The first
-vocabulary stays small:
+Composable behavior that maps source material and time into events. The core
+vocabulary is deliberately small:
 
 - structural: sequence, stack, repeat, cycle;
 - temporal: shift, stretch, slow, fast, phase;
@@ -268,10 +265,10 @@ vocabulary stays small:
 - conditional: sometimes, rarely, every, within.
 
 Signals such as sine, triangle, envelope, deterministic noise, and random walk
-can later provide continuous control. New operators must earn their place in a
-real composition. SuperCollider's pattern guide is a useful precedent for
-composing value streams and event patterns, but Ambiente does not copy its API
-or execution model.[^supercollider-patterns]
+can provide continuous control. Add an operator only when a composition needs
+behavior that existing operators cannot express. SuperCollider's pattern guide
+shows how value streams and event patterns can compose, but Ambiente does not
+copy its API or execution model.[^supercollider-patterns]
 
 ### Event
 
@@ -302,11 +299,10 @@ state. Transition behavior must be explicit.
 
 ### Macro
 
-A control published by the composer. A macro maps one listener-facing value to
-one or more lower-level parameters or process values. Names such as density,
-space, brightness, motion, and intensity are conventions, not universal engine
-semantics. Each piece defines what its macros mean and the range in which they
-operate.
+A control published by the composer. A macro maps one visible value to one or
+more parameters or process values. Names such as density, space, brightness,
+motion, and intensity are conventions rather than fixed engine semantics. Each
+piece defines the meaning and range of its macros.
 
 ### Capture
 
@@ -346,11 +342,10 @@ step pattern
 
 ## Operations and validation
 
-Interfaces edit documents through named operations such as adding a voice,
-updating material, inserting a note, setting a matrix cell, or changing a seed.
-Operations provide one place to check references, ranges, schema rules, and
-musical preconditions. They also create a stable basis for undo, CLI commands,
-live editing, and MCP tools.
+Interfaces change documents through named operations: add a voice, update
+material, insert a note, set a matrix cell, or change a seed. Each operation
+checks references, ranges, schema rules, and musical preconditions. The same
+operations support undo, CLI commands, live editing, and MCP tools.
 
 Validation reports all useful independent failures in one pass. Diagnostics
 identify the object and field, explain the violated rule, and include a
@@ -368,8 +363,8 @@ The composition model requires tests that prove:
 - tempo conversion and adjacent span boundaries remain exact before audio
   conversion.
 
-A dependency update that changes a golden vector is a semantic change to
-investigate, not a snapshot to refresh without review.
+If a dependency update changes a golden vector, investigate the semantic change.
+Do not accept it by refreshing the snapshot.
 
 ## Glossary
 

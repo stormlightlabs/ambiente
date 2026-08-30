@@ -127,13 +127,31 @@
 		color: var(--ink-soft);
 		font-size: 0.72rem;
 		line-height: 1.35;
+		padding-left: 0.7rem;
+		position: relative;
 		text-decoration: none;
 	}
-	.page-nav a:hover {
+	.page-nav a::before {
+		background: transparent;
+		bottom: 0;
+		content: '';
+		left: 0;
+		position: absolute;
+		top: 0;
+		width: 2px;
+	}
+	.page-nav a:hover,
+	.page-nav a[aria-current='location'] {
 		color: var(--ink);
 	}
-	.page-nav__nested {
-		padding-left: 0.75rem;
+	.page-nav a[aria-current='location'] {
+		font-weight: 700;
+	}
+	.page-nav a[aria-current='location']::before {
+		background: var(--forest);
+	}
+	.page-nav a.page-nav__nested {
+		padding-left: 1.45rem;
 	}
 	.prose {
 		min-width: 0;

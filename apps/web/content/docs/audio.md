@@ -1,14 +1,14 @@
 ---
 title: Audio
-description: Browser playback, scheduling, sound adapters, and deterministic event boundaries.
+description: How events become browser audio without changing the composition model.
 order: 4
 ---
 
 # Audio
 
-Ambiente separates composition from sound production. The Rust core emits
-backend-independent events. An audio runtime maps those events to instruments,
-samples, parameters, routing, and effects.
+The Rust core describes musical events without choosing how they sound. An audio
+runtime turns those events into instruments, samples, parameter changes, routing,
+and effects.
 
 ```text
 Rust/WASM
@@ -22,9 +22,8 @@ Tone.js / Web Audio
 instruments + samples + effects
 ```
 
-This boundary lets the same piece drive browser audio, MIDI, OSC,
-visualization, native synthesis, or offline rendering without changing its
-persisted musical structure.
+Because playback sits outside the document model, the same piece can drive
+browser audio, MIDI, OSC, visualization, native synthesis, or offline rendering.
 
 ## Browser-first runtime
 
@@ -33,21 +32,19 @@ audio graph and a high-precision audio clock. Tone.js adds a transport,
 future-time scheduling, synths, effects, and control signals.[^web-audio]
 [^tone]
 
-Tone.js is infrastructure rather than Ambiente's composition model. The core
-does not ask JavaScript to create a `Tone.Sequence`, persist a Tone instrument,
-or evaluate a Tone callback. It returns generalized events with musical timing
-and symbolic targets. The TypeScript runtime translates them to the active
-audio graph.
+Tone.js is playback infrastructure, not part of Ambiente's composition model.
+The core never creates a `Tone.Sequence`, stores a Tone instrument, or evaluates
+a Tone callback. It returns events with musical timing and symbolic targets; the
+TypeScript runtime maps them to the active audio graph.
 
-The browser backend is sufficient for the first product proof. Native real-time
-DSP is not a reboot prerequisite.
+The first real-time backend will run in the browser. Ambiente does not need
+native real-time DSP until a musical workflow exposes a browser limitation.
 
 ## Scheduling
 
-The scheduler repeatedly queries a short span ahead of the current transport
-position. It then converts event time to the audio context clock and schedules
-work in advance. It does not render an endless piece from time zero or keep the
-canonical pattern state inside Tone.js.
+The scheduler queries a short span ahead of the transport, converts each event to
+audio-context time, and schedules it before it must play. It neither renders an
+endless piece from time zero nor keeps pattern state inside Tone.js.
 
 The scheduler owns:
 
@@ -82,9 +79,9 @@ uninitialized → starting → ready → running
                          suspended  stopped
 ```
 
-Starting audio is asynchronous and can fail. The UI reports the failure and
-allows another user-initiated attempt. Loading a document must not start sound.
-Play, pause, stop, mute, and volume remain available controls.
+Starting audio is asynchronous and can fail. The UI reports the error and lets
+the user try again. Loading a document never starts sound. Play, pause, stop,
+mute, and volume remain explicit controls.
 
 Stopping releases active notes and scheduled work. Pausing preserves the musical
 position. Seeking rebuilds audible state at the destination, including events
@@ -96,7 +93,7 @@ A persisted voice contains a stable symbolic `SoundRef` and backend-independent
 parameters. The browser sound library resolves that reference to a concrete
 instrument or sample graph.
 
-Initial sound roles are deliberately few:
+The initial sound library will have a small set of roles:
 
 - felt or piano-like;
 - bell or glass;
@@ -105,10 +102,10 @@ Initial sound roles are deliberately few:
 - noise or air texture;
 - simple percussion.
 
-Stable IDs describe the intended sound within Ambiente, not a Tone.js class.
-Presets can change implementation while preserving their documented musical
-role. A missing sound produces a diagnostic and a defined fallback or silence;
-it must not corrupt the document.
+A stable ID names the intended sound, not a Tone.js class. A preset can change
+its implementation while keeping its documented musical role. If a sound is
+missing, the runtime reports a diagnostic and uses a defined fallback or silence;
+the document remains valid.
 
 Gain, pan, filter, and effects belong to the audio adapter when they describe
 rendering. A voice can persist semantic parameters that an adapter maps to those
@@ -125,8 +122,8 @@ more direct control.[^audio-loading]
 
 Asset loading is asynchronous. Playback should expose loading and failure state,
 avoid partially initialized instruments, and cache decoded assets within the
-runtime. The canonical document refers to an asset by a stable semantic ID or
-portable project reference rather than a transient URL.
+runtime. The document refers to an asset by a stable semantic ID or portable project
+reference, never by a temporary URL.
 
 Licenses and attribution must accompany every shipped sample. The initial
 palette should be curated for the Three Studies rather than expanded by preset
@@ -137,11 +134,10 @@ count.
 Determinism applies to the event stream. The same document, seed, and time span
 must yield identical normalized events in native Rust and WASM.
 
-Rendered samples are not expected to be bit-identical across browsers, operating
-systems, audio devices, or future backend implementations. Web Audio engines,
-sample rates, effects, and floating-point DSP can differ. A capture therefore
-preserves musical realization state. An exported audio file preserves one
-specific rendering of that state.
+Rendered audio can differ across browsers, operating systems, devices, sample
+rates, effects, and backend implementations. Determinism therefore applies to
+the events, not to identical output samples. A capture preserves the musical
+realization; an exported audio file preserves one rendering of it.
 
 Audio adapters must not add compositional randomness. If a sound needs random
 variation that affects reproducibility, its random inputs must come from event
@@ -159,10 +155,10 @@ be the authority for transport or process state.
 
 ## Native and offline audio
 
-A native backend may become justified by a concrete need for lower latency,
-device access, headless rendering, plugins, advanced DSP, or reliable offline
-exports. Until browser audio and the Three Studies expose such a limitation,
-Ambiente does not maintain a second sound engine.
+A concrete need for lower latency, device access, headless rendering, plugins,
+advanced DSP, or reliable offline export may justify a native backend. Until the
+browser or the Three Studies exposes such a limit, Ambiente maintains one sound
+engine.
 
 If a native backend is added, it implements the same event-adapter boundary. It
 does not move composition semantics out of `ambiente-core` or introduce a
