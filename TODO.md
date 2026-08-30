@@ -1,0 +1,747 @@
+# Ambiente Tasks
+
+> Execution checklist for the Ambiente reboot.
+> See `docs/roadmap.md` for product direction, architecture, influences, and rationale.
+
+## Working rules
+
+- [ ] Keep `ambiente-core` authoritative for persisted musical state and event generation.
+- [ ] Do not duplicate composition or pattern semantics in TypeScript.
+- [ ] Keep realtime audio implementation details out of persisted documents.
+- [ ] Require deterministic output for identical document + seed + time-span inputs.
+- [ ] Prefer a small set of composable musical primitives over many specialized generators.
+- [ ] Treat piano, matrix, graphical editors, DSL, CLI, and MCP as interfaces over the same document model.
+- [ ] Do not introduce a canonical `Song -> Track -> MIDI notes` hierarchy.
+- [ ] Do not add platform/infrastructure work unless it enables a concrete musical workflow.
+- [ ] Gate major feature expansion on the Three Studies producing music worth listening to.
+
+# M0 — Reboot foundation
+
+## Workspace
+
+- [ ] Replace the existing Ambiente implementation with the reboot workspace structure.
+- [ ] Create `crates/core`.
+- [ ] Create `crates/cli`.
+- [ ] Create `crates/ambiente-wasm` when the initial core API exists.
+- [ ] Establish the frontend workspace.
+- [ ] Add formatting, linting, testing, and CI commands for Rust and TypeScript.
+- [ ] Document supported Rust/Node/package-manager versions.
+- [ ] Keep crates/packages minimal; do not pre-create empty future architecture.
+
+## Documentation
+
+- [ ] Add `docs/roadmap.md`.
+- [ ] Add `docs/architecture.md`.
+- [ ] Add `docs/composition-model.md`.
+- [ ] Add `docs/audio.md`.
+- [ ] Document architectural invariants from the roadmap.
+- [ ] Add a glossary for `Document`, `Piece`, `Material`, `Voice`, `Pattern`, `Event`, `Scene`, `Macro`, and `Capture`.
+
+## Core decisions
+
+- [ ] Choose stable ID representation.
+- [ ] Choose versioned document serialization format.
+- [ ] Define schema versioning/migration strategy.
+- [ ] Choose deterministic PRNG implementation and seed representation.
+- [ ] Define error/diagnostic types.
+- [ ] Define musical and absolute time representations.
+
+### Done when
+
+- [ ] A minimal versioned document can serialize and deserialize without loss.
+- [ ] CI tests the round trip.
+- [ ] There is no audio, UI, or music-theory complexity required to understand the persisted document.
+
+# M1 — Musical document
+
+## Document model
+
+- [ ] Implement `Document`.
+- [ ] Implement `Piece`.
+- [ ] Implement document metadata.
+- [ ] Implement stable IDs/references.
+- [ ] Implement validation.
+- [ ] Implement document operations rather than relying on arbitrary mutable access.
+
+Initial operations should cover:
+
+- [ ] add/remove voice
+- [ ] add/remove material
+- [ ] update material
+- [ ] insert/remove note
+- [ ] update matrix cell
+- [ ] set seed
+- [ ] update voice settings
+
+## Time
+
+- [ ] Implement absolute duration/time.
+- [ ] Implement beats/cycles.
+- [ ] Implement tempo.
+- [ ] Implement meter only where required by metric material.
+- [ ] Implement conversion between musical and absolute time.
+- [ ] Ensure processes can use independent absolute durations without requiring tempo synchronization.
+
+Test cases should include:
+
+- [ ] ordinary 4/4 metric pattern
+- [ ] 17.2-second cycle
+- [ ] 23.8-second cycle
+- [ ] overlapping independent clocks
+
+## Theory primitives
+
+Implement only primitives required by early composition workflows.
+
+- [ ] `Pitch`
+- [ ] pitch class / chromatic representation as appropriate
+- [ ] `Interval`
+- [ ] `PitchSet`
+- [ ] `Scale`
+- [ ] register/range helpers
+- [ ] transposition
+
+Defer sophisticated harmonic analysis and chord-generation APIs.
+
+## Materials
+
+### Phrase
+
+- [ ] Implement `Phrase`.
+- [ ] Store arbitrary note events over time.
+- [ ] Support note pitch, onset, duration, and velocity.
+- [ ] Support non-quantized recording data.
+- [ ] Add optional quantization as a transformation/edit operation.
+
+### StepPattern
+
+- [ ] Implement `StepPattern`.
+- [ ] Support configurable number of steps.
+- [ ] Support configurable subdivision.
+- [ ] Support pitch rows.
+- [ ] Support active/inactive cells.
+- [ ] Keep the representation extensible for later probability/velocity values.
+
+## Voices
+
+- [ ] Implement `Voice`.
+- [ ] Allow a voice to reference musical material.
+- [ ] Add a symbolic `SoundRef`.
+- [ ] Add voice parameter storage without coupling it to Tone.js.
+- [ ] Do not add a canonical `Track` abstraction unless a later workflow demonstrates the need.
+
+### Done when
+
+- [ ] A test fixture can contain both a Phrase and StepPattern.
+- [ ] Editing is performed through document operations.
+- [ ] Save/load produces an equivalent document.
+- [ ] No browser code is required to construct or inspect a piece.
+
+# M2 — Pattern and event engine
+
+## Generalized events
+
+- [ ] Implement `TimeSpan`.
+- [ ] Implement generalized `Event`.
+- [ ] Define event target/voice association.
+- [ ] Support note events.
+- [ ] Support extensible event properties.
+- [ ] Avoid MIDI-specific event semantics in the core model.
+
+## Pattern query
+
+Implement the equivalent of:
+
+```text
+pattern.query(time_span, seed) -> events
+```
+
+- [ ] Query arbitrary spans.
+- [ ] Query overlapping spans consistently.
+- [ ] Query non-zero starting positions without rendering from time zero.
+- [ ] Sort/normalize returned events predictably.
+- [ ] Define boundary behavior precisely.
+
+## Initial deterministic transformations
+
+- [ ] sequence
+- [ ] stack
+- [ ] repeat
+- [ ] shift
+- [ ] stretch / slow / fast
+- [ ] rotate
+- [ ] reverse
+- [ ] transpose
+
+## Initial stochastic transformations
+
+- [ ] deterministic `choose`
+- [ ] weighted choice
+- [ ] `omit`
+- [ ] `sometimes`
+- [ ] hierarchical/sub-seeds so unrelated edits do not unnecessarily scramble an entire piece
+
+## Tests
+
+- [ ] Same document + seed + span always returns identical events.
+- [ ] Native debug/release results agree.
+- [ ] Adjacent queries agree with equivalent combined queries where semantics require it.
+- [ ] Stochastic operations remain deterministic.
+- [ ] Patterns operating on seconds do not require a tempo.
+- [ ] Metric and free-time patterns can coexist.
+
+### Done when
+
+- [ ] A Phrase and StepPattern can each produce generalized note events.
+- [ ] Several transformations can be composed.
+- [ ] A small generative piece can be represented entirely in Rust tests.
+
+# M3 — CLI and observability
+
+## CLI shell
+
+- [ ] Implement `ambiente new`.
+- [ ] Implement `ambiente check`.
+- [ ] Implement `ambiente inspect`.
+- [ ] Implement `ambiente events`.
+- [ ] Implement initial `ambiente export --midi`.
+
+## `check`
+
+- [ ] Validate references.
+- [ ] Validate time/range values.
+- [ ] Validate malformed patterns.
+- [ ] Produce useful source/document diagnostics.
+
+## `inspect`
+
+- [ ] Show document metadata.
+- [ ] Show materials.
+- [ ] Show voices.
+- [ ] Show pattern/process chains.
+- [ ] Show useful activity/register summaries where calculable.
+
+## `events`
+
+- [ ] Accept start/end spans.
+- [ ] Support human-readable output.
+- [ ] Support machine-readable output.
+- [ ] Allow filtering by voice/material.
+- [ ] Include enough information to debug scheduler behavior.
+
+## MIDI export
+
+- [ ] Translate supported note events to MIDI.
+- [ ] Define behavior for unsupported/non-note events.
+- [ ] Test deterministic export.
+
+### Done when
+
+- [ ] A developer can understand why a fixture sounds the way it does by inspecting the core through the CLI.
+- [ ] Pattern debugging does not require the browser.
+
+# M4 — WASM and browser audio
+
+## WASM
+
+- [ ] Compile `ambiente-core` through `ambiente-wasm`.
+- [ ] Expose a narrow command/query boundary.
+- [ ] Generate TypeScript definitions.
+- [ ] Add ergonomic TypeScript wrapper package.
+- [ ] Avoid exposing the entire mutable Rust object graph directly.
+
+Required browser operations:
+
+- [ ] load document
+- [ ] serialize document
+- [ ] apply operation
+- [ ] validate
+- [ ] query events
+- [ ] inspect useful document state
+
+## Cross-runtime conformance
+
+- [ ] Create shared event fixtures.
+- [ ] Run fixtures through native Rust.
+- [ ] Run fixtures through WASM.
+- [ ] Assert identical normalized event output.
+
+## Audio package
+
+- [ ] Create browser audio package.
+- [ ] Implement Web Audio/Tone.js scheduler.
+- [ ] Query a short future scheduling horizon instead of pre-rendering entire pieces.
+- [ ] Handle transport start.
+- [ ] Handle stop.
+- [ ] Handle pause/resume.
+- [ ] Handle seek.
+- [ ] Handle document changes while playing.
+- [ ] Avoid using Tone.js sequences as canonical composition state.
+
+## Initial sounds
+
+Build a deliberately small useful palette.
+
+- [ ] felt/piano-like sound
+
+- [ ] bell/glass sound
+
+- [ ] warm drone
+
+- [ ] soft pluck
+
+- [ ] noise/air texture
+
+- [ ] simple percussion
+
+- [ ] Give sounds stable semantic IDs.
+
+- [ ] Separate sound presets from composition semantics.
+
+- [ ] Add basic gain/pan/filter/effects handling.
+
+### Done when
+
+- [ ] A Rust document plays continuously in a browser.
+- [ ] No pattern-generation code is duplicated in TypeScript.
+- [ ] Native and WASM event fixtures agree.
+
+# M5 — Web Studio / instruments
+
+## Web shell
+
+- [ ] Create Vike + `vike-solid` application.
+- [ ] Configure prerendered static routes.
+- [ ] Configure `/studio/**` as the SPA portion.
+- [ ] Create shared Studio package/components.
+- [ ] Establish application/document state boundary around the WASM facade.
+
+## Transport
+
+- [ ] play
+- [ ] stop
+- [ ] pause
+- [ ] seek
+- [ ] current position
+- [ ] tempo where relevant
+- [ ] seed display/control
+
+## Browser/project persistence
+
+- [ ] Create a new document.
+- [ ] Save locally.
+- [ ] Reopen locally.
+- [ ] Import/export canonical document files.
+- [ ] Preserve document schema/version metadata.
+
+## Material and voice UI
+
+- [ ] List voices.
+- [ ] Select voice.
+- [ ] Add/delete voice.
+- [ ] List materials.
+- [ ] Add/delete material.
+- [ ] Associate material with voice.
+- [ ] Select sound.
+- [ ] Add initial inspector.
+
+## Piano
+
+- [ ] Render responsive piano keyboard.
+- [ ] Support pointer/touch note input.
+- [ ] Support computer keyboard input.
+- [ ] Send immediate note preview to selected sound.
+- [ ] Add octave navigation.
+- [ ] Record note-on/note-off timing.
+- [ ] Convert recording to canonical `Phrase`.
+- [ ] Display recorded phrase.
+- [ ] Add optional post-recording quantization.
+
+## Tone Matrix
+
+- [ ] Render configurable matrix.
+- [ ] Toggle cells.
+- [ ] Show playhead.
+- [ ] Map rows to pitches.
+- [ ] Configure step length.
+- [ ] Configure subdivision.
+- [ ] Edit canonical `StepPattern` through Rust operations.
+- [ ] Make playback changes audible without rebuilding the application.
+
+## Initial editor modes
+
+- [ ] Matrix
+- [ ] Phrase
+- [ ] basic System/voice inspector
+
+### Done when
+
+A user with no code knowledge can:
+
+- [ ] create a project
+- [ ] select a sound
+- [ ] play the piano
+- [ ] record a phrase
+- [ ] create a matrix pattern
+- [ ] play both
+- [ ] save
+- [ ] close/reopen
+- [ ] hear the same musical system again
+
+# M6 — Three Studies quality gate
+
+Do not proceed by adding broad product surface until these studies work musically.
+
+## Phase Study
+
+- [ ] Compose a first-party study from a small amount of material.
+- [ ] Add independent clock support required by the piece.
+- [ ] Support noncommensurate cycles.
+- [ ] Verify long playback does not drift incorrectly at the event level.
+- [ ] Create useful visualization for interacting cycles if needed.
+
+## Drone Study
+
+- [ ] Add long-duration events.
+- [ ] Add continuous/slow parameter modulation needed by the study.
+- [ ] Add restrained stochastic motion.
+- [ ] Improve ambient sound presets.
+- [ ] Support long sections of low activity/silence naturally.
+
+## Pattern Study
+
+- [ ] Compose from Phrase and/or StepPattern material.
+- [ ] Exercise transformations.
+- [ ] Exercise deterministic probability.
+- [ ] Exercise stronger rhythmic behavior.
+- [ ] Verify transformations preserve the authored identity of the material.
+
+## Quality review
+
+For each study:
+
+- [ ] keep roughly ≤5 voices unless there is a musical reason not to
+- [ ] support 5–10+ minutes of convincing playback
+- [ ] test several seeds
+- [ ] verify different seeds retain recognizable identity
+- [ ] remove primitives that encourage bad/random output
+- [ ] improve defaults instead of compensating with more configuration
+- [ ] listen outside development/debugging sessions
+
+### Hard gate
+
+- [ ] At least one study is something we would voluntarily use as background listening.
+- [ ] All three demonstrate a distinct strength of the engine.
+
+If not:
+
+- [ ] stop feature expansion
+- [ ] revise sounds
+- [ ] revise pattern primitives
+- [ ] revise stochastic constraints
+- [ ] revise composition workflow
+
+# M7 — Listen mode
+
+- [ ] Add dedicated listener-facing route/mode.
+- [ ] Hide composition implementation details.
+- [ ] Add first-party piece browser.
+- [ ] Support endless playback.
+- [ ] Add seed variation.
+- [ ] Add session duration controls.
+- [ ] Add restrained generative/process visualization.
+
+## Macros
+
+- [ ] Add canonical `Macro` model.
+- [ ] Allow composers to publish selected high-level controls.
+- [ ] Map one macro to multiple underlying parameters/process values.
+- [ ] Define useful semantic controls such as density, motion, space, warmth, and intensity where appropriate.
+
+## Purpose presets
+
+- [ ] Allow a piece to offer optional modes such as `Focus`, `Create`, or `Rest`.
+- [ ] Implement these as authored macro/scene presets.
+- [ ] Do not encode unsupported neuroscience claims into the engine or UI.
+
+### Done when
+
+- [ ] A user can open Ambiente solely to listen.
+- [ ] Composition knowledge is unnecessary in Listen mode.
+- [ ] At least one first-party piece works credibly as extended work/reading/creative background audio.
+
+# M8 — Generative Create
+
+## Process editing
+
+- [ ] Add process chains to the Studio.
+- [ ] Inspect transformations attached to a material/voice.
+- [ ] Add transformations graphically.
+- [ ] Remove/reorder transformations.
+- [ ] Edit transformation parameters.
+- [ ] Keep all edits represented by canonical Rust operations.
+
+## Additional patterns
+
+Add only as demanded by actual compositions.
+
+Candidates:
+
+- [ ] alternate
+- [ ] shuffle
+- [ ] random walk
+- [ ] `every`
+- [ ] `within`
+- [ ] duplication/interleave
+- [ ] richer pitch-selection helpers
+
+## Signals
+
+- [ ] Define continuous signal abstraction.
+- [ ] sine
+- [ ] triangle
+- [ ] envelope
+- [ ] deterministic noise
+- [ ] random walk
+
+Use signals initially for:
+
+- [ ] gain
+- [ ] pan
+- [ ] filter
+- [ ] other perceptually useful parameters
+
+## Scenes
+
+- [ ] Add canonical `Scene`.
+- [ ] Create/switch scenes.
+- [ ] Define transition behavior.
+- [ ] Allow scene state to interact with macros.
+
+## Explore
+
+- [ ] Seed browser.
+- [ ] Rapidly audition variants.
+- [ ] Keep chosen variants/seeds.
+- [ ] Add useful summaries rather than pretending to score musical quality automatically.
+
+### Done when
+
+- [ ] A user can turn a recorded Phrase or StepPattern into a substantially evolving composition without writing code.
+
+# M9 — DSL and Perform
+
+## Language
+
+Do not begin syntax work until the underlying semantic operations are stable.
+
+- [ ] Define textual representation of patterns/processes.
+- [ ] Implement parser.
+- [ ] Implement diagnostics.
+- [ ] Implement formatter.
+- [ ] Ensure source constructs map predictably to the Rust semantic model.
+- [ ] Avoid exposing implementation-specific Web Audio/Tone.js concepts.
+
+## Code editor
+
+- [ ] Add Code view.
+- [ ] Parse/edit while composition is stopped.
+- [ ] Add live updates.
+- [ ] Preserve transport clock during successful pattern replacement.
+- [ ] Preserve old running state when new source has errors.
+- [ ] Surface concise diagnostics inline.
+
+## Performance mode
+
+- [ ] Full/reduced performance UI.
+- [ ] Scene triggering.
+- [ ] Macro controls.
+- [ ] Keyboard mappings.
+- [ ] MIDI mappings.
+- [ ] Live seed changes.
+- [ ] Live process changes.
+- [ ] Performance-safe error behavior.
+
+### Done when
+
+- [ ] A performer can alter an active piece without stopping playback.
+- [ ] No JavaScript/Rust programming is required during musical performance.
+
+# M10 — Capture and production
+
+## Capture
+
+- [ ] Add canonical capture representation.
+- [ ] Capture document revision.
+- [ ] Capture seed/state.
+- [ ] Capture relevant scene/macro state.
+- [ ] Capture performance operations where required.
+- [ ] Support named captures.
+- [ ] Replay a capture deterministically.
+
+## Regions
+
+- [ ] Mark interesting time ranges.
+- [ ] Save/freeze a realization.
+- [ ] Start playback from captured state where semantically possible.
+
+## Export
+
+- [ ] Improve MIDI export.
+- [ ] Add audio export strategy.
+- [ ] WAV.
+- [ ] FLAC if justified.
+- [ ] Stems.
+- [ ] Preserve capture metadata alongside renders.
+
+### Done when
+
+- [ ] An interesting emergent performance can be preserved and recreated later.
+
+# M11 — Documentation and public web
+
+## Static site
+
+- [ ] Landing page.
+- [ ] `/docs/**`.
+- [ ] `/learn/**`.
+- [ ] `/examples/**`.
+- [ ] `/studio/**`.
+- [ ] `/listen/**` as appropriate.
+
+## Documentation
+
+- [ ] introduction
+- [ ] composition model
+- [ ] Phrase
+- [ ] Matrix
+- [ ] piano recording
+- [ ] voices
+- [ ] patterns
+- [ ] probability/seeds
+- [ ] independent clocks/phasing
+- [ ] signals
+- [ ] scenes
+- [ ] macros
+- [ ] sound
+- [ ] CLI
+- [ ] live coding
+
+## Interactive learning
+
+- [ ] Share WASM/audio runtime with docs examples.
+- [ ] Make simple documentation snippets playable.
+- [ ] Add focused tutorials based on the Three Studies.
+- [ ] Avoid separate demo-only implementations.
+
+### Done when
+
+- [ ] Static deployment requires no production application server.
+- [ ] Documentation routes contain prerendered content.
+- [ ] Studio remains an SPA.
+- [ ] A new user can learn enough on the site to create a basic piece.
+
+# M12 — Tauri desktop
+
+- [ ] Add Tauri 2 application.
+- [ ] Reuse shared Solid Studio.
+- [ ] Reuse canonical WASM/document behavior.
+- [ ] Add native project filesystem adapter.
+- [ ] Open project.
+- [ ] Save project.
+- [ ] Save As.
+- [ ] Recent projects.
+- [ ] Drag/drop supported assets.
+- [ ] Native file dialogs.
+- [ ] Native MIDI adapter.
+- [ ] OSC adapter.
+- [ ] Audio device/settings integration as needed.
+- [ ] Native export integration.
+- [ ] Package macOS build first.
+- [ ] Keep capability interfaces portable for later Windows/Linux builds.
+
+### Done when
+
+- [ ] The same Ambiente document opens interchangeably in web and desktop versions.
+- [ ] The Studio UX is shared rather than reimplemented.
+- [ ] Desktop-specific capabilities live behind adapters.
+
+# M13 — MCP
+
+## Server
+
+- [ ] Create `ambiente-mcp`.
+- [ ] Reuse `ambiente-core`.
+- [ ] Load/save canonical projects.
+- [ ] Reuse document operations and validation.
+
+## Semantic tools
+
+- [ ] `get_document`
+- [ ] `get_piece`
+- [ ] `list_voices`
+- [ ] `get_voice`
+- [ ] `list_materials`
+- [ ] `get_material`
+- [ ] `add_voice`
+- [ ] `add_material`
+- [ ] `insert_note`
+- [ ] `set_step`
+- [ ] `set_pattern`
+- [ ] `apply_process`
+- [ ] `set_macro`
+- [ ] `set_seed`
+- [ ] `query_events`
+- [ ] `inspect`
+- [ ] `validate`
+
+## Agent ergonomics
+
+- [ ] Return semantic summaries rather than enormous serialized documents by default.
+- [ ] Make IDs stable and easy to reference across calls.
+- [ ] Support bounded edits.
+- [ ] Provide useful validation failures.
+- [ ] Avoid source-code-writing tools as the primary musical API.
+
+### Done when
+
+- [ ] An agent can make musically meaningful structured edits without generating scheduler/audio code.
+
+# M14 — Native audio, if justified
+
+Do not schedule this milestone merely because a Rust DSP stack would be interesting.
+
+Investigate only after browser/Tauri workflows demonstrate an actual limitation.
+
+Possible tasks:
+
+- [ ] define concrete shortcomings of browser audio
+- [ ] evaluate native audio libraries
+- [ ] evaluate offline rendering architecture
+- [ ] evaluate shared DSP strategy
+- [ ] native realtime audio
+- [ ] headless CLI rendering
+- [ ] advanced synthesis
+- [ ] plugin architecture
+
+### Proceed only if
+
+- [ ] latency, rendering, DSP, device access, or production requirements cannot be met adequately by the established architecture.
+
+# Deferred / explicitly out of scope
+
+Do not implement during the initial roadmap unless requirements materially change:
+
+- [ ] full DAW timeline
+- [ ] multitrack waveform editing
+- [ ] VST/AU hosting
+- [ ] notation engraving
+- [ ] huge modular-synthesis environment
+- [ ] hundreds of Tidal-style operators
+- [ ] automatic "generate me a song" workflow
+- [ ] prompt-to-song
+- [ ] automatic chord/melody/bass/drum generators as core architecture
+- [ ] cloud accounts/auth
+- [ ] collaborative backend
+- [ ] server dependency for normal web use
+- [ ] native DSP solely for architectural purity
