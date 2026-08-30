@@ -150,12 +150,12 @@ Defer sophisticated harmonic analysis and chord-generation APIs.
 
 ### Generalized events
 
-- [ ] Implement `TimeSpan`.
-- [ ] Implement generalized `Event`.
-- [ ] Define event target/voice association.
-- [ ] Support note events.
-- [ ] Support extensible event properties.
-- [ ] Avoid MIDI-specific event semantics in the core model.
+- [x] Implement `TimeSpan`.
+- [x] Implement generalized `Event`.
+- [x] Define event target/voice association.
+- [x] Support note events.
+- [x] Support extensible event properties.
+- [x] Avoid MIDI-specific event semantics in the core model.
 
 ### Pattern query
 
@@ -165,46 +165,46 @@ Implement the equivalent of:
 pattern.query(time_span, seed) -> events
 ```
 
-- [ ] Query arbitrary spans.
-- [ ] Query overlapping spans consistently.
-- [ ] Query non-zero starting positions without rendering from time zero.
-- [ ] Sort/normalize returned events predictably.
-- [ ] Define boundary behavior precisely.
+- [x] Query arbitrary spans.
+- [x] Query overlapping spans consistently.
+- [x] Query non-zero starting positions without rendering from time zero.
+- [x] Sort/normalize returned events predictably.
+- [x] Define boundary behavior precisely.
 
 ### Initial deterministic transformations
 
-- [ ] sequence
-- [ ] stack
-- [ ] repeat
-- [ ] shift
-- [ ] stretch / slow / fast
-- [ ] rotate
-- [ ] reverse
-- [ ] transpose
+- [x] sequence
+- [x] stack
+- [x] repeat
+- [x] shift
+- [x] stretch / slow / fast
+- [x] rotate
+- [x] reverse
+- [x] transpose
 
 ### Initial stochastic transformations
 
-- [ ] deterministic `choose`
-- [ ] weighted choice
-- [ ] `omit`
-- [ ] `sometimes`
-- [ ] hierarchical/sub-seeds so unrelated edits do not unnecessarily scramble an entire
+- [x] deterministic `choose`
+- [x] weighted choice
+- [x] `omit`
+- [x] `sometimes`
+- [x] hierarchical/sub-seeds so unrelated edits do not unnecessarily scramble an entire
       piece
 
 ### Tests
 
-- [ ] Same document + seed + span always returns identical events.
-- [ ] Native debug/release results agree.
-- [ ] Adjacent queries agree with equivalent combined queries where semantics require it.
-- [ ] Stochastic operations remain deterministic.
-- [ ] Patterns operating on seconds do not require a tempo.
-- [ ] Metric and free-time patterns can coexist.
+- [x] Same document + seed + span always returns identical events.
+- [x] Native debug/release results agree.
+- [x] Adjacent queries agree with equivalent combined queries where semantics require it.
+- [x] Stochastic operations remain deterministic.
+- [x] Patterns operating on seconds do not require a tempo.
+- [x] Metric and free-time patterns can coexist.
 
 ### Done when
 
-- [ ] A Phrase and StepPattern can each produce generalized note events.
-- [ ] Several transformations can be composed.
-- [ ] A small generative piece can be represented entirely in Rust tests.
+- [x] A Phrase and StepPattern can each produce generalized note events.
+- [x] Several transformations can be composed.
+- [x] A small generative piece can be represented entirely in Rust tests.
 
 ## M3 — CLI and observability
 

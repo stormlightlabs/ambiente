@@ -4,7 +4,7 @@ use std::{collections::BTreeMap, fmt, marker::PhantomData, str::FromStr};
 
 use serde::{
     Deserialize, Deserializer, Serialize, Serializer, de,
-    de::{MapAccess, Visitor},
+    de::{MapAccess, SeqAccess, Visitor},
 };
 use thiserror::Error;
 use uuid::{Uuid, Version};
@@ -12,7 +12,7 @@ use uuid::{Uuid, Version};
 use crate::prelude::*;
 
 /// The current persisted document schema version.
-pub const SCHEMA_VERSION: u32 = 1;
+pub const SCHEMA_VERSION: u32 = 2;
 const FORMAT: &str = "ambiente";
 
 /// An error produced while parsing or constructing an entity ID.
@@ -643,7 +643,7 @@ pub enum ParameterValue {
 #[serde(deny_unknown_fields)]
 pub struct VoiceSettings {
     name: String,
-    material: Option<MaterialId>,
+    pattern: Option<Pattern>,
     sound: SoundRef,
     enabled: bool,
     #[serde(deserialize_with = "deserialize_unique_map")]
@@ -656,17 +656,24 @@ impl VoiceSettings {
     pub fn new(name: impl Into<String>, sound: SoundRef) -> Self {
         Self {
             name: name.into(),
-            material: None,
+            pattern: None,
             sound,
             enabled: true,
             parameters: BTreeMap::new(),
         }
     }
 
-    /// Associates the voice with material.
+    /// Associates the voice with one material source pattern.
     #[must_use]
-    pub const fn with_material(mut self, material: MaterialId) -> Self {
-        self.material = Some(material);
+    pub fn with_material(mut self, material: MaterialId) -> Self {
+        self.pattern = Some(Pattern::material(material));
+        self
+    }
+
+    /// Associates the voice with a composed pattern tree.
+    #[must_use]
+    pub fn with_pattern(mut self, pattern: Pattern) -> Self {
+        self.pattern = Some(pattern);
         self
     }
 
@@ -690,10 +697,19 @@ impl VoiceSettings {
         &self.name
     }
 
-    /// Returns referenced material when present.
+    /// Returns referenced material when the voice uses one direct material pattern.
     #[must_use]
     pub const fn material(&self) -> Option<MaterialId> {
-        self.material
+        match &self.pattern {
+            Some(Pattern::Material { material_id }) => Some(*material_id),
+            _ => None,
+        }
+    }
+
+    /// Returns the voice's pattern tree when present.
+    #[must_use]
+    pub const fn pattern(&self) -> Option<&Pattern> {
+        self.pattern.as_ref()
     }
 
     /// Returns the symbolic sound reference.
@@ -873,7 +889,7 @@ impl Document {
     /// Returns [`LoadError`] for malformed JSON, invalid headers, unsupported schemas,
     /// unknown fields, invalid IDs, or semantic validation failures.
     pub fn from_json(input: &str) -> Result<Self, LoadError> {
-        let value: serde_json::Value = serde_json::from_str(input)?;
+        let mut value = serde_json::from_str::<StrictValue>(input)?.0;
         let object = value.as_object().ok_or_else(|| {
             LoadError::InvalidHeader("document root must be an object".to_owned())
         })?;
@@ -899,13 +915,25 @@ impl Document {
                 "schema_version must be positive".to_owned(),
             ));
         }
-        if schema != SCHEMA_VERSION {
+        if schema > SCHEMA_VERSION {
             return Err(LoadError::UnsupportedSchema {
                 found: schema,
                 supported: SCHEMA_VERSION,
             });
         }
-        let document: Self = serde_json::from_str(input)?;
+        let document: Self = if schema == SCHEMA_VERSION {
+            serde_json::from_str(input)?
+        } else {
+            for version in schema..SCHEMA_VERSION {
+                value = match version {
+                    1 => migrate_v1_to_v2(value)?,
+                    _ => {
+                        return Err(MigrationError::UnsupportedSource(version).into());
+                    }
+                };
+            }
+            serde_json::from_value(value)?
+        };
         let diagnostics = document.validate();
         if diagnostics
             .iter()
@@ -914,6 +942,50 @@ impl Document {
             return Err(LoadError::InvalidDocument(diagnostics));
         }
         Ok(document)
+    }
+
+    /// Queries every enabled voice for events overlapping one half-open time span.
+    ///
+    /// Events use this document's persisted root seed and are sorted and deduplicated.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`PatternError`] when a pattern cannot be evaluated.
+    pub fn query_events(&self, span: TimeSpan) -> Result<Vec<Event>, PatternError> {
+        self.query_events_with_seed(span, self.seed)
+    }
+
+    /// Queries every enabled voice with an explicit realization seed.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`PatternError`] when a pattern cannot be evaluated.
+    pub fn query_events_with_seed(
+        &self,
+        span: TimeSpan,
+        seed: Seed,
+    ) -> Result<Vec<Event>, PatternError> {
+        let mut events = Vec::new();
+        for voice in self.piece.voices.values() {
+            if !voice.settings.enabled {
+                continue;
+            }
+            if let Some(pattern) = &voice.settings.pattern {
+                events.extend(pattern.query(self, voice.id, span, seed)?);
+            }
+        }
+        events.sort_by(|left, right| {
+            left.span()
+                .start()
+                .cmp(&right.span().start())
+                .then(left.span().end().cmp(&right.span().end()))
+                .then(left.target().cmp(right.target()))
+                .then(left.source().cmp(right.source()))
+                .then(left.kind().cmp(right.kind()))
+                .then(left.properties().cmp(right.properties()))
+        });
+        events.dedup();
+        Ok(events)
     }
 
     /// Reports all independent semantic problems in this document.
@@ -1257,6 +1329,17 @@ pub enum SaveError {
     InvalidDocument(Vec<Diagnostic>),
 }
 
+/// A deterministic schema migration failure.
+#[derive(Clone, Debug, Eq, Error, PartialEq)]
+pub enum MigrationError {
+    /// A migration received a JSON shape that the source schema does not permit.
+    #[error("schema migration could not find {0}")]
+    MissingField(&'static str),
+    /// No sequential migration exists for the source schema.
+    #[error("no migration is available from schema {0}")]
+    UnsupportedSource(u32),
+}
+
 /// A strict document loading failure.
 #[derive(Debug, Error)]
 pub enum LoadError {
@@ -1274,6 +1357,9 @@ pub enum LoadError {
         /// Current supported version.
         supported: u32,
     },
+    /// A supported older schema could not be migrated.
+    #[error("could not migrate document: {0}")]
+    Migration(#[from] MigrationError),
     /// Semantic validation failed after deserialization.
     #[error("document failed validation")]
     InvalidDocument(Vec<Diagnostic>),
@@ -1402,6 +1488,136 @@ impl Diagnostic {
     pub fn help(&self) -> Option<&str> {
         self.help.as_deref()
     }
+}
+
+struct StrictValue(serde_json::Value);
+
+impl<'de> Deserialize<'de> for StrictValue {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct StrictValueVisitor;
+
+        impl<'de> Visitor<'de> for StrictValueVisitor {
+            type Value = StrictValue;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("a JSON value without duplicate object keys")
+            }
+
+            fn visit_bool<E>(self, value: bool) -> Result<Self::Value, E> {
+                Ok(StrictValue(serde_json::Value::Bool(value)))
+            }
+
+            fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E> {
+                Ok(StrictValue(serde_json::Value::from(value)))
+            }
+
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E> {
+                Ok(StrictValue(serde_json::Value::from(value)))
+            }
+
+            fn visit_f64<E>(self, value: f64) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                serde_json::Number::from_f64(value)
+                    .map(serde_json::Value::Number)
+                    .map(StrictValue)
+                    .ok_or_else(|| de::Error::custom("JSON number must be finite"))
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E> {
+                Ok(StrictValue(serde_json::Value::String(value.to_owned())))
+            }
+
+            fn visit_string<E>(self, value: String) -> Result<Self::Value, E> {
+                Ok(StrictValue(serde_json::Value::String(value)))
+            }
+
+            fn visit_none<E>(self) -> Result<Self::Value, E> {
+                Ok(StrictValue(serde_json::Value::Null))
+            }
+
+            fn visit_unit<E>(self) -> Result<Self::Value, E> {
+                Ok(StrictValue(serde_json::Value::Null))
+            }
+
+            fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+            where
+                D: Deserializer<'de>,
+            {
+                StrictValue::deserialize(deserializer)
+            }
+
+            fn visit_seq<A>(self, mut sequence: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let mut values = Vec::new();
+                while let Some(value) = sequence.next_element::<StrictValue>()? {
+                    values.push(value.0);
+                }
+                Ok(StrictValue(serde_json::Value::Array(values)))
+            }
+
+            fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                let mut values = serde_json::Map::new();
+                while let Some((key, value)) = access.next_entry::<String, StrictValue>()? {
+                    if values.insert(key, value.0).is_some() {
+                        return Err(de::Error::custom("duplicate object key"));
+                    }
+                }
+                Ok(StrictValue(serde_json::Value::Object(values)))
+            }
+        }
+
+        deserializer.deserialize_any(StrictValueVisitor)
+    }
+}
+
+fn migrate_v1_to_v2(mut value: serde_json::Value) -> Result<serde_json::Value, MigrationError> {
+    let root = value
+        .as_object_mut()
+        .ok_or(MigrationError::MissingField("document root"))?;
+    let piece = root
+        .get_mut("piece")
+        .and_then(serde_json::Value::as_object_mut)
+        .ok_or(MigrationError::MissingField("piece"))?;
+    let voices = piece
+        .get_mut("voices")
+        .and_then(serde_json::Value::as_object_mut)
+        .ok_or(MigrationError::MissingField("piece.voices"))?;
+    for voice in voices.values_mut() {
+        let settings = voice
+            .get_mut("settings")
+            .and_then(serde_json::Value::as_object_mut)
+            .ok_or(MigrationError::MissingField("voice.settings"))?;
+        let material = settings
+            .remove("material")
+            .ok_or(MigrationError::MissingField("voice.settings.material"))?;
+        let pattern = if material.is_null() {
+            serde_json::Value::Null
+        } else {
+            let mut pattern = serde_json::Map::new();
+            pattern.insert(
+                "type".to_owned(),
+                serde_json::Value::String("material".to_owned()),
+            );
+            pattern.insert("material_id".to_owned(), material);
+            serde_json::Value::Object(pattern)
+        };
+        settings.insert("pattern".to_owned(), pattern);
+    }
+    root.insert(
+        "schema_version".to_owned(),
+        serde_json::Value::from(SCHEMA_VERSION),
+    );
+    Ok(value)
 }
 
 fn deserialize_unique_map<'de, D, K, V>(deserializer: D) -> Result<BTreeMap<K, V>, D::Error>
@@ -1599,14 +1815,20 @@ fn validate_voice(
             Some("provide a symbolic sound reference".to_owned()),
         ));
     }
-    if let Some(material) = voice.settings.material {
-        if !materials.contains_key(&material) {
-            diagnostics.push(Diagnostic::error(
-                DiagnosticCode::ReferenceMissing,
-                location("material"),
-                format!("referenced material `{material}` does not exist"),
-                Some("add the material or choose an existing material".to_owned()),
-            ));
+    if let Some(pattern) = &voice.settings.pattern {
+        let mut material_ids = Vec::new();
+        pattern.material_ids(&mut material_ids);
+        material_ids.sort_unstable();
+        material_ids.dedup();
+        for material in material_ids {
+            if !materials.contains_key(&material) {
+                diagnostics.push(Diagnostic::error(
+                    DiagnosticCode::ReferenceMissing,
+                    location("pattern"),
+                    format!("referenced material `{material}` does not exist"),
+                    Some("add the material or choose an existing material".to_owned()),
+                ));
+            }
         }
     }
     for name in voice.settings.parameters.keys() {
@@ -1651,11 +1873,51 @@ mod tests {
         let json = document.to_json().unwrap();
         assert!(json.ends_with('\n'));
         assert!(json.contains("\"format\": \"ambiente\""));
-        assert!(json.contains("\"schema_version\": 1"));
+        assert!(json.contains("\"schema_version\": 2"));
         assert!(json.contains("\"seed\": \"000000000000002a\""));
         let loaded = Document::from_json(&json).unwrap();
         assert_eq!(loaded, document);
         assert_eq!(loaded.to_json().unwrap(), json);
+    }
+
+    #[test]
+    fn version_one_voice_materials_migrate_to_source_patterns() {
+        let mut document = fixture();
+        let material_id = id("0f87ac6e-ea2c-43e7-9694-04b90e776f61");
+        let voice_id = id("826b8913-4c23-43e1-b150-594737909a58");
+        document
+            .apply(Operation::AddMaterial(Material::phrase(
+                material_id,
+                "Phrase",
+                Phrase::new(),
+            )))
+            .unwrap();
+        document
+            .apply(Operation::AddVoice(Voice::new(
+                voice_id,
+                VoiceSettings::new("Piano", SoundRef::new("felt-piano").unwrap())
+                    .with_material(material_id),
+            )))
+            .unwrap();
+
+        let mut old: serde_json::Value =
+            serde_json::from_str(&document.to_json().unwrap()).unwrap();
+        old["schema_version"] = serde_json::Value::from(1);
+        let settings = old["piece"]["voices"][voice_id.to_string()]["settings"]
+            .as_object_mut()
+            .unwrap();
+        settings.remove("pattern");
+        settings.insert(
+            "material".to_owned(),
+            serde_json::Value::String(material_id.to_string()),
+        );
+
+        let loaded = Document::from_json(&serde_json::to_string(&old).unwrap()).unwrap();
+        assert_eq!(loaded.schema_version(), SCHEMA_VERSION);
+        assert_eq!(
+            loaded.piece().voices()[&voice_id].settings().material(),
+            Some(material_id)
+        );
     }
 
     #[test]

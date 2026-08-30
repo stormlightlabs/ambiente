@@ -53,7 +53,7 @@ starts with a format sentinel and an integer schema version:
 ```json
 {
   "format": "ambiente",
-  "schema_version": 1,
+  "schema_version": 2,
   "id": "9f8d76b0-0dd1-4fea-9ad9-43ae8f94f860",
   "piece": {}
 }
@@ -63,6 +63,10 @@ JSON works in browsers, has mature Serde support, remains readable in source
 control, and supports migration through `serde_json::Value`.[^serde] A future
 `.ambiente` project container may bundle assets, but it must contain or refer to
 this versioned document instead of defining another musical schema.
+
+Schema 2 replaces each voice's optional `material` field with an optional
+`pattern`. Loading schema 1 wraps a non-null material ID in a `material` source
+pattern and preserves a null value as no pattern.
 
 The following rules define the canonical representation:
 
@@ -140,7 +144,7 @@ migration alone.
 The document format requires tests that prove:
 
 - entity IDs round-trip in canonical form and reject nil UUIDs;
-- a minimal document writes `format = "ambiente"` and `schema_version = 1`;
+- a minimal document writes `format = "ambiente"` and the current schema version;
 - save, load, and save again produce a semantically equal, canonically stable
   document;
 - unknown fields and future schema versions are rejected; and

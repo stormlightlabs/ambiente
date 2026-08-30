@@ -165,9 +165,14 @@ BLAKE3 derive-key, ambiente-random-v1
 32-byte ChaCha8 seed
 ```
 
-The tuple encoding must be specified and covered by test vectors before
-stochastic operators ship. Components are fixed-width or length-prefixed;
-concatenated strings are not a valid encoding.
+The version 1 tuple uses the root seed as an 8-byte little-endian integer,
+the target voice UUID and operator UUID as their 16 raw bytes, a 4-byte
+little-endian coordinate count, each signed occurrence coordinate as an 8-byte
+little-endian integer, and an 8-byte little-endian operator-local key. BLAKE3
+derives a 32-byte key with `ambiente-random-v1`; that key seeds `ChaCha8Rng`.
+Bounded integers use rejection sampling over `next_u64`, so modulo bias and
+library distribution changes do not alter choices. Golden vectors fix this
+encoding and sampling behavior.
 
 Keying each choice by semantic identity and time isolates unrelated edits and
 query order. Editing one voice need not scramble another, and querying `[0, 4)`
@@ -272,10 +277,18 @@ kind, and extensible properties. Kinds can include note, sample, parameter,
 scene, and control. Events are not MIDI messages and contain no Tone.js object.
 An adapter may translate suitable events to those systems.
 
-Query boundaries must be precise. An event that starts before a requested span
-but overlaps it may need to be returned so a renderer can reconstruct active
-state. Exact inclusion, clipping, ordering, and deduplication rules belong to the
-core API before the pattern engine is considered stable.
+Queries and events use non-empty half-open spans: the start is included and the
+end is excluded. A query returns an event when `event.start < query.end` and
+`event.end > query.start`. It therefore includes events that start before the
+query and remain active, but excludes events ending exactly at the query start
+or starting exactly at the query end. Returned spans retain their original
+bounds; the query does not clip them.
+
+Metric and absolute spans are queried separately. A mixed-clock stack can
+contain both, and each query returns events in its own clock without converting
+through tempo. Results sort by clock, start, end, target, source, kind, and
+properties, then remove exact duplicates. These rules make adjacent,
+overlapping, and non-zero-start queries agree without rendering from time zero.
 
 ### Scene
 

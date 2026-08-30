@@ -24,10 +24,10 @@ pub enum TimeError {
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-struct Rational(Ratio<i64>);
+pub(crate) struct Rational(Ratio<i64>);
 
 impl Rational {
-    fn new(numerator: i64, denominator: i64) -> Result<Self, TimeError> {
+    pub(crate) fn new(numerator: i64, denominator: i64) -> Result<Self, TimeError> {
         Self::from_i128(i128::from(numerator), i128::from(denominator))
     }
 
@@ -49,14 +49,28 @@ impl Rational {
         Ok(Self(Ratio::new_raw(numerator, denominator)))
     }
 
-    fn checked_mul(self, other: Self) -> Result<Self, TimeError> {
+    pub(crate) fn checked_add(self, other: Self) -> Result<Self, TimeError> {
+        let numerator = i128::from(*self.0.numer()) * i128::from(*other.0.denom())
+            + i128::from(*other.0.numer()) * i128::from(*self.0.denom());
+        let denominator = i128::from(*self.0.denom()) * i128::from(*other.0.denom());
+        Self::from_i128(numerator, denominator)
+    }
+
+    pub(crate) fn checked_sub(self, other: Self) -> Result<Self, TimeError> {
+        let numerator = i128::from(*self.0.numer()) * i128::from(*other.0.denom())
+            - i128::from(*other.0.numer()) * i128::from(*self.0.denom());
+        let denominator = i128::from(*self.0.denom()) * i128::from(*other.0.denom());
+        Self::from_i128(numerator, denominator)
+    }
+
+    pub(crate) fn checked_mul(self, other: Self) -> Result<Self, TimeError> {
         Self::from_i128(
             i128::from(*self.0.numer()) * i128::from(*other.0.numer()),
             i128::from(*self.0.denom()) * i128::from(*other.0.denom()),
         )
     }
 
-    fn checked_div(self, other: Self) -> Result<Self, TimeError> {
+    pub(crate) fn checked_div(self, other: Self) -> Result<Self, TimeError> {
         if *other.0.numer() == 0 {
             return Err(TimeError::ZeroDenominator);
         }
@@ -66,12 +80,25 @@ impl Rational {
         )
     }
 
-    fn is_negative(self) -> bool {
+    pub(crate) fn is_negative(self) -> bool {
         *self.0.numer() < 0
     }
 
-    fn is_positive(self) -> bool {
+    pub(crate) fn is_positive(self) -> bool {
         *self.0.numer() > 0
+    }
+
+    pub(crate) fn numerator(self) -> i64 {
+        *self.0.numer()
+    }
+
+    pub(crate) fn denominator(self) -> i64 {
+        *self.0.denom()
+    }
+
+    pub(crate) fn floor_integer(self) -> Result<i64, TimeError> {
+        let quotient = i128::from(*self.0.numer()).div_euclid(i128::from(*self.0.denom()));
+        i64::try_from(quotient).map_err(|_| TimeError::Overflow)
     }
 
     fn quantize_nonnegative(self, subdivision: Self) -> Result<Self, TimeError> {
@@ -151,7 +178,7 @@ macro_rules! rational_value {
     ($name:ident, $doc:literal) => {
         #[doc = $doc]
         #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-        pub struct $name(Rational);
+        pub struct $name(pub(crate) Rational);
 
         impl $name {
             /// Constructs a normalized exact value.
@@ -231,6 +258,10 @@ rational_value!(
     Cycles,
     "An exact cycle position or count with no implied beat length."
 );
+rational_value!(
+    Seconds,
+    "An exact signed position or displacement measured in elapsed seconds."
+);
 
 impl Beats {
     /// Rounds a non-negative beat value to the nearest subdivision, with ties upward.
@@ -259,7 +290,7 @@ impl Cycles {
 
 /// Elapsed exact seconds from the piece or transport origin.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct AbsoluteTime(Rational);
+pub struct AbsoluteTime(pub(crate) Rational);
 
 impl AbsoluteTime {
     /// Constructs a non-negative absolute time.
@@ -293,7 +324,7 @@ impl AbsoluteTime {
 
 /// A non-negative exact duration measured in seconds.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct AbsoluteDuration(Rational);
+pub struct AbsoluteDuration(pub(crate) Rational);
 
 impl AbsoluteDuration {
     /// Constructs a non-negative duration.
