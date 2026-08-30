@@ -160,7 +160,7 @@
 	.principle-band {
 		align-items: end;
 		background: var(--forest-dark);
-		color: var(--paper);
+		color: var(--inverse-paper);
 		display: grid;
 		gap: 2rem;
 		grid-template-columns: 1fr auto;

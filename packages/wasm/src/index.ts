@@ -81,9 +81,14 @@ export class WasmApplication implements AmbienteApplication {
 
 	/** Initializes the module and loads a canonical document. */
 	static async create(document: SerializedDocument, module?: InitInput): Promise<WasmApplication> {
-		initialization ??= module === undefined ? init() : init({ module_or_path: module });
-		await initialization;
+		await initialize(module);
 		return new WasmApplication(new AmbienteWasm(document));
+	}
+
+	/** Creates and loads a new empty canonical document in Rust. */
+	static async createNew(title = 'Untitled piece', module?: InitInput): Promise<WasmApplication> {
+		await initialize(module);
+		return new WasmApplication(new AmbienteWasm(AmbienteWasm.newDocument(title)));
 	}
 
 	/** Replaces the active document, leaving it unchanged when loading fails. */
@@ -115,6 +120,11 @@ export class WasmApplication implements AmbienteApplication {
 	inspect(): DocumentInspection {
 		return parseJson(this.runtime.inspect());
 	}
+}
+
+async function initialize(module?: InitInput): Promise<void> {
+	initialization ??= module === undefined ? init() : init({ module_or_path: module });
+	await initialization;
 }
 
 function parseJson<T>(value: string): T {

@@ -44,6 +44,11 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   stable semantic sound presets with gain, pan, filter, and reverb controls.
 - Connected Studio playback to a Rust-authored document through the production
   WASM facade and browser audio package.
+- Added complete Studio transport and seed controls, including canonical tempo
+  edits, seeking, and live position display.
+- Added a Dexie-backed local piece library with autosave, create, reopen,
+  duplicate, delete, canonical import/export, storage persistence handling, and
+  independent IndexedDB migration tests.
 - Added Pagefind indexing, in-page search, and scroll-aware section navigation
   for the prerendered documentation.
 
@@ -53,7 +58,8 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and expanded ESLint coverage for the Vike and Solid application.
 - Updated the web shell to use Literata and Instrument Sans variable fonts,
   UnoCSS-backed Bootstrap and Remix icons, the favicon artwork as its header
-  mark, and clearer public and documentation copy.
+  mark, dark mode, a fuller site footer, and clearer public and documentation
+  copy.
 - Moved project architecture documentation into `apps/web/content/docs/` for the
   web application, while keeping the product roadmap at the repository root.
 - Sequenced the Vike/Solid web shell and Sätteri documentation pipeline before

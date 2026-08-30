@@ -1059,6 +1059,7 @@ impl Document {
         match operation {
             Operation::SetMetadata(metadata) => self.metadata = metadata,
             Operation::SetSeed(seed) => self.seed = seed,
+            Operation::SetTempo(tempo) => self.piece.transport.tempo = tempo,
             Operation::AddMaterial(material) => {
                 let id = material.id();
                 if self.piece.materials.insert(id, material).is_some() {
@@ -1216,6 +1217,8 @@ pub enum Operation {
     SetMetadata(Metadata),
     /// Changes the root composition seed.
     SetSeed(Seed),
+    /// Changes the constant metric tempo while preserving the meter.
+    SetTempo(Tempo),
     /// Adds authored material.
     AddMaterial(Material),
     /// Removes unreferenced authored material.
@@ -2253,6 +2256,25 @@ mod tests {
         let json = document.to_json().unwrap();
         assert!(json.contains("\"type\": \"pitch_set\""));
         assert_eq!(Document::from_json(&json).unwrap(), document);
+    }
+
+    #[test]
+    fn transport_operations_update_seed_and_tempo() {
+        let mut document = fixture();
+        document.apply(Operation::SetSeed(Seed::new(7))).unwrap();
+        document
+            .apply(Operation::SetTempo(Tempo::new(96, 1).unwrap()))
+            .unwrap();
+
+        assert_eq!(document.seed(), Seed::new(7));
+        assert_eq!(
+            document.piece().transport().tempo(),
+            Tempo::new(96, 1).unwrap()
+        );
+        assert_eq!(
+            document.piece().transport().meter(),
+            Some(Meter::new(4, 4).unwrap())
+        );
     }
 
     #[test]

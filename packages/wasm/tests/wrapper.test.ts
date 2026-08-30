@@ -28,7 +28,11 @@ describe('WASM application', () => {
 		expect(repeated).toHaveLength(4);
 		expect(repeated[0]?.span.start.value).toBe('2/1');
 		expect(application.apply({ kind: 'set_seed', payload: '000000000000002b' })).toEqual([]);
-		expect(application.serialize()).toContain('"seed": "000000000000002b"');
+		expect(application.apply({ kind: 'set_tempo', payload: '96/1' })).toEqual([]);
+		expect(application.inspect()).toMatchObject({ seed: '000000000000002b', tempo: '96/1' });
+
+		const created = await WasmApplication.createNew('Fresh piece');
+		expect(created.inspect()).toMatchObject({ materialCount: 0, tempo: '120/1', title: 'Fresh piece', voiceCount: 0 });
 
 		const beforeInvalidLoad = application.serialize();
 		expect(application.load('{}')).toEqual([expect.objectContaining({ code: 'document.load', severity: 'error' })]);

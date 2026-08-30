@@ -12,13 +12,14 @@
 		"test:e2e": "playwright test",
 		"test:static": "vitest run tests/static-build.test.ts",
 		"test:types": "tsc --noEmit",
-		"test:unit": "vitest run tests/content.test.ts tests/facade.test.ts tests/scroll-spy.test.ts"
+		"test:unit": "vitest run tests/content.test.ts tests/facade.test.ts tests/piece-storage.test.ts tests/scroll-spy.test.ts"
 	},
 	"dependencies": {
 		"@ambiente/audio": "workspace:*",
 		"@ambiente/wasm": "workspace:*",
 		"@fontsource-variable/instrument-sans": "^5.3.0",
 		"@fontsource-variable/literata": "^5.3.0",
+		"dexie": "^4.4.5",
 		"satteri": "^0.10.5",
 		"satteri-expressive-code": "^0.1.24",
 		"solid-js": "^1.9.15",
@@ -30,6 +31,7 @@
 		"@iconify-json/ri": "^1.2.10",
 		"@playwright/test": "^1.62.1",
 		"@types/node": "^26.4.0",
+		"fake-indexeddb": "^6.2.5",
 		"jsdom": "^30.0.1",
 		"pagefind": "^1.5.2",
 		"unocss": "^66.8.1",

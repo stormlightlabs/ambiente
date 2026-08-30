@@ -11,6 +11,8 @@
 		--line: oklch(79% 0.025 109);
 		--white: oklch(98.5% 0.008 86);
 		--danger: oklch(54% 0.15 28);
+		--inverse-paper: oklch(95.5% 0.014 88);
+		--studio-surface: oklch(93% 0.012 100);
 		--font-display: 'Literata Variable', Georgia, serif;
 		--font-ui: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
 		--font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
@@ -19,5 +21,37 @@
 		--content-width: 86rem;
 		--radius-sm: 0.4rem;
 		--focus: 0 0 0 3px color-mix(in oklch, var(--gold) 75%, transparent);
+	}
+
+	:root[data-theme='dark'] {
+		--paper: oklch(18% 0.025 166);
+		--paper-deep: oklch(23% 0.03 166);
+		--ink: oklch(91% 0.018 91);
+		--ink-soft: oklch(73% 0.025 116);
+		--forest: oklch(69% 0.09 158);
+		--forest-dark: oklch(13% 0.025 166);
+		--moss: oklch(70% 0.1 139);
+		--gold: oklch(80% 0.1 83);
+		--line: oklch(36% 0.028 156);
+		--white: oklch(21% 0.027 166);
+		--danger: oklch(70% 0.14 28);
+		--studio-surface: oklch(16% 0.02 166);
+	}
+
+	@media (prefers-color-scheme: dark) {
+		:root:not([data-theme]) {
+			--paper: oklch(18% 0.025 166);
+			--paper-deep: oklch(23% 0.03 166);
+			--ink: oklch(91% 0.018 91);
+			--ink-soft: oklch(73% 0.025 116);
+			--forest: oklch(69% 0.09 158);
+			--forest-dark: oklch(13% 0.025 166);
+			--moss: oklch(70% 0.1 139);
+			--gold: oklch(80% 0.1 83);
+			--line: oklch(36% 0.028 156);
+			--white: oklch(21% 0.027 166);
+			--danger: oklch(70% 0.14 28);
+			--studio-surface: oklch(16% 0.02 166);
+		}
 	}
 }

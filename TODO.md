@@ -8,33 +8,6 @@ rationale live with the web documentation source under `apps/web/content/docs/`.
 
 ## M6 — Instrument Studio
 
-### Transport
-
-- [ ] play
-- [ ] stop
-- [ ] pause
-- [ ] seek
-- [ ] current position
-- [ ] tempo where relevant
-- [ ] seed display/control
-
-### Browser piece persistence
-
-- [ ] Define `PieceStorage` around canonical serialized `Document` values.
-- [ ] Add `BrowserPieceStorage` backed by Dexie/IndexedDB.
-- [ ] Keep the canonical serialized `Document` as the source of truth; index only
-      library metadata needed to browse pieces.
-- [ ] Create a new piece.
-- [ ] List and reopen local pieces.
-- [ ] Duplicate/delete local pieces.
-- [ ] Save changes with debounced autosave.
-- [ ] Import/export canonical piece files.
-- [ ] Preserve document schema/version metadata independently of Dexie schema
-      versions.
-- [ ] Request persistent browser storage where available and handle denial/quota
-      failures without corrupting saved pieces.
-- [ ] Test Dexie migrations separately from Ambiente document migrations.
-
 ### Material and voice UI
 
 - [ ] List voices.

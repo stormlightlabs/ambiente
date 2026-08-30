@@ -93,6 +93,26 @@ The following rules define the canonical representation:
 One canonical encoder writes project files. Other code does not call Serde
 directly for this job, so formatting and wire-format decisions stay in one place.
 
+## Browser library
+
+Studio stores local pieces in IndexedDB through `PieceStorage`. Each record keeps
+the complete canonical document plus the title, document ID, document schema
+version, and timestamps needed to display the library. The index is not another
+music model. Opening a piece sends its saved document through the Rust loader,
+and saving replaces the stored document atomically.
+
+Studio saves edits after a short idle delay and also offers an explicit save
+action. Import validates and canonicalizes a piece through the WASM facade before
+it enters the library. Export downloads that same canonical representation as an
+`.ambiente.json` file.
+
+The IndexedDB schema version and Ambiente's `schema_version` have separate jobs.
+Dexie migrations change browser indexes or record layout. Document migrations
+change the canonical music format in Rust. Tests run these migration paths
+separately. Studio asks the browser to protect local data from automatic eviction;
+when the browser declines, local pieces still work and Studio advises exporting
+important files. Quota failures leave the previous saved record unchanged.
+
 ## Schema migration
 
 Loading runs a deterministic, sequential migration before strict deserialization

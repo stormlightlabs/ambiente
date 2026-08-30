@@ -7,6 +7,7 @@ import '@fontsource-variable/literata';
 import 'virtual:uno.css';
 
 import { BrandMark } from '../src/components/BrandMark';
+import { ThemeToggle } from '../src/components/ThemeToggle';
 import '../src/styles/global.css';
 
 const navigation = [
@@ -32,26 +33,64 @@ export function Layout(props: { children?: JSX.Element }) {
 					<BrandMark class="wordmark__mark" />
 					<span>ambiente</span>
 				</a>
-				<nav class="site-nav" aria-label="Primary navigation">
-					{navigation.map((item) => {
-						const isActive = () => (item.href === '/' ? pathname() === item.href : pathname().startsWith(item.href));
-						return (
-							<a href={item.href} aria-current={isActive() ? 'page' : undefined}>
-								{item.label}
-							</a>
-						);
-					})}
-				</nav>
+				<div class="site-header__actions">
+					<nav class="site-nav" aria-label="Primary navigation">
+						{navigation.map((item) => {
+							const isActive = () => (item.href === '/' ? pathname() === item.href : pathname().startsWith(item.href));
+							return (
+								<a href={item.href} aria-current={isActive() ? 'page' : undefined}>
+									{item.label}
+								</a>
+							);
+						})}
+					</nav>
+					<ThemeToggle />
+				</div>
 			</header>
 			<main id="main-content" class="site-main">
 				{props.children}
 			</main>
 			<Show when={!isStudio()}>
-				<footer class="site-footer" data-pagefind-ignore>
-					<p>Compose repeatable music that keeps changing.</p>
-					<a href="https://github.com/stormlightlabs/ambiente">Source on GitHub</a>
-				</footer>
+				<SiteFooter />
 			</Show>
 		</div>
+	);
+}
+
+function SiteFooter() {
+	return (
+		<footer class="site-footer" data-pagefind-ignore>
+			<div class="site-footer__inner">
+				<div class="site-footer__intro">
+					<a class="site-footer__brand" href="/" aria-label="Ambiente home">
+						<BrandMark />
+						<span>ambiente</span>
+					</a>
+					<p>Compose repeatable music that keeps changing.</p>
+				</div>
+				<nav class="site-footer__links" aria-label="Footer navigation">
+					<section>
+						<h2>Ambiente</h2>
+						<a href="/docs">Documentation</a>
+						<a href="/studio">Studio</a>
+						<a href="https://github.com/stormlightlabs/ambiente">Source</a>
+					</section>
+					<section>
+						<h2>Stormlight Labs</h2>
+						<a href="https://stormlightlabs.org">Website</a>
+						<a href="https://github.com/stormlightlabs">GitHub</a>
+					</section>
+					<section>
+						<h2>Contact</h2>
+						<a href="https://bsky.app/profile/stormlightlabs.org">Bluesky</a>
+						<a href="mailto:info@stormlightlabs.org">Email</a>
+					</section>
+				</nav>
+			</div>
+			<div class="site-footer__meta">
+				<p>© {new Date().getFullYear()} Stormlight Labs</p>
+				<p>Built with ⚡ in Austin, Texas</p>
+			</div>
+		</footer>
 	);
 }

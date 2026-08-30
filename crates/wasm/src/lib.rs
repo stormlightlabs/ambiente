@@ -14,6 +14,29 @@ pub struct AmbienteWasm {
 
 #[wasm_bindgen]
 impl AmbienteWasm {
+    /// Creates an empty canonical document with fresh browser-safe identities.
+    ///
+    /// # Errors
+    ///
+    /// Returns a JavaScript error if the default tempo or serialization fails.
+    #[wasm_bindgen(js_name = newDocument)]
+    pub fn new_document(title: &str) -> Result<String, JsError> {
+        let tempo = Tempo::new(120, 1).map_err(|error| js_error(&error))?;
+        let document = Document::new(
+            DocumentId::new(),
+            Metadata::new().with_title(title),
+            Seed::default(),
+            Piece::new(
+                PieceId::new(),
+                Transport::new(
+                    tempo,
+                    Some(Meter::new(4, 4).map_err(|error| js_error(&error))?),
+                ),
+            ),
+        );
+        document.to_json().map_err(|error| js_error(&error))
+    }
+
     /// Loads the initial canonical document.
     ///
     /// # Errors
