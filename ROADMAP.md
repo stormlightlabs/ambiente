@@ -48,7 +48,11 @@ The main influences are:
 These are references, not products or APIs to reproduce. Ambiente does not claim
 to implement proprietary neurological techniques from listener products.
 
-Three views operate on the same document:
+The user-facing authored artifact is a `Piece`. `Document` remains the versioned
+serialization and migration envelope around a piece; persistence implementations
+store canonical documents without becoming a second musical model.
+
+Three views operate on the same piece:
 
 - **Listen** hides implementation detail and exposes only controls published by
   the composer.
@@ -185,7 +189,10 @@ Make Ambiente playable without requiring code.
 
 Deliver:
 
-- transport, seed control, and browser project persistence;
+- transport and seed control;
+- browser piece persistence through `PieceStorage`, backed by Dexie/IndexedDB;
+- a local piece library with canonical import/export and persistent-storage
+  handling;
 - material and voice browsing, sound selection, and an inspector;
 - a pointer, touch, and keyboard piano with phrase recording;
 - a Tone-Matrix-inspired editor over canonical `StepPattern` data;
@@ -193,7 +200,7 @@ Deliver:
 - documentation examples that use the same production WASM/audio runtime.
 
 Exit when a new user can choose a sound, play and record a phrase, create a
-matrix pattern, play both, save the project, reopen it, and hear the same system.
+matrix pattern, play both, save the piece, reopen it, and hear the same system.
 
 ### M7 — Three Studies
 
@@ -262,26 +269,29 @@ captured ranges, relevant performance operations, deterministic replay, improved
 MIDI export, WAV and justified FLAC export, and stems where the architecture
 permits.
 
-Exit when a musician can mark an interesting realization, reopen the project,
+Exit when a musician can mark an interesting realization, reopen the piece,
 and recreate or render it.
 
 ### M12 — Desktop
 
 Wrap the shared Studio in Tauri 2.
 
-Deliver native projects, open/save, recent files, drag and drop, file dialogs,
-native MIDI, OSC, audio settings, export integration, and macOS packaging.
+Deliver native piece files through `DesktopPieceStorage`, open/save/Save As,
+recent pieces, atomic filesystem writes, drag and drop, file dialogs, native MIDI,
+OSC, audio settings, export integration, and macOS packaging. Keep small app
+metadata such as recents and preferences outside canonical piece files.
 Platform-specific capabilities remain behind adapters.
 
-Exit when one document moves between browser and desktop without conversion or
-semantic differences, and both use the same Studio UI.
+Exit when the same piece moves between browser and desktop as the same canonical
+`Document`, without conversion or semantic differences, and both use the same
+Studio UI.
 
 ### M13 — MCP
 
 Expose semantic musical operations to agents.
 
 Deliver inspection, stable object references, document operations, variation,
-event queries, validation, and project loading/saving through an MCP server that
+event queries, validation, and piece loading/saving through an MCP server that
 reuses `ambiente-core`.
 
 Exit when an agent can make meaningful musical edits without generating source
@@ -318,7 +328,9 @@ StepPattern document operations
 Use the existing WASM facade and audio package for Studio and documentation
 consumers. Do not fill remaining browser gaps with a TypeScript composition
 engine. After matrix editing works, repeat the path with piano recording into a
-canonical `Phrase`.
+canonical `Phrase`. Then add `PieceStorage` and the Dexie/IndexedDB browser
+adapter so canonical documents can be closed and reopened before broadening the
+Studio surface.
 
 ## Non-goals for the reboot
 
@@ -342,9 +354,10 @@ default sounds must support credible music. Piano and matrix editors must offer
 an immediate entry point, while the same material can grow into deeper Create,
 Listen, and Perform workflows.
 
-The document and event semantics must remain portable across native Rust, WASM,
-browser, desktop, CLI, and later MCP. The engine stays small enough that musical
-choices matter more than framework machinery.
+The `Piece` semantics, `Document` format, and event semantics must remain
+portable across native Rust, WASM, browser, desktop, CLI, and later MCP. The
+engine stays small enough that musical choices matter more than framework
+machinery.
 
 ## References
 
@@ -363,4 +376,8 @@ choices matter more than framework machinery.
 - [`vite-plugin-satteri`](https://github.com/bruits/satteri/tree/main/packages/vite-plugin-satteri)
 - [`satteri-expressive-code`](https://github.com/bruits/satteri/tree/main/packages/satteri-expressive-code)
 - [Tauri 2, _Frontend Configuration_](https://v2.tauri.app/start/frontend/)
+- [Tauri 2, _File System_](https://v2.tauri.app/plugin/file-system/)
+- [Tauri 2, _Store_](https://v2.tauri.app/plugin/store/)
+- [Dexie.js documentation](https://dexie.org/docs/Dexie.js)
+- [MDN, `StorageManager.persist()`](https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist)
 - [Command Line Interface Guidelines](https://clig.dev/)

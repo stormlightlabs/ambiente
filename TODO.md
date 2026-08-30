@@ -18,13 +18,22 @@ rationale live with the web documentation source under `apps/web/content/docs/`.
 - [ ] tempo where relevant
 - [ ] seed display/control
 
-### Browser project persistence
+### Browser piece persistence
 
-- [ ] Create a new document.
-- [ ] Save locally.
-- [ ] Reopen locally.
-- [ ] Import/export canonical document files.
-- [ ] Preserve document schema/version metadata.
+- [ ] Define `PieceStorage` around canonical serialized `Document` values.
+- [ ] Add `BrowserPieceStorage` backed by Dexie/IndexedDB.
+- [ ] Keep the canonical serialized `Document` as the source of truth; index only
+      library metadata needed to browse pieces.
+- [ ] Create a new piece.
+- [ ] List and reopen local pieces.
+- [ ] Duplicate/delete local pieces.
+- [ ] Save changes with debounced autosave.
+- [ ] Import/export canonical piece files.
+- [ ] Preserve document schema/version metadata independently of Dexie schema
+      versions.
+- [ ] Request persistent browser storage where available and handle denial/quota
+      failures without corrupting saved pieces.
+- [ ] Test Dexie migrations separately from Ambiente document migrations.
 
 ### Material and voice UI
 
@@ -76,7 +85,7 @@ rationale live with the web documentation source under `apps/web/content/docs/`.
 
 A user with no code knowledge can:
 
-- [ ] create a project
+- [ ] create a piece
 - [ ] select a sound
 - [ ] play the piano
 - [ ] record a phrase
@@ -310,11 +319,15 @@ Do not begin syntax work until the underlying semantic operations are stable.
 - [ ] Add Tauri 2 application.
 - [ ] Reuse shared Solid Studio.
 - [ ] Reuse canonical WASM/document behavior.
-- [ ] Add native project filesystem adapter.
-- [ ] Open project.
-- [ ] Save project.
+- [ ] Add `DesktopPieceStorage` filesystem adapter.
+- [ ] Open canonical piece files.
+- [ ] Save piece.
 - [ ] Save As.
-- [ ] Recent projects.
+- [ ] Recent pieces.
+- [ ] Use canonical `.ambiente.json` piece files.
+- [ ] Write user piece files atomically.
+- [ ] Keep recent-file/preferences state in Tauri Store, outside canonical piece
+      files.
 - [ ] Drag/drop supported assets.
 - [ ] Native file dialogs.
 - [ ] Native MIDI adapter.
@@ -326,7 +339,8 @@ Do not begin syntax work until the underlying semantic operations are stable.
 
 ### Done when
 
-- [ ] The same Ambiente document opens interchangeably in web and desktop versions.
+- [ ] The same Ambiente piece opens interchangeably in web and desktop versions
+      through the same canonical `Document`.
 - [ ] The Studio UX is shared rather than reimplemented.
 - [ ] Desktop-specific capabilities live behind adapters.
 
@@ -336,12 +350,11 @@ Do not begin syntax work until the underlying semantic operations are stable.
 
 - [ ] Create `ambiente-mcp`.
 - [ ] Reuse `ambiente-core`.
-- [ ] Load/save canonical projects.
+- [ ] Load/save canonical pieces.
 - [ ] Reuse document operations and validation.
 
 ### Semantic tools
 
-- [ ] `get_document`
 - [ ] `get_piece`
 - [ ] `list_voices`
 - [ ] `get_voice`
