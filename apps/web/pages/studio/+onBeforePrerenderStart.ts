@@ -1,3 +1,3 @@
 export function onBeforePrerenderStart() {
-  return ["/studio"];
+	return ['/studio'];
 }

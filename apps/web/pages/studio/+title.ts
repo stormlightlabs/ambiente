@@ -1,1 +1,1 @@
-export default "Studio — Ambiente";
+export default 'Studio — Ambiente';

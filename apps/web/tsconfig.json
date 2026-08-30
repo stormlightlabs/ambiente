@@ -1,18 +1,11 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js",
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "skipLibCheck": true,
-    "types": ["node", "vite/client"]
-  },
-  "include": [
-    "pages",
-    "src",
-    "tests",
-    "vite.config.ts",
-    "uno.config.ts",
-    "playwright.config.ts"
-  ]
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"jsx": "preserve",
+		"jsxImportSource": "solid-js",
+		"lib": ["DOM", "DOM.Iterable", "ES2022"],
+		"skipLibCheck": true,
+		"types": ["node", "vite/client"]
+	},
+	"include": ["pages", "src", "tests", "vite.config.ts", "uno.config.ts", "playwright.config.ts"]
 }

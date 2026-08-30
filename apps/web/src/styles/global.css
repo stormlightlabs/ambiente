@@ -1,12 +1,12 @@
 @layer reset, tokens, base, components, pages;
 
-@import "./reset.css";
-@import "./tokens.css";
-@import "./base.css";
-@import "./components/site-shell.css";
-@import "./components/controls.css";
-@import "./components/landing.css";
-@import "./components/content-index.css";
-@import "./components/documentation.css";
-@import "./components/placeholder-page.css";
-@import "./components/studio.css";
+@import './reset.css';
+@import './tokens.css';
+@import './base.css';
+@import './components/site-shell.css';
+@import './components/controls.css';
+@import './components/landing.css';
+@import './components/content-index.css';
+@import './components/documentation.css';
+@import './components/placeholder-page.css';
+@import './components/studio.css';

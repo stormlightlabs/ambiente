@@ -1,27 +1,27 @@
 @layer reset {
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-  html {
-    scroll-behavior: smooth;
-  }
-  body {
-    margin: 0;
-  }
-  button,
-  input,
-  textarea,
-  select {
-    font: inherit;
-  }
-  img,
-  svg {
-    display: block;
-    max-width: 100%;
-  }
-  a {
-    color: inherit;
-  }
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+	html {
+		scroll-behavior: smooth;
+	}
+	body {
+		margin: 0;
+	}
+	button,
+	input,
+	textarea,
+	select {
+		font: inherit;
+	}
+	img,
+	svg {
+		display: block;
+		max-width: 100%;
+	}
+	a {
+		color: inherit;
+	}
 }

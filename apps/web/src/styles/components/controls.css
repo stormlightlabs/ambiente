@@ -1,54 +1,54 @@
 @layer components {
-  .kicker {
-    color: var(--ink-soft);
-    font-size: 0.72rem;
-    font-weight: 750;
-    letter-spacing: 0.12em;
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-  }
-  .button {
-    align-items: center;
-    border: 1px solid var(--forest);
-    border-radius: var(--radius-sm);
-    display: inline-flex;
-    font-size: 0.84rem;
-    font-weight: 720;
-    justify-content: center;
-    min-height: 2.9rem;
-    padding: 0.7rem 1.2rem;
-    text-decoration: none;
-    transition:
-      background-color 150ms ease,
-      color 150ms ease,
-      transform 150ms ease;
-  }
-  .button--primary {
-    background: var(--forest);
-    color: var(--white);
-  }
-  .button--primary:hover {
-    background: var(--forest-dark);
-    transform: translateY(-1px);
-  }
-  .button--primary:active {
-    transform: translateY(0);
-  }
-  .text-link {
-    font-size: 0.84rem;
-    font-weight: 720;
-    text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
-    text-underline-offset: 0.3em;
-  }
-  .text-link .icon {
-    font-size: 1rem;
-    margin-left: 0.25rem;
-    transition: transform 150ms ease;
-  }
-  .text-link:hover .icon {
-    transform: translateX(0.2rem);
-  }
-  .text-link--light {
-    color: var(--paper);
-  }
+	.kicker {
+		color: var(--ink-soft);
+		font-size: 0.72rem;
+		font-weight: 750;
+		letter-spacing: 0.12em;
+		margin-bottom: 1rem;
+		text-transform: uppercase;
+	}
+	.button {
+		align-items: center;
+		border: 1px solid var(--forest);
+		border-radius: var(--radius-sm);
+		display: inline-flex;
+		font-size: 0.84rem;
+		font-weight: 720;
+		justify-content: center;
+		min-height: 2.9rem;
+		padding: 0.7rem 1.2rem;
+		text-decoration: none;
+		transition:
+			background-color 150ms ease,
+			color 150ms ease,
+			transform 150ms ease;
+	}
+	.button--primary {
+		background: var(--forest);
+		color: var(--white);
+	}
+	.button--primary:hover {
+		background: var(--forest-dark);
+		transform: translateY(-1px);
+	}
+	.button--primary:active {
+		transform: translateY(0);
+	}
+	.text-link {
+		font-size: 0.84rem;
+		font-weight: 720;
+		text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
+		text-underline-offset: 0.3em;
+	}
+	.text-link .icon {
+		font-size: 1rem;
+		margin-left: 0.25rem;
+		transition: transform 150ms ease;
+	}
+	.text-link:hover .icon {
+		transform: translateX(0.2rem);
+	}
+	.text-link--light {
+		color: var(--paper);
+	}
 }

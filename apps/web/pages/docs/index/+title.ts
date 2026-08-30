@@ -1,1 +1,1 @@
-export default "Documentation — Ambiente";
+export default 'Documentation — Ambiente';

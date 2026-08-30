@@ -1,1 +1,1 @@
-export default "Examples — Ambiente";
+export default 'Examples — Ambiente';

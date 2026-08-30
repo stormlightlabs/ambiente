@@ -34,9 +34,12 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   embedded in prerendered MDX.
 - Added the narrow TypeScript application facade and a read-only shell fixture
   that leaves document semantics and event generation in Rust.
+- Added Pagefind indexing and in-page search for the prerendered documentation.
 
 ### Changed
 
+- Matched the frontend Prettier rules used by related Stormlight Labs projects
+  and expanded ESLint coverage for the Vike and Solid application.
 - Updated the web shell to use Literata and Instrument Sans variable fonts,
   UnoCSS-backed Bootstrap and Remix icons, and clearer public and placeholder
   copy.

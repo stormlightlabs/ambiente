@@ -57,12 +57,7 @@ Standalone reboot projects use the `.ambiente.json` extension. Each document
 starts with a format sentinel and an integer schema version:
 
 ```json
-{
-  "format": "ambiente",
-  "schema_version": 2,
-  "id": "9f8d76b0-0dd1-4fea-9ad9-43ae8f94f860",
-  "piece": {}
-}
+{ "format": "ambiente", "schema_version": 2, "id": "9f8d76b0-0dd1-4fea-9ad9-43ae8f94f860", "piece": {} }
 ```
 
 JSON works in browsers, has mature Serde support, remains readable in source

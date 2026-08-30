@@ -166,6 +166,9 @@ dist
 **/playwright-report/
 **/test-results/
 
+# Generated Pagefind development index
+apps/web/public/pagefind/
+
 # Vite files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*

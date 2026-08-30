@@ -98,10 +98,7 @@ wall-clock time and never contains a Unix timestamp.
 The document stores rational values in an Ambiente-owned string format:
 
 ```json
-{
-  "onset": "3/2",
-  "duration": "1/4"
-}
+{ "onset": "3/2", "duration": "1/4" }
 ```
 
 Fractions are reduced, denominators are positive, and whole values retain their

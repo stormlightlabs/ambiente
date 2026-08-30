@@ -1,23 +1,23 @@
 @layer tokens {
-  :root {
-    --paper: oklch(95.5% 0.014 88);
-    --paper-deep: oklch(91.5% 0.025 86);
-    --ink: oklch(25% 0.035 167);
-    --ink-soft: oklch(43% 0.03 166);
-    --forest: oklch(31% 0.065 166);
-    --forest-dark: oklch(23% 0.05 166);
-    --moss: oklch(60% 0.09 139);
-    --gold: oklch(78% 0.11 83);
-    --line: oklch(79% 0.025 109);
-    --white: oklch(98.5% 0.008 86);
-    --danger: oklch(54% 0.15 28);
-    --font-display: "Literata Variable", Georgia, serif;
-    --font-ui: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
-    --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-    --page-pad: clamp(1rem, 3.5vw, 3.5rem);
-    --header-height: 4.5rem;
-    --content-width: 86rem;
-    --radius-sm: 0.4rem;
-    --focus: 0 0 0 3px color-mix(in oklch, var(--gold) 75%, transparent);
-  }
+	:root {
+		--paper: oklch(95.5% 0.014 88);
+		--paper-deep: oklch(91.5% 0.025 86);
+		--ink: oklch(25% 0.035 167);
+		--ink-soft: oklch(43% 0.03 166);
+		--forest: oklch(31% 0.065 166);
+		--forest-dark: oklch(23% 0.05 166);
+		--moss: oklch(60% 0.09 139);
+		--gold: oklch(78% 0.11 83);
+		--line: oklch(79% 0.025 109);
+		--white: oklch(98.5% 0.008 86);
+		--danger: oklch(54% 0.15 28);
+		--font-display: 'Literata Variable', Georgia, serif;
+		--font-ui: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
+		--font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+		--page-pad: clamp(1rem, 3.5vw, 3.5rem);
+		--header-height: 4.5rem;
+		--content-width: 86rem;
+		--radius-sm: 0.4rem;
+		--focus: 0 0 0 3px color-mix(in oklch, var(--gold) 75%, transparent);
+	}
 }

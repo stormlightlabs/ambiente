@@ -1,23 +1,23 @@
 @layer pages {
-  .placeholder-page {
-    margin: auto;
-    max-width: var(--content-width);
-    min-height: calc(100svh - var(--header-height));
-    padding: clamp(5rem, 10vw, 10rem) var(--page-pad);
-  }
-  .placeholder-page h1 {
-    font-size: clamp(3rem, 6vw, 6rem);
-  }
-  .placeholder-page > p:not(.kicker) {
-    color: var(--ink-soft);
-    font-size: 1.1rem;
-    max-width: 42rem;
-  }
-  .placeholder-page .button {
-    margin-top: 1.5rem;
-  }
+	.placeholder-page {
+		margin: auto;
+		max-width: var(--content-width);
+		min-height: calc(100svh - var(--header-height));
+		padding: clamp(5rem, 10vw, 10rem) var(--page-pad);
+	}
+	.placeholder-page h1 {
+		font-size: clamp(3rem, 6vw, 6rem);
+	}
+	.placeholder-page > p:not(.kicker) {
+		color: var(--ink-soft);
+		font-size: 1.1rem;
+		max-width: 42rem;
+	}
+	.placeholder-page .button {
+		margin-top: 1.5rem;
+	}
 
-  .not-found {
-    padding: var(--page-pad);
-  }
+	.not-found {
+		padding: var(--page-pad);
+	}
 }

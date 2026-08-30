@@ -1,1 +1,1 @@
-export default "Ambiente — Generative music with composer control";
+export default 'Ambiente — Generative music with composer control';
