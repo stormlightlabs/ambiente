@@ -52,7 +52,7 @@ The user-facing authored artifact is a `Piece`. `Document` remains the versioned
 serialization and migration envelope around a piece; persistence implementations
 store canonical documents without becoming a second musical model.
 
-Three views operate on the same piece:
+Five connected surfaces operate on the same piece:
 
 - **Listen** hides implementation detail and exposes only controls published by
   the composer.
@@ -60,6 +60,22 @@ Three views operate on the same piece:
   editors.
 - **Perform** provides scenes, macros, mappings, seed changes, live replacement,
   capture, and focused visualization.
+- **Learn** teaches sound, process, ambient-music history, and theory by letting
+  readers manipulate production pieces and primitives.
+- **Inspect** explains the material, processes, events, and scheduler state behind
+  what the user hears without becoming a second editing model.
+
+The product expands by musical role and demonstrated workflow. Sounds remain
+stable semantic references rather than serialized Tone.js graphs. Browser audio
+maps those references and normalized controls to curated implementations. Assets
+use stable project or content references rather than browser URLs or native file
+handles. MIDI, notation, visualization, and analysis remain adapters or read-only
+projections over canonical Rust state.
+
+New process, theory, sound, and material abstractions must first serve a named
+piece, lesson, performance, listening, or interoperability workflow. Ambiente
+will not accumulate speculative algorithms, effect graphs, genre vectors, or a
+persisted DAW `Track` hierarchy.
 
 ## Sequence
 
@@ -229,9 +245,22 @@ constraints, and composition workflow instead of adding features.
 Make completed pieces useful as listener-facing music.
 
 Deliver a dedicated Listen view, first-party piece browser, endless playback,
-seed exploration, session controls, process artwork, composer-defined macros,
-and optional intent presets such as Focus, Create, or Rest. Presets are authored
-macro and scene values, not global neuroscience claims.
+seed exploration, session controls, event-driven process artwork,
+composer-defined macros, and optional intent presets such as Focus, Create, or
+Rest. Presets are authored macro and scene values, not global neuroscience
+claims.
+
+Improve the semantic sound families as the Studies require: soft piano,
+resonant mallets, drones, plucks, pads, air/noise textures, restrained percussion,
+and later sample-backed granular or vocal-like textures. Reusable controls may
+cover envelope, brightness, motion, space, delay, width, warmth, and
+sample-specific grain or formant behavior. Complex effect chains stay inside
+curated sound implementations unless several pieces need the same semantic
+control.
+
+The Studies become the first interactive learning pieces: Phase teaches
+independent clocks and repetition, Drone teaches sustained sound and silence,
+and Pattern teaches transformation, probability, pulse, and mutation.
 
 Exit when one study works credibly as an extended soundtrack for work, reading,
 creative activity, or rest.
@@ -240,10 +269,26 @@ creative activity, or rest.
 
 Expose process composition graphically.
 
-Deliver transformation chains, independent-cycle visualization, seed browsing,
-macros, scenes, continuous signals, and only the additional pattern primitives
-that real pieces require. Keep the graphical model focused on musical
-relationships rather than an unconstrained node graph.
+Deliver transformation chains, independent-cycle visualization, seed A/B
+comparison, macros, scenes, continuous signals, deterministic humanize and
+swing, and only the additional pattern primitives that real pieces require. Keep
+the graphical model focused on musical relationships rather than an
+unconstrained node graph.
+
+Scenes establish declared voice, material, process, and macro state. Transitions
+may be immediate, quantized, or morphed over metric or absolute time. Continuous
+parameters interpolate only where semantics are defined; discrete values switch
+at a declared boundary.
+
+Add **Materialize** or **Freeze to phrase** as an atomic document operation:
+query a source over a span and seed, preserve note onset, duration, pitch, and
+velocity, and create editable authored material with lightweight provenance.
+Capture preserves performance state; materialization creates source material.
+
+Read-only analysis may report pitch sets, range, intervals, density, overlap,
+likely scales or modes, and event provenance. It must report ambiguity and never
+silently rewrite a piece. Operation history covers canonical document mutations,
+not transport, audio readiness, or transient UI state.
 
 Exit when a user can turn a recorded phrase or step pattern into a nontrivial,
 evolving piece without code.
@@ -266,8 +311,19 @@ Preserve and render emergent performances.
 
 Deliver named captures, seed and state snapshots, scene and macro state,
 captured ranges, relevant performance operations, deterministic replay, improved
-MIDI export, WAV and justified FLAC export, and stems where the architecture
-permits.
+MIDI export, WAV and justified FLAC export, stems where the architecture permits,
+and deterministic SVG or PNG process artwork.
+
+Add constant-tempo Standard MIDI File import through `midly`, mapping logical
+tracks and channels to voices without adding a canonical `Track`. Preserve
+performed timing and velocity; diagnose unsupported tempo maps, controllers, and
+events rather than silently dropping them. Web MIDI remains progressive
+enhancement for performance, recording, mappings, and external synth output.
+
+When a first-party piece establishes the need, add stable `AssetRef` and
+`AssetStore` capabilities plus small sample-backed material and source-event
+semantics. Canonical documents store asset references and musical intent, while
+browser and desktop adapters own blobs and files.
 
 Exit when a musician can mark an interesting realization, reopen the piece,
 and recreate or render it.
@@ -306,20 +362,43 @@ device, or production limitation.
 Do not build a second sound engine solely because the Rust ecosystem makes it
 interesting.
 
-## Next implementation slice
+## Expansion sequence
 
-Instrument Studio now completes the first no-code composition workflow: Phrase,
-Matrix, and System views edit and play the same canonical document, local pieces
-survive reopen, and focused guides use the production WASM and audio runtime.
+Instrument Studio completes the first no-code composition workflow. Phase and
+Drone cover independent clocks, exact long-form timing, sustained events, sparse
+sections, restrained stochastic changes, and slow sound modulation. The next
+slice remains Pattern: use existing Phrase or StepPattern material to test
+transformation, deterministic probability, rhythm, and live mutation before
+adding unrelated operators.
 
-Phase and Drone now cover independent noncommensurate clocks, exact long-form
-event timing, sustained events, sparse sections, restrained stochastic changes,
-and slow sound modulation. The authored documents live under `studies/` and can
-be imported into Studio or inspected through the CLI.
+After all Three Studies pass the quality gate:
 
-The next slice is the Pattern study. Use Phrase or StepPattern material to test
-transformations, deterministic probability, stronger rhythmic behavior, and
-live mutation without adding unrelated pattern operators.
+1. Improve listener-quality sound and event-driven visual identity, then ship
+   Listen and turn the Studies into the first interactive learning pages.
+2. Deepen Create with signals, scenes, macros, explicit transitions,
+   deterministic feel, seed A/B comparison, analysis, and materialization.
+3. Add constant-tempo MIDI import, Web MIDI, then asset and sample-backed
+   workflows as concrete pieces require them.
+4. Grow Learn lesson by lesson: theory spelling and harmony, VexFlow notation,
+   ambient history, and composition-linked ear training.
+5. Add Perform mappings and morphing, the textual frontend, Capture, production
+   export, and desktop integration after their underlying semantics stabilize.
+
+Learn uses the same piano, matrix, Rust/WASM theory, and audio runtime as Studio.
+Its default loop is hear, see, change, predict, hear again, then use the result in
+a piece. Ambient history follows a branching map across listening context, tape
+and studio practice, process and phase, dub, ambient's explicit formulation,
+Deep Listening, Japanese environmental music, ambient electronic descendants,
+drone, sound art, and contemporary practice. Each chapter combines sourced
+history with an original micro-study and an **Open in Studio** action; Ambiente
+does not ship imitations of named artists.
+
+Theory grows only with lessons: written pitch spelling, diatonic intervals,
+scale degrees, chords, inversion, voicing, voice leading, and later harmonic
+function. Written spelling remains distinct from equal-tempered sounding pitch.
+VexFlow may render small teaching examples, but notation is not the canonical
+model. External curricula may guide coverage; copied CC BY-SA material requires
+intentional attribution and share-alike compliance.
 
 ## Non-goals for the reboot
 
@@ -369,4 +448,9 @@ machinery.
 - [Tauri 2, _Store_](https://v2.tauri.app/plugin/store/)
 - [Dexie.js documentation](https://dexie.org/docs/Dexie.js)
 - [MDN, `StorageManager.persist()`](https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist)
+- [MDN, Web MIDI API](https://developer.mozilla.org/en-US/docs/Web/API/Web_MIDI_API)
+- [Tone.js `GrainPlayer`](https://tonejs.github.io/docs/15.0.4/classes/GrainPlayer.html)
+- [`midly`](https://docs.rs/midly/)
+- [VexFlow](https://www.vexflow.com/)
+- [Open Music Theory](https://viva.pressbooks.pub/openmusictheory/)
 - [Command Line Interface Guidelines](https://clig.dev/)
