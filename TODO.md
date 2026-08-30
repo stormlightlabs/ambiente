@@ -210,44 +210,44 @@ pattern.query(time_span, seed) -> events
 
 ### CLI foundation
 
-- [ ] Use `clap` for argument parsing, subcommands, help, and shell completions.
-- [ ] Use `owo-colors` for terminal styling.
-- [ ] Implement `ambiente new`.
-- [ ] Implement `ambiente check`.
-- [ ] Implement `ambiente inspect`.
-- [ ] Implement `ambiente events`.
-- [ ] Implement initial `ambiente export --midi`.
-- [ ] Show concise help when a required command or argument is missing.
-- [ ] Support `-h`, `--help`, and help for each subcommand.
-- [ ] Include common examples and a link to the web documentation in help output.
+- [x] Use `clap` for argument parsing, subcommands, help, and shell completions.
+- [x] Use `owo-colors` for terminal styling.
+- [x] Implement `ambiente new`.
+- [x] Implement `ambiente check`.
+- [x] Implement `ambiente inspect`.
+- [x] Implement `ambiente events`.
+- [x] Implement initial `ambiente export --midi`.
+- [x] Show concise help when a required command or argument is missing.
+- [x] Support `-h`, `--help`, and help for each subcommand.
+- [x] Include common examples and a link to the web documentation in help output.
 
 ### Output and automation
 
-- [ ] Write primary and machine-readable output to `stdout`.
-- [ ] Write diagnostics and progress messages to `stderr`.
-- [ ] Return zero on success and meaningful non-zero exit codes on failure.
-- [ ] Default to concise, human-readable output.
-- [ ] Add `--json` for structured output where it is useful.
-- [ ] Add `--plain` when human-oriented formatting would break line-based tools.
-- [ ] Add `--quiet` to suppress non-essential output where commands otherwise report
+- [x] Write primary and machine-readable output to `stdout`.
+- [x] Write diagnostics and progress messages to `stderr`.
+- [x] Return zero on success and meaningful non-zero exit codes on failure.
+- [x] Default to concise, human-readable output.
+- [x] Add `--json` for structured output where it is useful.
+- [x] Add `--plain` when human-oriented formatting would break line-based tools.
+- [x] Add `--quiet` to suppress non-essential output where commands otherwise report
       progress or success.
-- [ ] Never require a prompt; accept all required input through arguments or flags.
-- [ ] Prompt only when `stdin` is a TTY, and disable prompts with `--no-input`.
+- [x] Never require a prompt; accept all required input through arguments or flags.
+- [x] Prompt only when `stdin` is a TTY, and disable prompts with `--no-input`.
 
 ### Color and terminal behavior
 
-- [ ] Use color sparingly and never as the only way to convey meaning.
-- [ ] Disable color per stream when that stream is not a TTY.
-- [ ] Honor `NO_COLOR`, `TERM=dumb`, and `--no-color`.
-- [ ] Do not show animations when `stdout` is not a TTY.
+- [x] Use color sparingly and never as the only way to convey meaning.
+- [x] Disable color per stream when that stream is not a TTY.
+- [x] Honor `NO_COLOR`, `TERM=dumb`, and `--no-color`.
+- [x] Do not show animations when `stdout` is not a TTY.
 
 ### `check`
 
-- [ ] Validate references.
-- [ ] Validate time and range values.
-- [ ] Validate malformed patterns.
-- [ ] Group related validation failures under concise explanations.
-- [ ] Explain how to correct expected errors without printing internal traces.
+- [x] Validate references.
+- [x] Validate time and range values.
+- [x] Validate malformed patterns.
+- [x] Group related validation failures under concise explanations.
+- [x] Explain how to correct expected errors without printing internal traces.
 
 ### `inspect`
 

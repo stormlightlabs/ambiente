@@ -1710,7 +1710,9 @@ fn validate_material(material: &Material, diagnostics: &mut Vec<Diagnostic>) {
                             Some("time".to_owned()),
                         )),
                         "note onset must be non-negative and duration must be positive",
-                        None,
+                        Some(
+                            "use a non-negative onset and a duration greater than zero".to_owned(),
+                        ),
                     ));
                 }
                 if !(1..=127).contains(&note.velocity) {
@@ -1721,7 +1723,7 @@ fn validate_material(material: &Material, diagnostics: &mut Vec<Diagnostic>) {
                             Some("velocity".to_owned()),
                         )),
                         "note velocity must be between 1 and 127",
-                        None,
+                        Some("set velocity to an integer from 1 through 127".to_owned()),
                     ));
                 }
             }
@@ -1732,7 +1734,10 @@ fn validate_material(material: &Material, diagnostics: &mut Vec<Diagnostic>) {
                     DiagnosticCode::PatternInvalid,
                     location("pattern"),
                     "step pattern requires steps, rows, and a positive subdivision",
-                    None,
+                    Some(
+                        "add a pitch row and step, then use a subdivision greater than zero"
+                            .to_owned(),
+                    ),
                 ));
             }
             for row in &pattern.rows {
@@ -1741,7 +1746,9 @@ fn validate_material(material: &Material, diagnostics: &mut Vec<Diagnostic>) {
                         DiagnosticCode::PatternInvalid,
                         location("rows"),
                         "every step-pattern row must match the declared step count",
-                        None,
+                        Some(
+                            "make each row contain exactly the declared number of cells".to_owned(),
+                        ),
                     ));
                 }
             }
@@ -1816,6 +1823,17 @@ fn validate_voice(
         ));
     }
     if let Some(pattern) = &voice.settings.pattern {
+        let mut structure_errors = Vec::new();
+        pattern.validate_structure(&mut structure_errors);
+        for message in structure_errors {
+            diagnostics.push(Diagnostic::error(
+                DiagnosticCode::PatternInvalid,
+                location("pattern"),
+                message,
+                Some("add a valid child pattern or remove the empty operator".to_owned()),
+            ));
+        }
+
         let mut material_ids = Vec::new();
         pattern.material_ids(&mut material_ids);
         material_ids.sort_unstable();
@@ -1952,6 +1970,42 @@ mod tests {
             Document::from_json(&unknown),
             Err(LoadError::Json(_))
         ));
+    }
+
+    #[test]
+    fn loading_reports_malformed_pattern_trees() {
+        let mut document = fixture();
+        let voice_id = id("826b8913-4c23-43e1-b150-594737909a58");
+        document
+            .apply(Operation::AddVoice(Voice::new(
+                voice_id,
+                VoiceSettings::new("Piano", SoundRef::new("felt-piano").unwrap())
+                    .with_pattern(Pattern::sequence([])),
+            )))
+            .unwrap_err();
+
+        let mut value: serde_json::Value =
+            serde_json::from_str(&fixture().to_json().unwrap()).unwrap();
+        value["piece"]["voices"] = serde_json::json!({
+            voice_id.to_string(): {
+                "id": voice_id,
+                "settings": {
+                    "name": "Piano",
+                    "pattern": { "type": "sequence", "patterns": [] },
+                    "sound": "felt-piano",
+                    "enabled": true,
+                    "parameters": {}
+                }
+            }
+        });
+        let error = Document::from_json(&serde_json::to_string(&value).unwrap()).unwrap_err();
+        let LoadError::InvalidDocument(diagnostics) = error else {
+            panic!("expected semantic validation failure");
+        };
+        assert!(diagnostics.iter().any(|diagnostic| {
+            diagnostic.code() == DiagnosticCode::PatternInvalid
+                && diagnostic.message().contains("at least one child")
+        }));
     }
 
     #[test]

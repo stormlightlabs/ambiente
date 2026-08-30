@@ -306,6 +306,18 @@ impl AbsoluteTime {
         Ok(Self(value))
     }
 
+    /// Returns the reduced numerator.
+    #[must_use]
+    pub fn numerator(self) -> i64 {
+        *self.0.0.numer()
+    }
+
+    /// Returns the positive denominator.
+    #[must_use]
+    pub fn denominator(self) -> i64 {
+        *self.0.0.denom()
+    }
+
     /// Returns the exact elapsed duration from the origin.
     #[must_use]
     pub fn elapsed(self) -> AbsoluteDuration {
@@ -340,6 +352,18 @@ impl AbsoluteDuration {
             ));
         }
         Ok(Self(value))
+    }
+
+    /// Returns the reduced numerator.
+    #[must_use]
+    pub fn numerator(self) -> i64 {
+        *self.0.0.numer()
+    }
+
+    /// Returns the positive denominator.
+    #[must_use]
+    pub fn denominator(self) -> i64 {
+        *self.0.0.denom()
     }
 
     /// Reports whether this duration is zero.

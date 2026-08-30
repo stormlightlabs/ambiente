@@ -654,6 +654,48 @@ impl Pattern {
             }
         }
     }
+
+    /// Collects structural errors that constructors cannot prevent after deserialization.
+    pub(crate) fn validate_structure(&self, errors: &mut Vec<&'static str>) {
+        match self {
+            Self::Material { .. } => {}
+            Self::Sequence { patterns } | Self::Stack { patterns } => {
+                if patterns.is_empty() {
+                    errors.push("sequence and stack patterns must contain at least one child");
+                }
+                for pattern in patterns {
+                    pattern.validate_structure(errors);
+                }
+            }
+            Self::Repeat { pattern, count } => {
+                if *count == Some(0) {
+                    errors.push("finite repeat patterns must repeat at least once");
+                }
+                pattern.validate_structure(errors);
+            }
+            Self::Transform { pattern, .. }
+            | Self::Omit { pattern, .. }
+            | Self::Sometimes { pattern, .. } => pattern.validate_structure(errors),
+            Self::Choose { patterns, .. } => {
+                if patterns.is_empty() {
+                    errors.push("choice patterns must contain at least one branch");
+                }
+                for pattern in patterns {
+                    pattern.validate_structure(errors);
+                }
+            }
+            Self::WeightedChoose { patterns, .. } => {
+                if patterns.is_empty() {
+                    errors.push("weighted choice patterns must contain at least one branch");
+                } else if !patterns.iter().any(|pattern| pattern.weight > 0) {
+                    errors.push("weighted choice patterns require a positive branch weight");
+                }
+                for pattern in patterns {
+                    pattern.pattern.validate_structure(errors);
+                }
+            }
+        }
+    }
 }
 
 /// A backend-independent event target.
