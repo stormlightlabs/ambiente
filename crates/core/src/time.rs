@@ -73,6 +73,41 @@ impl Rational {
     fn is_positive(self) -> bool {
         *self.0.numer() > 0
     }
+
+    fn quantize_nonnegative(self, subdivision: Self) -> Result<Self, TimeError> {
+        if self.is_negative() || !subdivision.is_positive() {
+            return Err(TimeError::OutOfRange(
+                "quantized values must be non-negative and subdivision must be positive",
+            ));
+        }
+
+        let value_numerator = i128::from(*self.0.numer());
+        let value_denominator = i128::from(*self.0.denom());
+        let grid_numerator = i128::from(*subdivision.0.numer());
+        let grid_denominator = i128::from(*subdivision.0.denom());
+        let units_numerator = value_numerator
+            .checked_mul(grid_denominator)
+            .ok_or(TimeError::Overflow)?;
+        let units_denominator = value_denominator
+            .checked_mul(grid_numerator)
+            .ok_or(TimeError::Overflow)?;
+        let rounded_units = units_numerator
+            .checked_add(units_denominator / 2)
+            .ok_or(TimeError::Overflow)?
+            / units_denominator;
+
+        let divisor = i128::try_from(gcd(
+            rounded_units.unsigned_abs(),
+            grid_denominator.unsigned_abs(),
+        ))
+        .map_err(|_| TimeError::Overflow)?;
+        Self::from_i128(
+            (rounded_units / divisor)
+                .checked_mul(grid_numerator)
+                .ok_or(TimeError::Overflow)?,
+            grid_denominator / divisor,
+        )
+    }
 }
 
 impl fmt::Display for Rational {
@@ -197,6 +232,17 @@ rational_value!(
     "An exact cycle position or count with no implied beat length."
 );
 
+impl Beats {
+    /// Rounds a non-negative beat value to the nearest subdivision, with ties upward.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TimeError`] for a negative value, non-positive subdivision, or overflow.
+    pub fn quantize(self, subdivision: Self) -> Result<Self, TimeError> {
+        self.0.quantize_nonnegative(subdivision.0).map(Self)
+    }
+}
+
 impl Cycles {
     /// Calculates cycle position for a beat clock with an explicit cycle length.
     ///
@@ -234,6 +280,15 @@ impl AbsoluteTime {
     pub fn elapsed(self) -> AbsoluteDuration {
         AbsoluteDuration(self.0)
     }
+
+    /// Rounds this position to the nearest absolute subdivision, with ties upward.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TimeError`] for a zero subdivision or arithmetic overflow.
+    pub fn quantize(self, subdivision: AbsoluteDuration) -> Result<Self, TimeError> {
+        self.0.quantize_nonnegative(subdivision.0).map(Self)
+    }
 }
 
 /// A non-negative exact duration measured in seconds.
@@ -260,6 +315,15 @@ impl AbsoluteDuration {
     #[must_use]
     pub fn is_zero(self) -> bool {
         !self.0.is_positive()
+    }
+
+    /// Rounds this duration to the nearest absolute subdivision, with ties upward.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TimeError`] for a zero subdivision or arithmetic overflow.
+    pub fn quantize(self, subdivision: Self) -> Result<Self, TimeError> {
+        self.0.quantize_nonnegative(subdivision.0).map(Self)
     }
 }
 
@@ -501,6 +565,32 @@ mod tests {
         assert!("6/4".parse::<Beats>().is_err());
         assert!("1/-2".parse::<Beats>().is_err());
         assert!("1".parse::<Beats>().is_err());
+    }
+
+    #[test]
+    fn quantization_rounds_to_the_nearest_exact_grid() {
+        assert_eq!(
+            Beats::new(1, 8)
+                .unwrap()
+                .quantize(Beats::new(1, 4).unwrap())
+                .unwrap()
+                .to_string(),
+            "1/4"
+        );
+        assert_eq!(
+            AbsoluteTime::new(13, 100)
+                .unwrap()
+                .quantize(AbsoluteDuration::new(1, 10).unwrap())
+                .unwrap()
+                .to_string(),
+            "1/10"
+        );
+        assert!(
+            Beats::new(1, 1)
+                .unwrap()
+                .quantize(Beats::new(0, 1).unwrap())
+                .is_err()
+        );
     }
 
     #[test]

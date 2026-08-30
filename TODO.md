@@ -99,52 +99,52 @@ Defer sophisticated harmonic analysis and chord-generation APIs.
 
 ### Materials
 
-- [ ] Implement `Material` as the persisted sum type for authored source material.
-- [ ] Give every material a stable `MaterialId`.
-- [ ] Store materials in `Piece` independently from voices.
-- [ ] Support stable references from voices and later patterns to materials.
-- [ ] Define explicit serialized tags for each material type.
-- [ ] Implement add/remove/update material operations.
-- [ ] Validate duplicate IDs, broken references, and invalid material payloads.
-- [ ] Keep materials independent of sounds, Tone.js, MIDI, and UI state.
-- [ ] Initially support:
-  - [ ] `Phrase`
-  - [ ] `StepPattern`
-  - [ ] `PitchSet`
-- [ ] Defer `SampleSet` until sample playback provides a concrete requirement.
+- [x] Implement `Material` as the persisted sum type for authored source material.
+- [x] Give every material a stable `MaterialId`.
+- [x] Store materials in `Piece` independently from voices.
+- [x] Support stable references from voices and later patterns to materials.
+- [x] Define explicit serialized tags for each material type.
+- [x] Implement add/remove/update material operations.
+- [x] Validate duplicate IDs, broken references, and invalid material payloads.
+- [x] Keep materials independent of sounds, Tone.js, MIDI, and UI state.
+- [x] Initially support:
+  - [x] `Phrase`
+  - [x] `StepPattern`
+  - [x] `PitchSet`
+- [x] Defer `SampleSet` until sample playback provides a concrete requirement.
 
 ### Phrase
 
-- [ ] Implement `Phrase`.
-- [ ] Store arbitrary note events over time.
-- [ ] Support note pitch, onset, duration, and velocity.
-- [ ] Support non-quantized recording data.
-- [ ] Add optional quantization as a transformation/edit operation.
+- [x] Implement `Phrase`.
+- [x] Store arbitrary note events over time.
+- [x] Support note pitch, onset, duration, and velocity.
+- [x] Support non-quantized recording data.
+- [x] Add optional quantization as a transformation/edit operation.
 
 ### StepPattern
 
-- [ ] Implement `StepPattern`.
-- [ ] Support configurable number of steps.
-- [ ] Support configurable subdivision.
-- [ ] Support pitch rows.
-- [ ] Support active/inactive cells.
-- [ ] Keep the representation extensible for later probability/velocity values.
+- [x] Implement `StepPattern`.
+- [x] Support configurable number of steps.
+- [x] Support configurable subdivision.
+- [x] Support pitch rows.
+- [x] Support active/inactive cells.
+- [x] Keep the representation extensible for later probability/velocity values.
 
 ### Voices
 
-- [ ] Implement `Voice`.
-- [ ] Allow a voice to reference musical material.
-- [ ] Add a symbolic `SoundRef`.
-- [ ] Add voice parameter storage without coupling it to Tone.js.
-- [ ] Do not add a canonical `Track` abstraction unless a later workflow demonstrates
+- [x] Implement `Voice`.
+- [x] Allow a voice to reference musical material.
+- [x] Add a symbolic `SoundRef`.
+- [x] Add voice parameter storage without coupling it to Tone.js.
+- [x] Do not add a canonical `Track` abstraction unless a later workflow demonstrates
       the need.
 
 ### Done when
 
-- [ ] A test fixture can contain both a Phrase and StepPattern.
-- [ ] Editing is performed through document operations.
-- [ ] Save/load produces an equivalent document.
-- [ ] No browser code is required to construct or inspect a piece.
+- [x] A test fixture can contain both a Phrase and StepPattern.
+- [x] Editing is performed through document operations.
+- [x] Save/load produces an equivalent document.
+- [x] No browser code is required to construct or inspect a piece.
 
 ## M2 — Pattern and event engine
 

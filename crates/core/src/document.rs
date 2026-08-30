@@ -1,8 +1,11 @@
 //! Versioned musical documents, validation, and atomic edit operations.
 
-use std::{collections::BTreeMap, fmt, str::FromStr};
+use std::{collections::BTreeMap, fmt, marker::PhantomData, str::FromStr};
 
-use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
+use serde::{
+    Deserialize, Deserializer, Serialize, Serializer, de,
+    de::{MapAccess, Visitor},
+};
 use thiserror::Error;
 use uuid::{Uuid, Version};
 
@@ -282,7 +285,7 @@ pub enum DocumentValueError {
 
 /// A note's position and duration in one explicit clock domain.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(tag = "clock", rename_all = "snake_case")]
+#[serde(tag = "clock", rename_all = "snake_case", deny_unknown_fields)]
 pub enum NoteTime {
     /// A note measured in quarter-note beats.
     Metric {
@@ -374,6 +377,7 @@ impl Note {
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Phrase {
+    #[serde(deserialize_with = "deserialize_unique_map")]
     notes: BTreeMap<NoteId, Note>,
 }
 
@@ -399,12 +403,33 @@ impl Default for Phrase {
     }
 }
 
-/// A row in a step pattern.
+/// One extensible cell in a step pattern.
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct StepCell {
+    active: bool,
+}
+
+impl StepCell {
+    /// Constructs a cell with the requested activity state.
+    #[must_use]
+    pub const fn new(active: bool) -> Self {
+        Self { active }
+    }
+
+    /// Reports whether the cell produces an event.
+    #[must_use]
+    pub const fn active(&self) -> bool {
+        self.active
+    }
+}
+
+/// A pitch row in a step pattern.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct StepRow {
     pitch: Pitch,
-    cells: Vec<bool>,
+    cells: Vec<StepCell>,
 }
 
 impl StepRow {
@@ -413,7 +438,7 @@ impl StepRow {
     pub fn new(pitch: Pitch, steps: usize) -> Self {
         Self {
             pitch,
-            cells: vec![false; steps],
+            cells: vec![StepCell::default(); steps],
         }
     }
 
@@ -423,9 +448,9 @@ impl StepRow {
         self.pitch
     }
 
-    /// Returns active/inactive cell values.
+    /// Returns the row's cells.
     #[must_use]
-    pub fn cells(&self) -> &[bool] {
+    pub fn cells(&self) -> &[StepCell] {
         &self.cells
     }
 }
@@ -491,7 +516,7 @@ impl StepPattern {
 
 /// One authored material object.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Material {
     /// Freely timed phrase material.
     Phrase {
@@ -510,6 +535,15 @@ pub enum Material {
         name: String,
         /// Step-pattern content.
         pattern: StepPattern,
+    },
+    /// A source collection of distinct pitches.
+    PitchSet {
+        /// Stable material identity.
+        id: MaterialId,
+        /// Human-readable material name.
+        name: String,
+        /// Available pitches.
+        pitches: PitchSet,
     },
 }
 
@@ -534,11 +568,23 @@ impl Material {
         }
     }
 
+    /// Constructs pitch-set material.
+    #[must_use]
+    pub fn pitch_set(id: MaterialId, name: impl Into<String>, pitches: PitchSet) -> Self {
+        Self::PitchSet {
+            id,
+            name: name.into(),
+            pitches,
+        }
+    }
+
     /// Returns the stable material ID.
     #[must_use]
     pub const fn id(&self) -> MaterialId {
         match self {
-            Self::Phrase { id, .. } | Self::StepPattern { id, .. } => *id,
+            Self::Phrase { id, .. } | Self::StepPattern { id, .. } | Self::PitchSet { id, .. } => {
+                *id
+            }
         }
     }
 
@@ -546,7 +592,9 @@ impl Material {
     #[must_use]
     pub fn name(&self) -> &str {
         match self {
-            Self::Phrase { name, .. } | Self::StepPattern { name, .. } => name,
+            Self::Phrase { name, .. }
+            | Self::StepPattern { name, .. }
+            | Self::PitchSet { name, .. } => name,
         }
     }
 }
@@ -598,6 +646,7 @@ pub struct VoiceSettings {
     material: Option<MaterialId>,
     sound: SoundRef,
     enabled: bool,
+    #[serde(deserialize_with = "deserialize_unique_map")]
     parameters: BTreeMap<String, ParameterValue>,
 }
 
@@ -700,7 +749,9 @@ impl Voice {
 pub struct Piece {
     id: PieceId,
     transport: Transport,
+    #[serde(deserialize_with = "deserialize_unique_map")]
     materials: BTreeMap<MaterialId, Material>,
+    #[serde(deserialize_with = "deserialize_unique_map")]
     voices: BTreeMap<VoiceId, Voice>,
 }
 
@@ -854,7 +905,7 @@ impl Document {
                 supported: SCHEMA_VERSION,
             });
         }
-        let document: Self = serde_json::from_value(value)?;
+        let document: Self = serde_json::from_str(input)?;
         let diagnostics = document.validate();
         if diagnostics
             .iter()
@@ -1063,7 +1114,22 @@ impl Document {
                     .get_mut(row)
                     .and_then(|pattern_row| pattern_row.cells.get_mut(step))
                     .ok_or(OperationError::CellOutOfBounds { row, step })?;
-                *cell = active;
+                cell.active = active;
+            }
+            Operation::QuantizePhrase { material_id, grid } => {
+                let material = self.piece.materials.get_mut(&material_id).ok_or_else(|| {
+                    OperationError::NotFound {
+                        entity: "material",
+                        id: material_id.to_string(),
+                    }
+                })?;
+                let Material::Phrase { phrase, .. } = material else {
+                    return Err(OperationError::WrongMaterialKind {
+                        id: material_id.to_string(),
+                        expected: "phrase",
+                    });
+                };
+                quantize_phrase(phrase, grid)?;
             }
         }
         Ok(())
@@ -1119,6 +1185,22 @@ pub enum Operation {
         /// New cell state.
         active: bool,
     },
+    /// Quantizes phrase notes that use the grid's clock domain.
+    QuantizePhrase {
+        /// Target phrase material.
+        material_id: MaterialId,
+        /// Metric or absolute-time quantization grid.
+        grid: QuantizationGrid,
+    },
+}
+
+/// An exact metric or absolute-time grid used to quantize phrase notes.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum QuantizationGrid {
+    /// A grid measured in quarter-note beats.
+    Metric(Beats),
+    /// A grid measured in elapsed seconds.
+    Absolute(AbsoluteDuration),
 }
 
 /// A failure to apply a document operation.
@@ -1156,6 +1238,9 @@ pub enum OperationError {
         /// Requested step.
         step: usize,
     },
+    /// Exact time arithmetic failed while applying a transformation.
+    #[error("could not transform note timing: {0}")]
+    Time(#[from] TimeError),
     /// The operation would violate document invariants.
     #[error("operation would make the document invalid")]
     Validation(Vec<Diagnostic>),
@@ -1319,6 +1404,42 @@ impl Diagnostic {
     }
 }
 
+fn deserialize_unique_map<'de, D, K, V>(deserializer: D) -> Result<BTreeMap<K, V>, D::Error>
+where
+    D: Deserializer<'de>,
+    K: Deserialize<'de> + Ord,
+    V: Deserialize<'de>,
+{
+    struct UniqueMapVisitor<K, V>(PhantomData<(K, V)>);
+
+    impl<'de, K, V> Visitor<'de> for UniqueMapVisitor<K, V>
+    where
+        K: Deserialize<'de> + Ord,
+        V: Deserialize<'de>,
+    {
+        type Value = BTreeMap<K, V>;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+            formatter.write_str("an object with unique keys")
+        }
+
+        fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
+        where
+            A: MapAccess<'de>,
+        {
+            let mut values = BTreeMap::new();
+            while let Some((key, value)) = access.next_entry()? {
+                if values.insert(key, value).is_some() {
+                    return Err(de::Error::custom("duplicate object key"));
+                }
+            }
+            Ok(values)
+        }
+    }
+
+    deserializer.deserialize_map(UniqueMapVisitor(PhantomData))
+}
+
 fn validate_metadata(metadata: &Metadata, diagnostics: &mut Vec<Diagnostic>) {
     for (field, value) in [
         ("title", metadata.title.as_deref()),
@@ -1409,7 +1530,46 @@ fn validate_material(material: &Material, diagnostics: &mut Vec<Diagnostic>) {
                 }
             }
         }
+        Material::PitchSet { .. } => {}
     }
+}
+
+fn quantize_phrase(phrase: &mut Phrase, grid: QuantizationGrid) -> Result<(), TimeError> {
+    match grid {
+        QuantizationGrid::Metric(subdivision) if !subdivision.is_positive() => {
+            return Err(TimeError::OutOfRange(
+                "metric quantization subdivision must be positive",
+            ));
+        }
+        QuantizationGrid::Absolute(subdivision) if subdivision.is_zero() => {
+            return Err(TimeError::OutOfRange(
+                "absolute quantization subdivision must be positive",
+            ));
+        }
+        QuantizationGrid::Metric(_) | QuantizationGrid::Absolute(_) => {}
+    }
+
+    for note in phrase.notes.values_mut() {
+        match (&mut note.time, grid) {
+            (NoteTime::Metric { onset, duration }, QuantizationGrid::Metric(subdivision)) => {
+                *onset = onset.quantize(subdivision)?;
+                *duration = duration.quantize(subdivision)?;
+                if !duration.is_positive() {
+                    *duration = subdivision;
+                }
+            }
+            (NoteTime::Absolute { onset, duration }, QuantizationGrid::Absolute(subdivision)) => {
+                *onset = onset.quantize(subdivision)?;
+                *duration = duration.quantize(subdivision)?;
+                if duration.is_zero() {
+                    *duration = subdivision;
+                }
+            }
+            (NoteTime::Metric { .. }, QuantizationGrid::Absolute(_))
+            | (NoteTime::Absolute { .. }, QuantizationGrid::Metric(_)) => {}
+        }
+    }
+    Ok(())
 }
 
 fn validate_voice(
@@ -1514,6 +1674,54 @@ mod tests {
     }
 
     #[test]
+    fn loading_rejects_invalid_material_payloads() {
+        let mut document = fixture();
+        let material_id = id("0f87ac6e-ea2c-43e7-9694-04b90e776f61");
+        document
+            .apply(Operation::AddMaterial(Material::phrase(
+                material_id,
+                "Phrase",
+                Phrase::new(),
+            )))
+            .unwrap();
+        let json = document.to_json().unwrap();
+        let unknown = json.replace("\"phrase\": {", "\"unknown\": true,\n        \"phrase\": {");
+        assert!(matches!(
+            Document::from_json(&unknown),
+            Err(LoadError::Json(_))
+        ));
+    }
+
+    #[test]
+    fn loading_rejects_duplicate_entity_ids() {
+        let mut document = fixture();
+        let material_id = id("0f87ac6e-ea2c-43e7-9694-04b90e776f61");
+        document
+            .apply(Operation::AddMaterial(Material::phrase(
+                material_id,
+                "Phrase",
+                Phrase::new(),
+            )))
+            .unwrap();
+        let mut json = document.to_json().unwrap();
+        let materials_start = json.find("\"materials\": {\n").unwrap() + "\"materials\": {\n".len();
+        let materials_end = json[materials_start..]
+            .find("\n    },\n    \"voices\"")
+            .unwrap()
+            + materials_start;
+        let entry = json[materials_start..materials_end].to_owned();
+        json.replace_range(
+            materials_start..materials_end,
+            &format!("{entry},\n{entry}"),
+        );
+
+        assert!(matches!(
+            Document::from_json(&json),
+            Err(LoadError::Json(_))
+        ));
+    }
+
+    #[test]
     fn operations_edit_material_voice_note_and_matrix() {
         let mut document = fixture();
         let phrase_id = id("0f87ac6e-ea2c-43e7-9694-04b90e776f61");
@@ -1541,7 +1749,9 @@ mod tests {
         document
             .apply(Operation::AddVoice(Voice::new(
                 voice_id,
-                VoiceSettings::new("Piano", sound).with_material(phrase_id),
+                VoiceSettings::new("Piano", sound)
+                    .with_material(phrase_id)
+                    .with_parameter("muted", ParameterValue::Boolean(false)),
             )))
             .unwrap();
         let pitch = Pitch::in_register(PitchClass::new(0).unwrap(), Register::new(4)).unwrap();
@@ -1572,10 +1782,11 @@ mod tests {
             .unwrap();
         assert!(document.validate().is_empty());
         assert_eq!(document.piece().voices().len(), 1);
-        assert_eq!(
-            Document::from_json(&document.to_json().unwrap()).unwrap(),
-            document
-        );
+        assert!(step_pattern(&document, matrix_id).rows()[1].cells()[3].active());
+        let json = document.to_json().unwrap();
+        assert!(json.contains("\"type\": \"phrase\""));
+        assert!(json.contains("\"type\": \"step_pattern\""));
+        assert_eq!(Document::from_json(&json).unwrap(), document);
 
         document.apply(Operation::SetSeed(Seed::new(7))).unwrap();
         document
@@ -1612,6 +1823,120 @@ mod tests {
         assert!(document.piece().voices().is_empty());
     }
 
+    fn step_pattern(document: &Document, material_id: MaterialId) -> &StepPattern {
+        let Material::StepPattern { pattern, .. } =
+            document.piece().materials().get(&material_id).unwrap()
+        else {
+            panic!("fixture material must be a step pattern");
+        };
+        pattern
+    }
+
+    #[test]
+    fn quantization_edits_each_clock_domain_without_discarding_recorded_timing() {
+        let mut document = fixture();
+        let phrase_id = id("0f87ac6e-ea2c-43e7-9694-04b90e776f61");
+        document
+            .apply(Operation::AddMaterial(Material::phrase(
+                phrase_id,
+                "Recorded phrase",
+                Phrase::new(),
+            )))
+            .unwrap();
+        let absolute_note_id = id("92b8d664-2b27-45ca-a7c2-f816124fe813");
+        document
+            .apply(Operation::InsertNote {
+                material_id: phrase_id,
+                note: Note::new(
+                    absolute_note_id,
+                    Pitch::from_semitones(60),
+                    NoteTime::Absolute {
+                        onset: AbsoluteTime::new(13, 100).unwrap(),
+                        duration: AbsoluteDuration::new(19, 100).unwrap(),
+                    },
+                    90,
+                )
+                .unwrap(),
+            })
+            .unwrap();
+        let metric_note_id = id("152ef5b4-f493-43f8-91a2-dba94309922a");
+        document
+            .apply(Operation::InsertNote {
+                material_id: phrase_id,
+                note: Note::new(
+                    metric_note_id,
+                    Pitch::from_semitones(64),
+                    NoteTime::Metric {
+                        onset: Beats::new(1, 8).unwrap(),
+                        duration: Beats::new(1, 8).unwrap(),
+                    },
+                    100,
+                )
+                .unwrap(),
+            })
+            .unwrap();
+
+        document
+            .apply(Operation::QuantizePhrase {
+                material_id: phrase_id,
+                grid: QuantizationGrid::Absolute(AbsoluteDuration::new(1, 10).unwrap()),
+            })
+            .unwrap();
+        document
+            .apply(Operation::QuantizePhrase {
+                material_id: phrase_id,
+                grid: QuantizationGrid::Metric(Beats::new(1, 4).unwrap()),
+            })
+            .unwrap();
+
+        let Material::Phrase { phrase, .. } = document.piece().materials().get(&phrase_id).unwrap()
+        else {
+            panic!("fixture material must remain a phrase");
+        };
+        assert_eq!(
+            absolute_note_time(phrase, absolute_note_id),
+            ("1/10".to_owned(), "1/5".to_owned())
+        );
+        assert_eq!(
+            metric_note_time(phrase, metric_note_id),
+            ("1/4".to_owned(), "1/4".to_owned())
+        );
+    }
+
+    fn absolute_note_time(phrase: &Phrase, note_id: NoteId) -> (String, String) {
+        let NoteTime::Absolute { onset, duration } = phrase.notes()[&note_id].time() else {
+            panic!("note must use absolute time");
+        };
+        (onset.to_string(), duration.to_string())
+    }
+
+    fn metric_note_time(phrase: &Phrase, note_id: NoteId) -> (String, String) {
+        let NoteTime::Metric { onset, duration } = phrase.notes()[&note_id].time() else {
+            panic!("note must use metric time");
+        };
+        (onset.to_string(), duration.to_string())
+    }
+
+    #[test]
+    fn pitch_sets_are_materials_with_explicit_tags() {
+        let mut document = fixture();
+        let material_id = id("313b2f8d-8c00-4d82-82f6-cdb7aeb112de");
+        document
+            .apply(Operation::AddMaterial(Material::pitch_set(
+                material_id,
+                "Harmony",
+                PitchSet::new([
+                    Pitch::from_semitones(67),
+                    Pitch::from_semitones(60),
+                    Pitch::from_semitones(67),
+                ]),
+            )))
+            .unwrap();
+        let json = document.to_json().unwrap();
+        assert!(json.contains("\"type\": \"pitch_set\""));
+        assert_eq!(Document::from_json(&json).unwrap(), document);
+    }
+
     #[test]
     fn failed_operations_leave_the_document_unchanged() {
         let mut document = fixture();
@@ -1625,6 +1950,25 @@ mod tests {
         assert!(matches!(
             document.apply(Operation::AddVoice(voice)),
             Err(OperationError::Validation(_))
+        ));
+        assert_eq!(document, before);
+    }
+
+    #[test]
+    fn duplicate_material_ids_are_rejected_atomically() {
+        let mut document = fixture();
+        let material_id = id("313b2f8d-8c00-4d82-82f6-cdb7aeb112de");
+        let material = Material::phrase(material_id, "Phrase", Phrase::new());
+        document
+            .apply(Operation::AddMaterial(material.clone()))
+            .unwrap();
+        let before = document.clone();
+        assert!(matches!(
+            document.apply(Operation::AddMaterial(material)),
+            Err(OperationError::AlreadyExists {
+                entity: "material",
+                ..
+            })
         ));
         assert_eq!(document, before);
     }
