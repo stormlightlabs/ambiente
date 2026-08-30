@@ -1,0 +1,221 @@
+@layer pages {
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(20rem, 0.9fr);
+    margin: 0 auto;
+    max-width: var(--content-width);
+    min-height: calc(100svh - var(--header-height));
+    padding: clamp(4rem, 8vw, 8rem) var(--page-pad);
+  }
+  .hero__copy {
+    align-self: center;
+    max-width: 48rem;
+    position: relative;
+    z-index: 1;
+  }
+  .hero h1,
+  .content-index h1,
+  .placeholder-page h1 {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 6.3vw, 6.7rem);
+    font-weight: 500;
+    letter-spacing: -0.055em;
+    line-height: 0.93;
+    margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+  }
+  .hero__lede {
+    color: var(--ink-soft);
+    font-size: clamp(1rem, 1.5vw, 1.22rem);
+    line-height: 1.7;
+    max-width: 36rem;
+  }
+  .hero__actions {
+    align-items: center;
+    display: flex;
+    gap: 1.4rem;
+    margin-top: 2.3rem;
+  }
+  .score-field {
+    align-self: center;
+    aspect-ratio: 1;
+    isolation: isolate;
+    position: relative;
+  }
+  .score-field::before,
+  .score-field::after {
+    border: 1px solid color-mix(in oklch, var(--forest) 20%, transparent);
+    content: "";
+    left: 8%;
+    position: absolute;
+    right: 2%;
+  }
+  .score-field::before {
+    top: 42%;
+  }
+  .score-field::after {
+    top: 58%;
+  }
+  .score-field__orbit {
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    position: absolute;
+  }
+  .score-field__orbit--one {
+    inset: 7% 15% 17% 8%;
+    rotate: -17deg;
+  }
+  .score-field__orbit--two {
+    inset: 18% 5% 6% 22%;
+    rotate: 23deg;
+  }
+  .score-note {
+    background: var(--forest);
+    border-radius: 50%;
+    height: 0.8rem;
+    position: absolute;
+    width: 0.8rem;
+  }
+  .score-note::after {
+    background: inherit;
+    content: "";
+    height: 5rem;
+    left: 50%;
+    position: absolute;
+    top: -4.5rem;
+    width: 1px;
+  }
+  .score-note--one {
+    left: 16%;
+    top: 42%;
+  }
+  .score-note--two {
+    background: var(--gold);
+    left: 56%;
+    top: 57%;
+  }
+  .score-note--three {
+    left: 80%;
+    top: 41%;
+  }
+  .score-field p {
+    bottom: 8%;
+    color: var(--ink-soft);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    left: 12%;
+    letter-spacing: 0.08em;
+    position: absolute;
+  }
+  .score-field i {
+    color: var(--moss);
+    font-style: normal;
+    margin-inline: 0.5rem;
+  }
+  .pathways {
+    border-top: 1px solid var(--line);
+    margin: 0 var(--page-pad);
+    padding: clamp(4rem, 8vw, 7rem) 0;
+  }
+  .section-heading {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: 1fr 2fr;
+  }
+  .section-heading h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2.3rem, 4vw, 4.3rem);
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+  .pathway-list {
+    margin-left: 33.333%;
+    margin-top: 4rem;
+  }
+  .pathway {
+    align-items: start;
+    border-top: 1px solid var(--line);
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 3rem minmax(10rem, 0.7fr) 1fr;
+    padding: 1.6rem 0;
+  }
+  .pathway > span {
+    color: var(--ink-soft);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    padding-top: 0.25rem;
+  }
+  .pathway h3 {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    margin: 0;
+  }
+  .pathway p {
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    margin: 0;
+    max-width: 38rem;
+  }
+  .principle-band {
+    align-items: end;
+    background: var(--forest-dark);
+    color: var(--paper);
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: 1fr auto;
+    padding: clamp(3rem, 7vw, 6rem) var(--page-pad);
+  }
+  .principle-band blockquote {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 4rem);
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+    margin: 0;
+    max-width: 65rem;
+  }
+}
+
+@media (max-width: 48rem) {
+  .hero {
+    display: block;
+    min-height: auto;
+    padding-top: 4rem;
+  }
+  .score-field {
+    margin: 2rem auto 0;
+    max-width: 28rem;
+  }
+  .section-heading {
+    display: block;
+  }
+  .pathway-list {
+    margin-left: 0;
+  }
+  .pathway {
+    grid-template-columns: 2rem 1fr;
+  }
+  .pathway p {
+    grid-column: 2;
+  }
+  .principle-band {
+    display: block;
+  }
+  .principle-band .text-link {
+    display: inline-block;
+    margin-top: 2rem;
+  }
+}
+
+@media (max-width: 34rem) {
+  .hero h1 {
+    font-size: clamp(2.8rem, 14vw, 4.4rem);
+  }
+  .hero__actions {
+    align-items: start;
+    flex-direction: column;
+  }
+  .score-field {
+    margin-inline: -0.5rem;
+  }
+}

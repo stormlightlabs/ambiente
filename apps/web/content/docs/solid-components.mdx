@@ -1,0 +1,21 @@
+---
+title: Interactive documentation
+description: How focused Solid controls enter guides without duplicating musical behavior.
+order: 5
+---
+
+import { ProcessPulse } from "../../src/components/ProcessPulse";
+
+# Interactive documentation
+
+Guides can include focused controls without creating a second musical implementation. Sätteri compiles this MDX page with Solid's JSX runtime.
+
+## A presentation-only example
+
+This control rotates a visual sequence. It does not generate events or change an Ambiente document.
+
+<ProcessPulse />
+
+## Shared application code
+
+Playable guides will call the same application facade, WASM package, and audio runtime as Studio. A guide may expose fewer controls, but composition and pattern behavior remain in Rust.

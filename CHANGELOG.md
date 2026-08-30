@@ -26,9 +26,20 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added script-safe JSON and plain output, separated diagnostics, meaningful exit
   codes, shell completions, and styling that honors TTY state, `NO_COLOR`,
   `TERM=dumb`, and `--no-color`.
+- Added the Vike and Solid web application with prerendered public and
+  documentation routes, a prerendered Studio SPA shell, responsive site and
+  documentation layouts, and browser smoke tests.
+- Added Sätteri Markdown and MDX processing with frontmatter, GFM, heading
+  navigation, clean documentation links, Expressive Code, and Solid components
+  embedded in prerendered MDX.
+- Added the narrow TypeScript application facade and a read-only shell fixture
+  that leaves document semantics and event generation in Rust.
 
 ### Changed
 
+- Updated the web shell to use Literata and Instrument Sans variable fonts,
+  UnoCSS-backed Bootstrap and Remix icons, and clearer public and placeholder
+  copy.
 - Moved project architecture documentation into `apps/web/content/docs/` for the
   web application, while keeping the product roadmap at the repository root.
 - Sequenced the Vike/Solid web shell and Sätteri documentation pipeline before

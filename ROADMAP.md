@@ -297,19 +297,18 @@ interesting.
 
 ## Next implementation slice
 
-The Rust side of the first vertical slice now reaches deterministic events:
+The first vertical slice now reaches a browser shell around deterministic Rust
+events:
 
 ```text
 Document -> StepPattern -> pattern query -> Events
+                                      ↓
+                         Vike + Solid application
 ```
 
-The next slice should prove the browser integration in this order:
+The next slice should complete browser playback in this order:
 
 ```text
-Vike + Solid shell
-        ↓
-Sätteri docs + /studio shell
-        ↓
 TypeScript facade
         ↓
 WASM implementation
@@ -321,8 +320,8 @@ Matrix UI
 sound
 ```
 
-Build the shell and facade first, then let `ambiente-wasm` implement the browser
-operations those real consumers need. Do not fill the gap with a TypeScript
+Let `ambiente-wasm` implement the browser operations that the existing Studio
+and documentation consumers need. Do not fill the gap with a TypeScript
 composition engine. After matrix playback works, repeat the path with piano
 recording into a canonical `Phrase`.
 

@@ -1,3 +1,9 @@
+---
+title: Document format
+description: Stable IDs, canonical JSON, schema migration, and compatibility rules.
+order: 3
+---
+
 # Document format
 
 Ambiente stores musical state in a versioned UTF-8 JSON document. The format
@@ -9,7 +15,7 @@ runtime state belongs to the [audio design](audio.md).
 
 Every persisted entity has a typed ID backed by UUID version 4:
 
-```rust,ignore
+```rust
 struct VoiceId(Uuid);
 struct MaterialId(Uuid);
 struct PatternId(Uuid);
@@ -110,7 +116,7 @@ UTF-8 bytes
 
 Each migration advances one schema version:
 
-```rust,ignore
+```rust
 fn migrate_v1_to_v2(value: Value) -> Result<Value, MigrationError>;
 ```
 

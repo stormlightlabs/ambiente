@@ -2,3 +2,5 @@ Cargo.lock
 node_modules/
 target/
 **/dist/
+**/playwright-report/
+**/test-results/

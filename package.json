@@ -18,7 +18,7 @@
     "lint:web": "eslint . --max-warnings=0",
     "test": "pnpm test:rust && pnpm test:web",
     "test:rust": "cargo test --workspace --all-features",
-    "test:web": "vitest run --passWithNoTests",
+    "test:web": "pnpm --filter @ambiente/web test:types && pnpm --filter @ambiente/web test",
     "check": "pnpm format:check && pnpm lint && pnpm test"
   },
   "devDependencies": {

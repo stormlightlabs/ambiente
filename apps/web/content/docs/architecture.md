@@ -1,3 +1,9 @@
+---
+title: Architecture
+description: System boundaries across Rust, WebAssembly, browser interfaces, and audio adapters.
+order: 1
+---
+
 # Architecture
 
 Ambiente uses one Rust model for persisted musical state and event generation. The
@@ -8,7 +14,8 @@ This page records the system boundaries and invariants. See the
 [document format](document-format.md) for identity, persistence, and migration;
 the [composition model](composition-model.md) for musical concepts, time, and
 deterministic randomness; [audio](audio.md) for playback; and the
-[roadmap](../../../../ROADMAP.md) for sequencing.
+[roadmap](https://github.com/stormlightlabs/ambiente/blob/main/ROADMAP.md) for
+sequencing.
 
 ## System shape
 
@@ -48,12 +55,11 @@ The repository has two workspaces:
 - pnpm owns browser applications and TypeScript packages under `apps/` and
   `packages/`.
 
-Only `crates/core` and `crates/cli` exist as implemented code packages at the
-current reboot boundary. The canonical documentation source already lives under
-`apps/web/content/docs/`, but the Vike application itself has not been scaffolded.
-Build that shell before `crates/wasm` so the TypeScript facade is shaped by real
-browser routes and consumers as well as the core API. Add other crates and
-packages only when implemented behavior gives them a clear boundary.
+The implemented packages are `crates/core`, `crates/cli`, and the Vike
+application in `apps/web`. The web application serves the canonical documentation
+from `apps/web/content/docs/` and defines the TypeScript facade that
+`crates/wasm` will implement. Add other crates and packages only when implemented
+behavior gives them a clear boundary.
 
 The supported development versions are:
 
@@ -112,7 +118,7 @@ not become part of the public API shape.[^thiserror]
 
 Validation reports independent problems in one pass as structured diagnostics:
 
-```rust,ignore
+```rust
 struct Diagnostic {
     code: DiagnosticCode,
     severity: Severity,
@@ -147,7 +153,7 @@ Diagnostic behavior follows these rules:
 The core emits backend-independent events. An event conceptually contains a time
 span, target, kind, and properties:
 
-```rust,ignore
+```rust
 Event {
     span,
     target,
@@ -190,7 +196,7 @@ document, seed, and time span. Shared fixtures will test this property.
 
 ## Web and desktop
 
-The web application will use Vite, Vike, `vike-solid`, and Solid. Routes have
+The web application uses Vite, Vike, `vike-solid`, and Solid. Routes have
 different rendering needs:
 
 ```text
@@ -207,8 +213,8 @@ routes are prerendered, production consists of static assets and requires no
 application server.[^vike-render-modes] [^vike-prerender]
 
 Documentation is part of this application rather than a separate site or build.
-Canonical Markdown and MDX live in `apps/web/content/docs/`. The Vite build will
-process both through Sätteri using `vite-plugin-satteri`,[^satteri-vite] with GFM and
+Canonical Markdown and MDX live in `apps/web/content/docs/`. The Vite build
+processes both through Sätteri using `vite-plugin-satteri`,[^satteri-vite] with GFM and
 frontmatter enabled and MDX compiled with `jsxImportSource: "solid-js/h"`. Sätteri is the native
 Markdown/MDX processor that Astro 7 uses by default; using it directly preserves
 that parser and plugin model without adopting Astro itself.[^astro-satteri] [^satteri]

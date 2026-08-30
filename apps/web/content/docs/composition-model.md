@@ -1,3 +1,9 @@
+---
+title: Composition model
+description: Authored material, deterministic processes, exact time, and the canonical musical vocabulary.
+order: 2
+---
+
 # Composition model
 
 Ambiente represents a human-authored musical system that can produce many
@@ -71,7 +77,7 @@ Musical time and absolute time are separate exact rational domains. Neither is
 an `f64` in the core or the persisted document. Domain types wrap an exact
 rational implementation such as `num_rational::Ratio<i64>`:[^num-rational]
 
-```rust,ignore
+```rust
 struct Beats(Ratio<i64>);
 struct Seconds(Ratio<i64>);
 

@@ -1,3 +1,9 @@
+---
+title: Audio
+description: Browser playback, scheduling, sound adapters, and deterministic event boundaries.
+order: 4
+---
+
 # Audio
 
 Ambiente separates composition from sound production. The Rust core emits

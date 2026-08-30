@@ -39,5 +39,7 @@ jobs:
         run: pnpm format:web:check
       - name: Lint TypeScript and JavaScript
         run: pnpm lint:web
+      - name: Install browser
+        run: pnpm --filter @ambiente/web exec playwright install --with-deps chromium
       - name: Test
         run: pnpm test:web

@@ -24,6 +24,12 @@ pnpm install
 pnpm check
 ```
 
+Start the web application with:
+
+```sh
+pnpm --filter @ambiente/web dev
+```
+
 See
 [Architecture: Repository and workspace](apps/web/content/docs/architecture.md#repository-and-workspace)
 for individual formatting, linting, and test commands.

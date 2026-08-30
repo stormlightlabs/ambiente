@@ -1,0 +1,49 @@
+@layer base {
+  html {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-ui);
+  }
+  body {
+    min-width: 20rem;
+    min-height: 100vh;
+    line-height: 1.55;
+  }
+  ::selection {
+    background: var(--gold);
+    color: var(--forest-dark);
+  }
+  :focus-visible {
+    outline: 0;
+    box-shadow: var(--focus);
+  }
+  h1,
+  h2,
+  h3,
+  p {
+    margin-block-start: 0;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.52;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

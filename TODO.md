@@ -6,63 +6,6 @@ summarized in `CHANGELOG.md`.
 See `ROADMAP.md` for product direction and sequencing. Architecture and design
 rationale live with the web documentation source under `apps/web/content/docs/`.
 
-## M4 — Web shell and documentation
-
-Build the product shell before the WASM package so browser integration is driven
-by concrete routes and UI boundaries rather than an invented binding surface.
-The existing project documentation already lives in `apps/web/content/docs/`;
-this milestone makes it part of the application.
-
-### Application shell
-
-- [ ] Create the Vike + `vike-solid` application in `apps/web`.
-- [ ] Configure `/`, `/docs/**`, `/learn/**`, and `/examples/**` as prerendered
-      routes.
-- [ ] Configure `/studio/**` as a prerendered SPA shell.
-- [ ] Add the shared site shell, navigation, typography, and documentation layout.
-- [ ] Keep the first Studio shell intentionally thin; do not implement musical
-      semantics in TypeScript.
-
-### Markdown and MDX
-
-Use the same Markdown/MDX processor family as current Astro rather than creating
-a bespoke content pipeline.
-
-- [ ] Process `.md` and `.mdx` with Sätteri through `vite-plugin-satteri`.
-- [ ] Enable GFM and frontmatter.
-- [ ] Configure MDX with `jsxImportSource: "solid-js/h"` and prove a Solid
-      component can render inside a prerendered documentation page.
-- [ ] Use `satteri-expressive-code` for syntax-highlighted code blocks.
-- [ ] Discover documentation with a Vite content glob and derive stable `/docs/**`
-      routes from paths/frontmatter.
-- [ ] Collect headings for page navigation and stable heading anchors.
-- [ ] Make links between the moved architecture documents resolve in both local
-      development and the prerendered build.
-
-### Frontend boundary
-
-- [ ] Define the TypeScript application/document facade the Studio consumes.
-- [ ] Keep the facade narrow enough to be implemented by WASM in M5.
-- [ ] Use fixtures or a temporary in-memory test adapter only for shell development;
-      do not duplicate document, theory, or pattern behavior.
-- [ ] Extract shared Studio packages/components only when reuse creates a real
-      boundary.
-
-### Tests
-
-- [ ] Add browser smoke tests for the landing page, a documentation page, and the
-      Studio shell.
-- [ ] Verify public/documentation routes are emitted as static HTML.
-- [ ] Verify the Studio shell can build before `ambiente-wasm` exists.
-
-### Done when
-
-- [ ] The current documentation is served from `apps/web/content/docs/`.
-- [ ] Markdown and MDX render through Sätteri in the Vike application.
-- [ ] Static routes prerender and `/studio/**` behaves as the application shell.
-- [ ] The frontend has a concrete facade boundary ready for the WASM implementation.
-- [ ] No browser code owns canonical musical behavior.
-
 ## M5 — WASM and browser audio
 
 ### WASM
