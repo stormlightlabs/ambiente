@@ -1,5 +1,9 @@
 {
-    "ul-indent": {
-        "indent": 4
-    }
+  "ul-indent": {
+    "indent": 4,
+  },
+  "line-length": false,
+  "no-duplicate-heading": {
+    "siblings_only": true,
+  },
 }

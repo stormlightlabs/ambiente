@@ -1,6 +1,18 @@
 [package]
 name = "ambiente-cli"
-version = "0.1.0"
-edition = "2024"
+description = "Command-line interface for Ambiente"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "ambiente"
+path = "src/main.rs"
+
+[lints]
+workspace = true
 
 [dependencies]
+ambiente-core = { path = "../core" }
