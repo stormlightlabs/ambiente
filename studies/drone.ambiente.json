@@ -1,0 +1,373 @@
+{
+  "format": "ambiente",
+  "schema_version": 2,
+  "id": "20000000-0000-4000-8000-000000000010",
+  "metadata": {
+    "title": "Drone Study",
+    "composer": "Ambiente",
+    "description": "Long tones and air move within a restrained pitch field, leaving room for silence."
+  },
+  "seed": "44524f4e45000001",
+  "piece": {
+    "id": "20000000-0000-4000-8000-000000000011",
+    "transport": {
+      "tempo": "60/1",
+      "meter": {
+        "numerator": 4,
+        "denominator": 4
+      }
+    },
+    "materials": {
+      "20000000-0000-4000-8000-000000000101": {
+        "type": "phrase",
+        "id": "20000000-0000-4000-8000-000000000101",
+        "name": "Ground tones",
+        "phrase": {
+          "notes": {
+            "20000000-0000-4000-8001-000000000101": {
+              "id": "20000000-0000-4000-8001-000000000101",
+              "pitch": 36,
+              "time": {
+                "clock": "absolute",
+                "onset": "0/1",
+                "duration": "55/1"
+              },
+              "velocity": 62
+            },
+            "20000000-0000-4000-8002-000000000101": {
+              "id": "20000000-0000-4000-8002-000000000101",
+              "pitch": 43,
+              "time": {
+                "clock": "absolute",
+                "onset": "80/1",
+                "duration": "10/1"
+              },
+              "velocity": 48
+            }
+          }
+        }
+      },
+      "20000000-0000-4000-8000-000000000102": {
+        "type": "phrase",
+        "id": "20000000-0000-4000-8000-000000000102",
+        "name": "Fifth tones",
+        "phrase": {
+          "notes": {
+            "20000000-0000-4000-8001-000000000102": {
+              "id": "20000000-0000-4000-8001-000000000102",
+              "pitch": 43,
+              "time": {
+                "clock": "absolute",
+                "onset": "12/1",
+                "duration": "42/1"
+              },
+              "velocity": 62
+            },
+            "20000000-0000-4000-8002-000000000102": {
+              "id": "20000000-0000-4000-8002-000000000102",
+              "pitch": 50,
+              "time": {
+                "clock": "absolute",
+                "onset": "77/1",
+                "duration": "8/1"
+              },
+              "velocity": 48
+            }
+          }
+        }
+      },
+      "20000000-0000-4000-8000-000000000103": {
+        "type": "phrase",
+        "id": "20000000-0000-4000-8000-000000000103",
+        "name": "Halo tones",
+        "phrase": {
+          "notes": {
+            "20000000-0000-4000-8001-000000000103": {
+              "id": "20000000-0000-4000-8001-000000000103",
+              "pitch": 55,
+              "time": {
+                "clock": "absolute",
+                "onset": "25/1",
+                "duration": "20/1"
+              },
+              "velocity": 62
+            },
+            "20000000-0000-4000-8002-000000000103": {
+              "id": "20000000-0000-4000-8002-000000000103",
+              "pitch": 57,
+              "time": {
+                "clock": "absolute",
+                "onset": "100/1",
+                "duration": "10/1"
+              },
+              "velocity": 48
+            }
+          }
+        }
+      },
+      "20000000-0000-4000-8000-000000000104": {
+        "type": "phrase",
+        "id": "20000000-0000-4000-8000-000000000104",
+        "name": "Air tones",
+        "phrase": {
+          "notes": {
+            "20000000-0000-4000-8001-000000000104": {
+              "id": "20000000-0000-4000-8001-000000000104",
+              "pitch": 48,
+              "time": {
+                "clock": "absolute",
+                "onset": "5/1",
+                "duration": "35/1"
+              },
+              "velocity": 62
+            },
+            "20000000-0000-4000-8002-000000000104": {
+              "id": "20000000-0000-4000-8002-000000000104",
+              "pitch": 50,
+              "time": {
+                "clock": "absolute",
+                "onset": "75/1",
+                "duration": "12/1"
+              },
+              "velocity": 48
+            }
+          }
+        }
+      }
+    },
+    "voices": {
+      "20000000-0000-4000-8000-000000000201": {
+        "id": "20000000-0000-4000-8000-000000000201",
+        "settings": {
+          "name": "Ground",
+          "pattern": {
+            "type": "repeat",
+            "pattern": {
+              "type": "sometimes",
+              "id": "20000000-0000-4000-8000-000000000401",
+              "probability": {
+                "numerator": 1,
+                "denominator": 7
+              },
+              "transformation": {
+                "type": "transpose",
+                "interval": 12
+              },
+              "pattern": {
+                "type": "omit",
+                "id": "20000000-0000-4000-8000-000000000301",
+                "probability": {
+                  "numerator": 1,
+                  "denominator": 10
+                },
+                "pattern": {
+                  "type": "material",
+                  "material_id": "20000000-0000-4000-8000-000000000101"
+                }
+              }
+            },
+            "count": null
+          },
+          "sound": "warm-drone",
+          "enabled": true,
+          "parameters": {
+            "filter_hz": {
+              "type": "integer",
+              "value": 2400
+            },
+            "gain": {
+              "type": "integer",
+              "value": 50
+            },
+            "motion": {
+              "type": "integer",
+              "value": 16
+            },
+            "pan": {
+              "type": "integer",
+              "value": -18
+            },
+            "reverb": {
+              "type": "integer",
+              "value": 55
+            }
+          }
+        }
+      },
+      "20000000-0000-4000-8000-000000000202": {
+        "id": "20000000-0000-4000-8000-000000000202",
+        "settings": {
+          "name": "Fifth",
+          "pattern": {
+            "type": "repeat",
+            "pattern": {
+              "type": "sometimes",
+              "id": "20000000-0000-4000-8000-000000000402",
+              "probability": {
+                "numerator": 1,
+                "denominator": 7
+              },
+              "transformation": {
+                "type": "transpose",
+                "interval": -12
+              },
+              "pattern": {
+                "type": "omit",
+                "id": "20000000-0000-4000-8000-000000000302",
+                "probability": {
+                  "numerator": 1,
+                  "denominator": 8
+                },
+                "pattern": {
+                  "type": "material",
+                  "material_id": "20000000-0000-4000-8000-000000000102"
+                }
+              }
+            },
+            "count": null
+          },
+          "sound": "warm-drone",
+          "enabled": true,
+          "parameters": {
+            "filter_hz": {
+              "type": "integer",
+              "value": 2400
+            },
+            "gain": {
+              "type": "integer",
+              "value": 42
+            },
+            "motion": {
+              "type": "integer",
+              "value": 23
+            },
+            "pan": {
+              "type": "integer",
+              "value": 20
+            },
+            "reverb": {
+              "type": "integer",
+              "value": 55
+            }
+          }
+        }
+      },
+      "20000000-0000-4000-8000-000000000203": {
+        "id": "20000000-0000-4000-8000-000000000203",
+        "settings": {
+          "name": "Halo",
+          "pattern": {
+            "type": "repeat",
+            "pattern": {
+              "type": "sometimes",
+              "id": "20000000-0000-4000-8000-000000000403",
+              "probability": {
+                "numerator": 1,
+                "denominator": 7
+              },
+              "transformation": {
+                "type": "transpose",
+                "interval": 12
+              },
+              "pattern": {
+                "type": "omit",
+                "id": "20000000-0000-4000-8000-000000000303",
+                "probability": {
+                  "numerator": 1,
+                  "denominator": 5
+                },
+                "pattern": {
+                  "type": "material",
+                  "material_id": "20000000-0000-4000-8000-000000000103"
+                }
+              }
+            },
+            "count": null
+          },
+          "sound": "glass",
+          "enabled": true,
+          "parameters": {
+            "filter_hz": {
+              "type": "integer",
+              "value": 2400
+            },
+            "gain": {
+              "type": "integer",
+              "value": 34
+            },
+            "motion": {
+              "type": "integer",
+              "value": 10
+            },
+            "pan": {
+              "type": "integer",
+              "value": 38
+            },
+            "reverb": {
+              "type": "integer",
+              "value": 55
+            }
+          }
+        }
+      },
+      "20000000-0000-4000-8000-000000000204": {
+        "id": "20000000-0000-4000-8000-000000000204",
+        "settings": {
+          "name": "Air",
+          "pattern": {
+            "type": "repeat",
+            "pattern": {
+              "type": "sometimes",
+              "id": "20000000-0000-4000-8000-000000000404",
+              "probability": {
+                "numerator": 1,
+                "denominator": 7
+              },
+              "transformation": {
+                "type": "transpose",
+                "interval": 0
+              },
+              "pattern": {
+                "type": "omit",
+                "id": "20000000-0000-4000-8000-000000000304",
+                "probability": {
+                  "numerator": 1,
+                  "denominator": 6
+                },
+                "pattern": {
+                  "type": "material",
+                  "material_id": "20000000-0000-4000-8000-000000000104"
+                }
+              }
+            },
+            "count": null
+          },
+          "sound": "air",
+          "enabled": true,
+          "parameters": {
+            "filter_hz": {
+              "type": "integer",
+              "value": 2400
+            },
+            "gain": {
+              "type": "integer",
+              "value": 30
+            },
+            "motion": {
+              "type": "integer",
+              "value": 30
+            },
+            "pan": {
+              "type": "integer",
+              "value": -35
+            },
+            "reverb": {
+              "type": "integer",
+              "value": 55
+            }
+          }
+        }
+      }
+    }
+  }
+}

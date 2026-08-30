@@ -61,6 +61,12 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the production WASM document runtime and browser audio package.
 - Added Pagefind indexing, in-page search, and scroll-aware section navigation
   for the prerendered documentation.
+- Added first-party Phase and Drone studies as canonical documents and Rust
+  builders. Phase uses three exact noncommensurate absolute-time cycles; Drone
+  uses long events, rests, restrained seeded changes, and four voices over a
+  ten-minute query span.
+- Added a semantic `motion` sound control for slow filter and pan modulation in
+  the browser audio graphs.
 
 ### Changed
 
@@ -79,3 +85,5 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the WASM/browser-audio milestone so the browser boundary is integration-driven.
 - Kept `TODO.md` focused on outstanding work; completed implementation history now
   lives here.
+- Corrected browser pitch rendering so canonical chromatic pitches are converted
+  from MIDI-style semitone values to Tone.js frequencies.

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { SOUND_IDS } from '../src/types';
-import { soundControls } from '../src/sounds';
+import { midiFrequency, soundControls } from '../src/sounds';
 
 describe('browser sounds', () => {
 	test('publishes the complete stable semantic palette', () => {
@@ -16,6 +16,12 @@ describe('browser sounds', () => {
 				pan: { type: 'integer', value: -25 },
 				reverb: { type: 'integer', value: 130 }
 			})
-		).toEqual({ filterHz: 20_000, gain: 0.4, pan: -0.25, reverb: 1 });
+		).toEqual({ filterHz: 20_000, gain: 0.4, motion: 0, pan: -0.25, reverb: 1 });
+	});
+
+	test('maps slow motion and chromatic pitches at the audio boundary', () => {
+		expect(soundControls({ motion: { type: 'integer', value: 30 } }).motion).toBe(0.3);
+		expect(midiFrequency(69)).toBe(440);
+		expect(midiFrequency(60)).toBeCloseTo(261.626, 3);
 	});
 });

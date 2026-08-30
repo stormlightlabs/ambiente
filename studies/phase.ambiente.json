@@ -1,0 +1,206 @@
+{
+  "format": "ambiente",
+  "schema_version": 2,
+  "id": "10000000-0000-4000-8000-000000000010",
+  "metadata": {
+    "title": "Phase Study",
+    "composer": "Ambiente",
+    "description": "Three copies of one small phrase move through independent, noncommensurate clocks."
+  },
+  "seed": "5048415345000001",
+  "piece": {
+    "id": "10000000-0000-4000-8000-000000000011",
+    "transport": {
+      "tempo": "60/1",
+      "meter": {
+        "numerator": 4,
+        "denominator": 4
+      }
+    },
+    "materials": {
+      "10000000-0000-4000-8000-000000000001": {
+        "type": "phrase",
+        "id": "10000000-0000-4000-8000-000000000001",
+        "name": "Four tones",
+        "phrase": {
+          "notes": {
+            "10000000-0000-4000-8000-000000000101": {
+              "id": "10000000-0000-4000-8000-000000000101",
+              "pitch": 60,
+              "time": {
+                "clock": "absolute",
+                "onset": "0/1",
+                "duration": "3/2"
+              },
+              "velocity": 76
+            },
+            "10000000-0000-4000-8000-000000000102": {
+              "id": "10000000-0000-4000-8000-000000000102",
+              "pitch": 64,
+              "time": {
+                "clock": "absolute",
+                "onset": "2/1",
+                "duration": "1/1"
+              },
+              "velocity": 68
+            },
+            "10000000-0000-4000-8000-000000000103": {
+              "id": "10000000-0000-4000-8000-000000000103",
+              "pitch": 67,
+              "time": {
+                "clock": "absolute",
+                "onset": "5/1",
+                "duration": "3/2"
+              },
+              "velocity": 72
+            },
+            "10000000-0000-4000-8000-000000000104": {
+              "id": "10000000-0000-4000-8000-000000000104",
+              "pitch": 62,
+              "time": {
+                "clock": "absolute",
+                "onset": "8/1",
+                "duration": "2/1"
+              },
+              "velocity": 64
+            }
+          }
+        }
+      }
+    },
+    "voices": {
+      "10000000-0000-4000-8000-000000000201": {
+        "id": "10000000-0000-4000-8000-000000000201",
+        "settings": {
+          "name": "Near",
+          "pattern": {
+            "type": "repeat",
+            "pattern": {
+              "type": "transform",
+              "transformation": {
+                "type": "transpose",
+                "interval": 0
+              },
+              "pattern": {
+                "type": "transform",
+                "transformation": {
+                  "type": "stretch",
+                  "factor": "43/25"
+                },
+                "pattern": {
+                  "type": "material",
+                  "material_id": "10000000-0000-4000-8000-000000000001"
+                }
+              }
+            },
+            "count": null
+          },
+          "sound": "felt-piano",
+          "enabled": true,
+          "parameters": {
+            "gain": {
+              "type": "integer",
+              "value": 58
+            },
+            "pan": {
+              "type": "integer",
+              "value": -32
+            },
+            "reverb": {
+              "type": "integer",
+              "value": 42
+            }
+          }
+        }
+      },
+      "10000000-0000-4000-8000-000000000202": {
+        "id": "10000000-0000-4000-8000-000000000202",
+        "settings": {
+          "name": "Middle",
+          "pattern": {
+            "type": "repeat",
+            "pattern": {
+              "type": "transform",
+              "transformation": {
+                "type": "transpose",
+                "interval": 7
+              },
+              "pattern": {
+                "type": "transform",
+                "transformation": {
+                  "type": "stretch",
+                  "factor": "119/50"
+                },
+                "pattern": {
+                  "type": "material",
+                  "material_id": "10000000-0000-4000-8000-000000000001"
+                }
+              }
+            },
+            "count": null
+          },
+          "sound": "glass",
+          "enabled": true,
+          "parameters": {
+            "gain": {
+              "type": "integer",
+              "value": 58
+            },
+            "pan": {
+              "type": "integer",
+              "value": 28
+            },
+            "reverb": {
+              "type": "integer",
+              "value": 42
+            }
+          }
+        }
+      },
+      "10000000-0000-4000-8000-000000000203": {
+        "id": "10000000-0000-4000-8000-000000000203",
+        "settings": {
+          "name": "Far",
+          "pattern": {
+            "type": "repeat",
+            "pattern": {
+              "type": "transform",
+              "transformation": {
+                "type": "transpose",
+                "interval": 12
+              },
+              "pattern": {
+                "type": "transform",
+                "transformation": {
+                  "type": "stretch",
+                  "factor": "311/100"
+                },
+                "pattern": {
+                  "type": "material",
+                  "material_id": "10000000-0000-4000-8000-000000000001"
+                }
+              }
+            },
+            "count": null
+          },
+          "sound": "soft-pluck",
+          "enabled": true,
+          "parameters": {
+            "gain": {
+              "type": "integer",
+              "value": 58
+            },
+            "pan": {
+              "type": "integer",
+              "value": 4
+            },
+            "reverb": {
+              "type": "integer",
+              "value": 42
+            }
+          }
+        }
+      }
+    }
+  }
+}

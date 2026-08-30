@@ -68,7 +68,7 @@ export class ToneAudioBackend implements AudioBackend {
 }
 
 /** Values mapped from semantic voice parameters into one browser sound graph. */
-export type SoundControls = Readonly<{ filterHz: number; gain: number; pan: number; reverb: number }>;
+export type SoundControls = Readonly<{ filterHz: number; gain: number; motion: number; pan: number; reverb: number }>;
 
 /**
  * Maps backend-independent integer controls to safe Web Audio ranges.
@@ -78,6 +78,7 @@ export function soundControls(parameters: Readonly<Record<string, AudioParameter
 	return {
 		filterHz: clamp(integerParameter(parameters.filter_hz, 12_000), 80, 20_000),
 		gain: clamp(integerParameter(parameters.gain, 80), 0, 100) / 100,
+		motion: clamp(integerParameter(parameters.motion, 0), 0, 100) / 100,
 		pan: clamp(integerParameter(parameters.pan, 0), -100, 100) / 100,
 		reverb: clamp(integerParameter(parameters.reverb, 15), 0, 100) / 100
 	};
@@ -97,9 +98,11 @@ function createVoiceGraph(voice: AudioVoice): VoiceGraph {
 
 	const instrument = createInstrument(sound);
 	instrument.output.connect(filter);
+	const modulation = createSlowModulation(controls, filter, panner);
 
 	return {
 		dispose: () => {
+			modulation?.dispose();
 			instrument.dispose();
 			filter.dispose();
 			panner.dispose();
@@ -112,6 +115,38 @@ function createVoiceGraph(voice: AudioVoice): VoiceGraph {
 	};
 }
 
+function createSlowModulation(
+	controls: SoundControls,
+	filter: Tone.Filter,
+	panner: Tone.Panner
+): { dispose(): void } | undefined {
+	if (controls.motion === 0) return;
+
+	const cycleSeconds = 150 - controls.motion * 120;
+	const filterDepth = 0.08 + controls.motion * 0.22;
+	const filterMotion = new Tone.LFO({
+		frequency: 1 / cycleSeconds,
+		max: Math.min(20_000, controls.filterHz * (1 + filterDepth)),
+		min: Math.max(80, controls.filterHz * (1 - filterDepth)),
+		type: 'sine'
+	});
+	const panDepth = 0.04 + controls.motion * 0.16;
+	const panMotion = new Tone.LFO({
+		frequency: 1 / (cycleSeconds * 1.618),
+		max: Math.min(1, controls.pan + panDepth),
+		min: Math.max(-1, controls.pan - panDepth),
+		type: 'sine'
+	});
+	filterMotion.connect(filter.frequency).start();
+	panMotion.connect(panner.pan).start();
+	return {
+		dispose: () => {
+			filterMotion.dispose();
+			panMotion.dispose();
+		}
+	};
+}
+
 function createInstrument(sound: SoundId): VoiceGraph & { output: Tone.ToneAudioNode } {
 	switch (sound) {
 		case 'felt-piano': {
@@ -119,7 +154,7 @@ function createInstrument(sound: SoundId): VoiceGraph & { output: Tone.ToneAudio
 				envelope: { attack: 0.015, decay: 0.8, release: 1.8, sustain: 0.18 },
 				oscillator: { type: 'triangle8' }
 			});
-			return pitchedInstrument(synth, (pitch, at) => synth.triggerRelease(pitch, at));
+			return pitchedInstrument(synth, (pitch, at) => synth.triggerRelease(midiFrequency(pitch), at));
 		}
 		case 'glass': {
 			const synth = new Tone.PolySynth(Tone.FMSynth, {
@@ -127,7 +162,7 @@ function createInstrument(sound: SoundId): VoiceGraph & { output: Tone.ToneAudio
 				harmonicity: 3.5,
 				modulationIndex: 8
 			});
-			return pitchedInstrument(synth, (pitch, at) => synth.triggerRelease(pitch, at));
+			return pitchedInstrument(synth, (pitch, at) => synth.triggerRelease(midiFrequency(pitch), at));
 		}
 		case 'warm-drone': {
 			const synth = new Tone.PolySynth(Tone.MonoSynth, {
@@ -144,7 +179,7 @@ function createInstrument(sound: SoundId): VoiceGraph & { output: Tone.ToneAudio
 				},
 				oscillator: { type: 'sine4' }
 			});
-			return pitchedInstrument(synth, (_pitch, at) => synth.triggerRelease(at));
+			return pitchedInstrument(synth, (pitch, at) => synth.triggerRelease(midiFrequency(pitch), at));
 		}
 		case 'soft-pluck': {
 			const synth = new Tone.PluckSynth({ attackNoise: 0.7, dampening: 3200, resonance: 0.82 });
@@ -191,9 +226,15 @@ function pitchedInstrument(
 		dispose: () => instrument.dispose(),
 		output: instrument,
 		previewNoteOff: release,
-		previewNoteOn: (pitch, velocity, at) => instrument.triggerAttack(pitch, at, velocity),
-		trigger: (note) => instrument.triggerAttackRelease(note.pitch, note.duration, note.time, note.velocity)
+		previewNoteOn: (pitch, velocity, at) => instrument.triggerAttack(midiFrequency(pitch), at, velocity),
+		trigger: (note) =>
+			instrument.triggerAttackRelease(midiFrequency(note.pitch), note.duration, note.time, note.velocity)
 	};
+}
+
+/** Converts Ambiente's chromatic semitone pitch to the frequency expected by Tone.js. */
+export function midiFrequency(pitch: number): number {
+	return 440 * 2 ** ((pitch - 69) / 12);
 }
 
 function integerParameter(value: AudioParameterValue | undefined, fallback: number): number {

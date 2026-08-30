@@ -10,22 +10,6 @@ rationale live with the web documentation source under `apps/web/content/docs/`.
 
 Do not proceed by adding broad product surface until these studies work musically.
 
-### Phase study
-
-- [ ] Compose a first-party study from a small amount of material.
-- [ ] Add independent clock support required by the piece.
-- [ ] Support noncommensurate cycles.
-- [ ] Verify long playback does not drift incorrectly at the event level.
-- [ ] Create useful visualization for interacting cycles if needed.
-
-### Drone study
-
-- [ ] Add long-duration events.
-- [ ] Add continuous/slow parameter modulation needed by the study.
-- [ ] Add restrained stochastic motion.
-- [ ] Improve ambient sound presets.
-- [ ] Support long sections of low activity/silence naturally.
-
 ### Pattern study
 
 - [ ] Compose from Phrase and/or StepPattern material.

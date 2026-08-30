@@ -110,9 +110,11 @@ the document remains valid.
 
 Gain, pan, filter, and effects belong to the audio adapter when they describe
 rendering. The browser adapter maps integer `gain` and `reverb` values from
-0–100, `pan` values from -100–100, and `filter_hz` values from 80–20,000 Hz.
-Backend-specific node topology, sample URLs, buffer state, audio context IDs, and
-scheduling handles are never serialized in the document.
+0–100, `pan` values from -100–100, and `filter_hz` values from 80–20,000 Hz. An
+integer `motion` value from 0–100 adds slow filter and pan movement within the
+sound graph. It is a preset control for rendering, not a canonical continuous
+signal. Backend-specific node topology, sample URLs, buffer state, audio context
+IDs, and scheduling handles are never serialized in the document.
 
 ## Samples and assets
 

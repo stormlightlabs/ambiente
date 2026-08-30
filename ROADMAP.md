@@ -312,9 +312,14 @@ Instrument Studio now completes the first no-code composition workflow: Phrase,
 Matrix, and System views edit and play the same canonical document, local pieces
 survive reopen, and focused guides use the production WASM and audio runtime.
 
-The next slice begins the Three Studies quality gate with the Phase study. Add
-only the independent-clock and noncommensurate-cycle behavior the piece needs,
-then verify event timing over long queries before expanding its visualization.
+Phase and Drone now cover independent noncommensurate clocks, exact long-form
+event timing, sustained events, sparse sections, restrained stochastic changes,
+and slow sound modulation. The authored documents live under `studies/` and can
+be imported into Studio or inspected through the CLI.
+
+The next slice is the Pattern study. Use Phrase or StepPattern material to test
+transformations, deterministic probability, stronger rhythmic behavior, and
+live mutation without adding unrelated pattern operators.
 
 ## Non-goals for the reboot
 

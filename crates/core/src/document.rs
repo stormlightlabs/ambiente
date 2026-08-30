@@ -281,6 +281,9 @@ pub enum DocumentValueError {
     /// A symbolic reference was empty or whitespace.
     #[error("symbolic reference must not be empty")]
     EmptyReference,
+    /// A phrase attempted to reuse a note identity.
+    #[error("phrase note IDs must be unique")]
+    DuplicateNote,
 }
 
 /// A note's position and duration in one explicit clock domain.
@@ -394,6 +397,19 @@ impl Phrase {
     #[must_use]
     pub const fn notes(&self) -> &BTreeMap<NoteId, Note> {
         &self.notes
+    }
+
+    /// Inserts a validated note while preserving unique note identities.
+    pub(crate) fn insert_note(&mut self, note: Note) -> Result<(), DocumentValueError> {
+        match self.notes.entry(note.id()) {
+            std::collections::btree_map::Entry::Vacant(entry) => {
+                entry.insert(note);
+                Ok(())
+            }
+            std::collections::btree_map::Entry::Occupied(_) => {
+                Err(DocumentValueError::DuplicateNote)
+            }
+        }
     }
 }
 
