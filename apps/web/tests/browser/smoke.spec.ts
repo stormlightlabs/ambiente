@@ -39,11 +39,10 @@ test('documentation search uses the generated Pagefind index', async ({ page }) 
 test('Studio loads Rust events and the browser transport', async ({ page }) => {
 	await page.goto('/studio');
 
-	await expect(page.getByRole('heading', { level: 1, name: 'Pattern workspace' })).toBeVisible();
-	await expect(page.getByText('Rust events are ready to play.')).toBeVisible();
-	await expect(page.getByText('Rust audio ready')).toBeVisible();
+	await expect(page.getByRole('heading', { level: 1, name: 'Play and record' })).toBeVisible();
+	await expect(page.getByText('Ready to play')).toBeVisible();
 	await expect(page.getByRole('heading', { name: 'Local pieces' })).toBeVisible();
-	await expect(page.getByText('Schema 2')).toBeVisible();
+	await expect(page.getByText('Format 2')).toBeVisible();
 
 	await page.getByRole('button', { name: 'Play' }).click();
 	await expect(page.getByRole('button', { name: 'Pause' })).toBeEnabled();
@@ -62,4 +61,29 @@ test('Studio loads Rust events and the browser transport', async ({ page }) => {
 	await page.reload();
 	await expect(page.getByLabel('Composition seed')).toHaveValue('000000000000002b');
 	await expect(page.getByLabel('Tempo in beats per minute')).toHaveValue('96');
+});
+
+test('Studio edits voices and records piano input as a phrase', async ({ page }) => {
+	await page.goto('/studio');
+	await expect(page.getByText('Ready to play')).toBeVisible();
+
+	await page.getByLabel('Voice sound').selectOption('glass');
+	await expect(page.getByLabel('Voice sound')).toHaveValue('glass');
+
+	await page.getByRole('button', { name: 'Record phrase' }).click();
+	await page.keyboard.down('a');
+	await page.waitForTimeout(80);
+	await page.keyboard.up('a');
+	await page.getByRole('button', { name: 'Stop recording' }).click();
+
+	await expect(page.getByRole('heading', { name: 'Recording 1' })).toBeVisible();
+	await expect(page.getByLabel('Voice material')).toHaveValue(/.+/);
+	await page.getByRole('button', { name: 'Materials' }).click();
+	await expect(page.getByRole('heading', { level: 1, name: 'Musical material' })).toBeVisible();
+	await expect(page.getByText('1 recorded notes with exact onset and duration.')).toBeVisible();
+
+	await page.getByRole('button', { name: 'Add voice' }).click();
+	await expect(page.getByRole('heading', { name: 'Voice 2' })).toBeVisible();
+	await page.getByRole('button', { name: '+ Phrase' }).click();
+	await expect(page.getByRole('button', { name: 'Phrase 2 Phrase' })).toBeVisible();
 });

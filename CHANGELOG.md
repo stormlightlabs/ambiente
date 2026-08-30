@@ -49,6 +49,11 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added a Dexie-backed local piece library with autosave, create, reopen,
   duplicate, delete, canonical import/export, storage persistence handling, and
   independent IndexedDB migration tests.
+- Added voice and material browsing, creation, deletion, association, sound
+  selection, and an initial voice inspector with playback controls.
+- Added a responsive pointer, touch, and computer-keyboard piano with octave
+  navigation, immediate sound preview, canonical phrase recording, phrase
+  display, and optional sixteenth-note quantization.
 - Added Pagefind indexing, in-page search, and scroll-aware section navigation
   for the prerendered documentation.
 
@@ -60,6 +65,9 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   UnoCSS-backed Bootstrap and Remix icons, the favicon artwork as its header
   mark, dark mode, a fuller site footer, and clearer public and documentation
   copy.
+- Revised the published guides for current product behavior and added an
+  Instrument Studio guide for playing, recording, voice editing, and local
+  saving.
 - Moved project architecture documentation into `apps/web/content/docs/` for the
   web application, while keeping the product roadmap at the repository root.
 - Sequenced the Vike/Solid web shell and Sätteri documentation pipeline before

@@ -13,14 +13,24 @@ describe('WASM application', () => {
 		const module = await readFile(new URL('../generated/ambiente_wasm_bg.wasm', import.meta.url));
 		const application = await WasmApplication.create(document, module);
 
-		expect(application.inspect()).toEqual({
+		expect(application.inspect()).toMatchObject({
 			documentId: '9f8d76b0-0dd1-4fea-9ad9-43ae8f94f860',
 			materialCount: 1,
+			materials: [{ id: '313b2f8d-8c00-4d82-82f6-cdb7aeb112de', name: 'Pulse', type: 'step_pattern' }],
 			seed: '000000000000002a',
 			tempo: '120/1',
 			title: 'Cross-runtime study',
 			voiceCount: 1,
-			voices: [{ enabled: true, id: '826b8913-4c23-43e1-b150-594737909a58', parameters: {}, sound: 'felt-piano' }]
+			voices: [
+				{
+					enabled: true,
+					id: '826b8913-4c23-43e1-b150-594737909a58',
+					materialId: '313b2f8d-8c00-4d82-82f6-cdb7aeb112de',
+					name: 'Piano',
+					parameters: {},
+					sound: 'felt-piano'
+				}
+			]
 		});
 		expect(application.validate()).toEqual([]);
 		expect(application.queryEvents({ clock: 'metric', start: '0/1', end: '2/1' })).toEqual(expected);

@@ -8,8 +8,8 @@ export default function Page() {
 				Recognizable identity.
 			</h1>
 			<p>
-				Playable pieces are not available yet. The interactive documentation shows how a focused control can live in a
-				guide without simulating the music engine.
+				Playable pieces are not published yet. For now, explore a small interactive guide component and the ideas behind
+				Ambiente's composition model.
 			</p>
 			<a class="button button--primary" href="/docs/solid-components">
 				Open interactive documentation

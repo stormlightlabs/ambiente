@@ -1,7 +1,7 @@
 ---
 title: Document format
 description: How Ambiente identifies, stores, migrates, and validates a piece.
-order: 3
+order: 4
 ---
 
 # Document format
@@ -148,8 +148,6 @@ Migration follows these rules:
   current representation.
 - Loading migrates an old document in memory. Only saving or an explicit future
   migration command writes the current representation.
-- The loader records the source schema version so callers can report that an
-  in-memory migration occurred.
 - A migration does not silently change a saved realization. If changed pattern
   or randomness semantics cannot reproduce existing behavior, the old semantic
   version remains representable.

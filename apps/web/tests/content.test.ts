@@ -4,6 +4,7 @@ import { documentation, headingsFromHtml } from '../src/content/docs';
 
 describe('documentation discovery', () => {
 	test('derives stable routes from the canonical content directory', () => {
+		expect(documentation.map((entry) => entry.path)).toContain('/docs/instrument-studio');
 		expect(documentation.map((entry) => entry.path)).toContain('/docs/architecture');
 		expect(documentation.map((entry) => entry.path)).toContain('/docs/solid-components');
 	});

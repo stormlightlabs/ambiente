@@ -15,6 +15,7 @@ class FakeBackend implements AudioBackend {
 	configured: AudioDocument[] = [];
 	disposed = false;
 	notes: ScheduledNote[] = [];
+	previewed: string[] = [];
 	resets = 0;
 	time = 0;
 
@@ -28,6 +29,14 @@ class FakeBackend implements AudioBackend {
 
 	now(): number {
 		return this.time;
+	}
+
+	previewNoteOff(voiceId: string, pitch: number): void {
+		this.previewed.push(`off:${voiceId}:${pitch}`);
+	}
+
+	previewNoteOn(voiceId: string, pitch: number): void {
+		this.previewed.push(`on:${voiceId}:${pitch}`);
 	}
 
 	reset(): void {
@@ -60,11 +69,22 @@ function source(): AudioEventSource {
 		inspect: () => ({
 			documentId: 'document',
 			materialCount: 1,
+			materials: [],
 			seed: '000000000000002a',
 			tempo: '120/1',
 			title: 'Study',
 			voiceCount: 1,
-			voices: [{ enabled: true, id: 'voice', parameters: {}, sound: 'felt-piano' }]
+			voices: [
+				{
+					enabled: true,
+					id: 'voice',
+					materialId: null,
+					name: 'Piano',
+					parameters: {},
+					pattern: null,
+					sound: 'felt-piano'
+				}
+			]
 		}),
 		queryEvents: (query) => (query.clock === 'metric' ? [event] : [])
 	};
@@ -87,6 +107,17 @@ describe('look-ahead scheduler', () => {
 		backend.time = 0.05;
 		timer.callback?.();
 		expect(backend.notes).toHaveLength(1);
+	});
+
+	test('previews direct input without starting the transport', async () => {
+		const backend = new FakeBackend();
+		const scheduler = new LookAheadScheduler(source(), backend);
+
+		await scheduler.previewNoteOn('voice', 64);
+		scheduler.previewNoteOff('voice', 64);
+
+		expect(scheduler.state).toBe('stopped');
+		expect(backend.previewed).toEqual(['on:voice:64', 'off:voice:64']);
 	});
 
 	test('pauses, resumes, seeks, stops, and refreshes a running document', async () => {

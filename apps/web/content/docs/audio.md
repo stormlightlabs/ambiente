@@ -1,7 +1,7 @@
 ---
 title: Audio
 description: How events become browser audio without changing the composition model.
-order: 4
+order: 5
 ---
 
 # Audio
@@ -28,8 +28,8 @@ browser audio, MIDI, OSC, visualization, native synthesis, or offline rendering.
 ## Browser-first runtime
 
 The first real-time backend uses Web Audio with Tone.js. Web Audio provides an
-audio graph and a high-precision audio clock. Tone.js adds a transport,
-future-time scheduling, synths, effects, and control signals.[^web-audio]
+audio graph and a high-precision audio clock. Tone.js supplies instruments,
+effects, and future-time scheduling.[^web-audio]
 [^tone]
 
 Tone.js is playback infrastructure, not part of Ambiente's composition model.
@@ -37,8 +37,8 @@ The core never creates a `Tone.Sequence`, stores a Tone instrument, or evaluates
 a Tone callback. It returns events with musical timing and symbolic targets; the
 TypeScript runtime maps them to the active audio graph.
 
-The first real-time backend will run in the browser. Ambiente does not need
-native real-time DSP until a musical workflow exposes a browser limitation.
+The current real-time backend runs in the browser. Ambiente does not need native
+real-time DSP until a musical workflow exposes a browser limitation.
 
 ## Scheduling
 
@@ -46,7 +46,7 @@ The scheduler queries a short span ahead of the transport, converts each event t
 audio-context time, and schedules it before it must play. It neither renders an
 endless piece from time zero nor keeps pattern state inside Tone.js.
 
-The scheduler owns:
+The look-ahead scheduler owns:
 
 - mapping the Ambiente transport position to audio-context time;
 - choosing and advancing the look-ahead query window;
@@ -86,6 +86,8 @@ mute, and volume remain explicit controls.
 Stopping releases active notes and scheduled work. Pausing preserves the musical
 position. Seeking rebuilds audible state at the destination, including events
 that began before the exact seek point when the core reports them as active.
+Direct piano input uses the selected voice's sound but does not start or move the
+transport.
 
 ## Sounds and voices
 
@@ -103,8 +105,7 @@ The browser sound library provides six stable semantic presets:
 - `percussion` for simple percussion.
 
 A stable ID names the intended sound, not a Tone.js class. A preset can change
-its implementation while keeping its documented musical role. If a sound is
-missing, the runtime reports a diagnostic and uses a defined fallback or silence;
+its implementation while keeping its documented musical role. If a sound is missing, the browser runtime currently falls back to felt piano;
 the document remains valid.
 
 Gain, pan, filter, and effects belong to the audio adapter when they describe

@@ -43,6 +43,8 @@ export type AudioBackend = {
 	configure(document: AudioDocument): void;
 	dispose(): void;
 	now(): number;
+	previewNoteOff(voiceId: string, pitch: number, at: number): void;
+	previewNoteOn(voiceId: string, pitch: number, velocity: number, at: number): void;
 	reset(at: number): void;
 	schedule(note: ScheduledNote): void;
 	start(): Promise<void>;

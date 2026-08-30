@@ -1,7 +1,7 @@
 ---
 title: Composition model
 description: How Ambiente represents material, time, variation, and musical structure.
-order: 2
+order: 3
 ---
 
 # Composition model
@@ -199,8 +199,8 @@ musical choices while another seed explores another sequence.[^sonic-pi-rand]
 
 ```text
 Document
+├── Metadata
 └── Piece
-    ├── Metadata
     ├── Transport
     ├── Materials
     ├── Voices
@@ -234,15 +234,14 @@ absolute time independently.
 
 ### Material
 
-Authored source material. Initial material types are:
+Authored source material. The current model includes:
 
-- `Phrase`: arbitrary note or event material over time;
+- `Phrase`: notes with arbitrary onset and duration;
 - `StepPattern`: quantized material arranged in rows and steps;
-- `PitchSet`: a collection of available pitches;
-- `SampleSet`: a collection of symbolic sample references.
+- `PitchSet`: a collection of available pitches.
 
-A later workflow may justify chord sets, automation shapes, recorded controls,
-or audio clips.
+A later workflow may justify sample sets, chord sets, automation shapes,
+recorded controls, or audio clips.
 
 A piano recording creates a `Phrase`. The matrix edits a `StepPattern`. These
 editors do not own private playback models in JavaScript.
@@ -255,20 +254,14 @@ An interface can display voices as tracks, but `Track` is not a persisted type.
 
 ### Pattern
 
-Composable behavior that maps source material and time into events. The core
-vocabulary is deliberately small:
+Composable behavior that maps source material and time into events. The current vocabulary is deliberately small. It supports sequence, stack,
+repeat, shift, stretch, rotate, transpose, choose, weighted choice, omit, and
+sometimes. Add another operator only when a composition needs behavior that
+these operations cannot express.
 
-- structural: sequence, stack, repeat, cycle;
-- temporal: shift, stretch, slow, fast, phase;
-- transformations: rotate, reverse, transpose, invert, omit, duplicate, map;
-- selection: choose, weighted choice, alternate, shuffle, walk;
-- conditional: sometimes, rarely, every, within.
-
-Signals such as sine, triangle, envelope, deterministic noise, and random walk
-can provide continuous control. Add an operator only when a composition needs
-behavior that existing operators cannot express. SuperCollider's pattern guide
-shows how value streams and event patterns can compose, but Ambiente does not
-copy its API or execution model.[^supercollider-patterns]
+SuperCollider's pattern guide shows how value streams and event patterns can
+compose, but Ambiente does not copy its API or execution
+model.[^supercollider-patterns]
 
 ### Event
 

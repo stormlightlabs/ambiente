@@ -308,14 +308,9 @@ interesting.
 
 ## Next implementation slice
 
-The browser slice now plays deterministic Rust events through the shared audio
-package:
-
-```text
-Document -> pattern query -> WASM events -> look-ahead scheduler -> Tone.js / Web Audio
-```
-
-The next slice starts Instrument Studio with canonical matrix editing:
+Instrument Studio now has transport and local persistence, voice and material
+controls, sound settings, and a playable piano that records canonical phrases.
+The next slice adds canonical matrix editing:
 
 ```text
 StepPattern document operations
@@ -325,12 +320,10 @@ StepPattern document operations
       running audio
 ```
 
-Use the existing WASM facade and audio package for Studio and documentation
-consumers. Do not fill remaining browser gaps with a TypeScript composition
-engine. After matrix editing works, repeat the path with piano recording into a
-canonical `Phrase`. Then add `PieceStorage` and the Dexie/IndexedDB browser
-adapter so canonical documents can be closed and reopened before broadening the
-Studio surface.
+Use the existing WASM facade and audio package in Studio and playable guides.
+Do not fill browser gaps with a TypeScript composition engine. After matrix
+editing, add the remaining Phrase and System views and make focused production
+examples playable in the documentation.
 
 ## Non-goals for the reboot
 

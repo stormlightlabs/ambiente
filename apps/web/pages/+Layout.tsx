@@ -89,7 +89,7 @@ function SiteFooter() {
 			</div>
 			<div class="site-footer__meta">
 				<p>© {new Date().getFullYear()} Stormlight Labs</p>
-				<p>Built with ⚡ in Austin, Texas</p>
+				<p>Made in Austin, Texas</p>
 			</div>
 		</footer>
 	);

@@ -1,7 +1,7 @@
 ---
 title: Architecture
 description: How Rust, WebAssembly, browser code, and audio adapters divide responsibility.
-order: 1
+order: 2
 ---
 
 # Architecture
@@ -26,7 +26,7 @@ implementation order.
               ┌───────────────┼────────────────┐
               │               │                │
               ▼               ▼                ▼
-        ambiente-cli    ambiente-wasm     ambiente-mcp
+        ambiente-cli    ambiente-wasm   planned MCP adapter
                               │
                               ▼
                      TypeScript facade
@@ -34,7 +34,7 @@ implementation order.
                   ┌───────────┴───────────┐
                   │                       │
                   ▼                       ▼
-              Studio UI               audio-web
+              Studio UI             browser audio
                 Solid               Web Audio /
                                       Tone.js
                   │
@@ -93,7 +93,7 @@ ESLint, and Vitest. Run markdownlint-cli2 locally when checking documentation.
 - stable IDs and references;
 - document operations;
 - musical and absolute time;
-- materials, voices, patterns, scenes, macros, and captures;
+- materials, voices, patterns, and later canonical scenes, macros, and captures;
 - deterministic seed derivation;
 - event generation and inspection.
 
@@ -202,7 +202,6 @@ different rendering needs:
 /learn/**          prerendered
 /examples/**       prerendered with interactive components
 /studio/**         prerendered SPA shell
-/listen/**         prerendered shell or content as appropriate
 ```
 
 Vike supports render modes per page and can prerender an SPA shell. If all
@@ -216,18 +215,18 @@ runtime through `jsxImportSource: "solid-js/h"`.[^satteri-vite] Sätteri is also
 Astro 7's native Markdown and MDX processor.[^astro-satteri] [^satteri]
 `satteri-expressive-code` adds highlighted, annotated code blocks.[^satteri-expressive-code]
 
-The Studio and interactive guides share the same WASM facade and will share the
-audio package. A guide can expose fewer controls, but it cannot carry a separate
-pattern engine. The web shell keeps its small fixture adapter for shell-only
-tests.
+The Studio uses the WASM facade and shared audio package. Playable guides use
+those same production paths. A guide can expose fewer controls, but it cannot
+carry a separate pattern engine. The web shell keeps a small fixture adapter for
+shell-only tests.
 
 The Tauri application will host the shared Studio. Platform features sit behind
 capability adapters, for example:
 
 ```text
-ProjectStorage
-├── BrowserProjectStorage
-└── DesktopProjectStorage
+PieceStorage
+├── BrowserPieceStorage
+└── DesktopPieceStorage
 
 MidiHost
 ├── WebMidiHost

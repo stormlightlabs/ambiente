@@ -114,19 +114,28 @@ impl AmbienteWasm {
     #[must_use]
     pub fn inspect(&self) -> String {
         let piece = self.document.piece();
+        let materials = piece.materials().values().collect();
         let voices = piece
             .voices()
             .values()
             .map(|voice| AudioVoiceInspection {
                 enabled: voice.settings().enabled(),
                 id: voice.id().to_string(),
+                material_id: voice
+                    .settings()
+                    .pattern()
+                    .and_then(sole_material)
+                    .map(|id| id.to_string()),
+                name: voice.settings().name(),
                 parameters: voice.settings().parameters(),
+                pattern: voice.settings().pattern(),
                 sound: voice.settings().sound().as_str(),
             })
             .collect();
         json(&DocumentInspection {
             document_id: self.document.id().to_string(),
             material_count: piece.materials().len(),
+            materials,
             seed: self.document.seed().to_string(),
             tempo: piece.transport().tempo().to_string(),
             title: self
@@ -138,6 +147,30 @@ impl AmbienteWasm {
             voices,
         })
     }
+}
+
+fn sole_material(pattern: &Pattern) -> Option<MaterialId> {
+    match pattern {
+        Pattern::Material { material_id } => Some(*material_id),
+        Pattern::Sequence { patterns }
+        | Pattern::Stack { patterns }
+        | Pattern::Choose { patterns, .. } => sole_material_in(patterns.iter()),
+        Pattern::WeightedChoose { patterns, .. } => {
+            sole_material_in(patterns.iter().map(WeightedPattern::pattern))
+        }
+        Pattern::Repeat { pattern, .. }
+        | Pattern::Transform { pattern, .. }
+        | Pattern::Omit { pattern, .. }
+        | Pattern::Sometimes { pattern, .. } => sole_material(pattern),
+    }
+}
+
+fn sole_material_in<'a>(patterns: impl Iterator<Item = &'a Pattern>) -> Option<MaterialId> {
+    let mut materials = patterns.map(sole_material);
+    let first = materials.next()??;
+    materials
+        .all(|material| material == Some(first))
+        .then_some(first)
 }
 
 /// Runs an event query and returns the stable browser event representation.
@@ -199,6 +232,7 @@ enum QueryClock {
 struct DocumentInspection<'a> {
     document_id: String,
     material_count: usize,
+    materials: Vec<&'a Material>,
     seed: String,
     tempo: String,
     title: &'a str,
@@ -211,7 +245,10 @@ struct DocumentInspection<'a> {
 struct AudioVoiceInspection<'a> {
     enabled: bool,
     id: String,
+    material_id: Option<String>,
+    name: &'a str,
     parameters: &'a BTreeMap<String, ParameterValue>,
+    pattern: Option<&'a Pattern>,
     sound: &'a str,
 }
 

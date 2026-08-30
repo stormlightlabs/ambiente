@@ -44,11 +44,44 @@ export type ApplicationParameterValue =
 	| Readonly<{ type: 'integer'; value: number }>
 	| Readonly<{ type: 'text'; value: string }>;
 
-/** Playback settings for one canonical voice. */
+/** One canonical phrase note projected for browser editors. */
+export type ApplicationPhraseNote = Readonly<{
+	id: string;
+	pitch: number;
+	time:
+		| Readonly<{ clock: 'absolute'; duration: string; onset: string }>
+		| Readonly<{ clock: 'metric'; duration: string; onset: string }>;
+	velocity: number;
+}>;
+
+/** Authored material projected for browser editors. */
+export type ApplicationMaterial =
+	| Readonly<{
+			id: string;
+			name: string;
+			phrase: Readonly<{ notes: Readonly<Record<string, ApplicationPhraseNote>> }>;
+			type: 'phrase';
+	  }>
+	| Readonly<{
+			id: string;
+			name: string;
+			pattern: Readonly<{
+				rows: readonly Readonly<{ cells: readonly Readonly<{ active: boolean }>[]; pitch: number }>[];
+				steps: number;
+				subdivision: string;
+			}>;
+			type: 'step_pattern';
+	  }>
+	| Readonly<{ id: string; name: string; pitches: readonly number[]; type: 'pitch_set' }>;
+
+/** Playback and editor settings for one canonical voice. */
 export type ApplicationVoice = Readonly<{
 	enabled: boolean;
 	id: string;
+	materialId: string | null;
+	name: string;
 	parameters: Readonly<Record<string, ApplicationParameterValue>>;
+	pattern: Readonly<Record<string, unknown>> | null;
 	sound: string;
 }>;
 
@@ -56,6 +89,7 @@ export type ApplicationVoice = Readonly<{
 export type DocumentInspection = Readonly<{
 	documentId: string;
 	materialCount: number;
+	materials: readonly ApplicationMaterial[];
 	seed: string;
 	tempo: string;
 	title: string;

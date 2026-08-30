@@ -28,6 +28,7 @@ const browserTimer: SchedulerTimer = {
 export class LookAheadScheduler {
 	private readonly intervalSeconds: number;
 	private readonly latencySeconds: number;
+	private readonly heldPreviewNotes = new Set<string>();
 	private readonly listeners = new Set<TransportListener>();
 	private readonly lookAheadSeconds: number;
 	private readonly scheduledEvents = new Map<string, number>();
@@ -80,6 +81,29 @@ export class LookAheadScheduler {
 		this.setState('playing');
 		this.fillHorizon();
 		this.intervalId = this.timer.setInterval(() => this.fillHorizon(), this.intervalSeconds * 1000);
+	}
+
+	/** Starts a note immediately on a canonical voice for piano and other direct input. */
+	async previewNoteOn(voiceId: string, pitch: number, velocity = 100 / 127): Promise<void> {
+		const identity = previewIdentity(voiceId, pitch);
+		if (this.heldPreviewNotes.has(identity)) return;
+		this.heldPreviewNotes.add(identity);
+		try {
+			await this.backend.start();
+			if (this.heldPreviewNotes.has(identity)) {
+				this.backend.previewNoteOn(voiceId, pitch, velocity, this.backend.now());
+			}
+		} catch (error) {
+			this.heldPreviewNotes.delete(identity);
+			throw error;
+		}
+	}
+
+	/** Releases a note started by direct input. */
+	previewNoteOff(voiceId: string, pitch: number): void {
+		const identity = previewIdentity(voiceId, pitch);
+		if (!this.heldPreviewNotes.delete(identity)) return;
+		this.backend.previewNoteOff(voiceId, pitch, this.backend.now());
 	}
 
 	/** Pauses playback while preserving the current musical position. */
@@ -152,6 +176,7 @@ export class LookAheadScheduler {
 
 	/** Stops timers, releases audio nodes, and removes listeners. */
 	dispose(): void {
+		this.heldPreviewNotes.clear();
 		this.stopScheduling();
 		this.backend.dispose();
 		this.listeners.clear();
@@ -231,6 +256,10 @@ export class LookAheadScheduler {
 	private emit(): void {
 		for (const listener of this.listeners) listener(this.stateValue, this.positionSeconds);
 	}
+}
+
+function previewIdentity(voiceId: string, pitch: number): string {
+	return `${voiceId}:${pitch}`;
 }
 
 function exactToNumber(value: string): number {

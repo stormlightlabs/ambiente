@@ -8,29 +8,6 @@ rationale live with the web documentation source under `apps/web/content/docs/`.
 
 ## M6 — Instrument Studio
 
-### Material and voice UI
-
-- [ ] List voices.
-- [ ] Select voice.
-- [ ] Add/delete voice.
-- [ ] List materials.
-- [ ] Add/delete material.
-- [ ] Associate material with voice.
-- [ ] Select sound.
-- [ ] Add initial inspector.
-
-### Piano
-
-- [ ] Render responsive piano keyboard.
-- [ ] Support pointer/touch note input.
-- [ ] Support computer keyboard input.
-- [ ] Send immediate note preview to selected sound.
-- [ ] Add octave navigation.
-- [ ] Record note-on/note-off timing.
-- [ ] Convert recording to canonical `Phrase`.
-- [ ] Display recorded phrase.
-- [ ] Add optional post-recording quantization.
-
 ### Tone Matrix editor
 
 - [ ] Render configurable matrix.

@@ -11,11 +11,22 @@ import type {
 const fixtureInspection: DocumentInspection = {
 	documentId: 'fixture-document',
 	materialCount: 1,
+	materials: [],
 	seed: '000000000000002a',
 	tempo: '120/1',
 	title: 'Untitled system',
 	voiceCount: 1,
-	voices: [{ enabled: true, id: 'fixture-voice', parameters: {}, sound: 'felt-piano' }]
+	voices: [
+		{
+			enabled: true,
+			id: 'fixture-voice',
+			materialId: null,
+			name: 'Piano',
+			parameters: {},
+			pattern: null,
+			sound: 'felt-piano'
+		}
+	]
 };
 
 const fixtureDocument = JSON.stringify({ format: 'ambiente', fixture: true, schema_version: 2 });

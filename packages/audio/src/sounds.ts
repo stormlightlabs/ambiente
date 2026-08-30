@@ -5,7 +5,12 @@ import { isSoundId } from './types';
 
 type Trigger = (note: ScheduledNote) => void;
 
-type VoiceGraph = { dispose(): void; trigger: Trigger };
+type VoiceGraph = {
+	dispose(): void;
+	previewNoteOff(pitch: number, at: number): void;
+	previewNoteOn(pitch: number, velocity: number, at: number): void;
+	trigger: Trigger;
+};
 
 /** Tone.js rendering backend for Ambiente's stable semantic sound palette. */
 export class ToneAudioBackend implements AudioBackend {
@@ -26,6 +31,16 @@ export class ToneAudioBackend implements AudioBackend {
 	/** Returns audio-context time without Tone.js's additional look-ahead. */
 	now(): number {
 		return Tone.immediate();
+	}
+
+	/** Starts an unscheduled note for direct instrument input. */
+	previewNoteOn(voiceId: string, pitch: number, velocity: number, at: number): void {
+		this.graphs.get(voiceId)?.previewNoteOn(pitch, velocity, at);
+	}
+
+	/** Releases a note started by direct instrument input. */
+	previewNoteOff(voiceId: string, pitch: number, at: number): void {
+		this.graphs.get(voiceId)?.previewNoteOff(pitch, at);
 	}
 
 	/** Schedules one note on the graph selected by its canonical voice ID. */
@@ -91,6 +106,8 @@ function createVoiceGraph(voice: AudioVoice): VoiceGraph {
 			gain.dispose();
 			reverb.dispose();
 		},
+		previewNoteOff: instrument.previewNoteOff,
+		previewNoteOn: instrument.previewNoteOn,
 		trigger: instrument.trigger
 	};
 }
@@ -102,7 +119,7 @@ function createInstrument(sound: SoundId): VoiceGraph & { output: Tone.ToneAudio
 				envelope: { attack: 0.015, decay: 0.8, release: 1.8, sustain: 0.18 },
 				oscillator: { type: 'triangle8' }
 			});
-			return pitchedInstrument(synth);
+			return pitchedInstrument(synth, (pitch, at) => synth.triggerRelease(pitch, at));
 		}
 		case 'glass': {
 			const synth = new Tone.PolySynth(Tone.FMSynth, {
@@ -110,7 +127,7 @@ function createInstrument(sound: SoundId): VoiceGraph & { output: Tone.ToneAudio
 				harmonicity: 3.5,
 				modulationIndex: 8
 			});
-			return pitchedInstrument(synth);
+			return pitchedInstrument(synth, (pitch, at) => synth.triggerRelease(pitch, at));
 		}
 		case 'warm-drone': {
 			const synth = new Tone.PolySynth(Tone.MonoSynth, {
@@ -127,11 +144,11 @@ function createInstrument(sound: SoundId): VoiceGraph & { output: Tone.ToneAudio
 				},
 				oscillator: { type: 'sine4' }
 			});
-			return pitchedInstrument(synth);
+			return pitchedInstrument(synth, (_pitch, at) => synth.triggerRelease(at));
 		}
 		case 'soft-pluck': {
 			const synth = new Tone.PluckSynth({ attackNoise: 0.7, dampening: 3200, resonance: 0.82 });
-			return pitchedInstrument(synth);
+			return pitchedInstrument(synth, (_pitch, at) => synth.triggerRelease(at));
 		}
 		case 'air': {
 			const synth = new Tone.NoiseSynth({
@@ -141,6 +158,8 @@ function createInstrument(sound: SoundId): VoiceGraph & { output: Tone.ToneAudio
 			return {
 				dispose: () => synth.dispose(),
 				output: synth,
+				previewNoteOff: (_pitch, at) => synth.triggerRelease(at),
+				previewNoteOn: (_pitch, velocity, at) => synth.triggerAttack(at, velocity),
 				trigger: (note) => synth.triggerAttackRelease(note.duration, note.time, note.velocity)
 			};
 		}
@@ -150,7 +169,7 @@ function createInstrument(sound: SoundId): VoiceGraph & { output: Tone.ToneAudio
 				octaves: 5,
 				pitchDecay: 0.035
 			});
-			return pitchedInstrument(synth);
+			return pitchedInstrument(synth, (_pitch, at) => synth.triggerRelease(at));
 		}
 	}
 }
@@ -158,17 +177,21 @@ function createInstrument(sound: SoundId): VoiceGraph & { output: Tone.ToneAudio
 function pitchedInstrument(
 	instrument: Tone.ToneAudioNode & {
 		dispose(): unknown;
+		triggerAttack(note: Tone.Unit.Frequency, time?: Tone.Unit.Time, velocity?: number): unknown;
 		triggerAttackRelease(
 			note: Tone.Unit.Frequency,
 			duration: Tone.Unit.Time,
 			time?: Tone.Unit.Time,
 			velocity?: number
 		): unknown;
-	}
+	},
+	release: (pitch: number, at: number) => unknown
 ): VoiceGraph & { output: Tone.ToneAudioNode } {
 	return {
 		dispose: () => instrument.dispose(),
 		output: instrument,
+		previewNoteOff: release,
+		previewNoteOn: (pitch, velocity, at) => instrument.triggerAttack(pitch, at, velocity),
 		trigger: (note) => instrument.triggerAttackRelease(note.pitch, note.duration, note.time, note.velocity)
 	};
 }

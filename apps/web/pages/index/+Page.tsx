@@ -14,7 +14,7 @@ const pathways = [
 	{
 		index: '03',
 		title: 'Keep the realization',
-		copy: 'Save the document and seed to return to the same event stream in the CLI, browser, and future desktop app.'
+		copy: 'Save the piece and its seed to return to the same musical realization whenever you want to hear it again.'
 	}
 ];
 
@@ -23,12 +23,8 @@ export default function Page() {
 		<>
 			<section class="hero">
 				<div class="hero__copy">
-					<p class="kicker">A generative music instrument</p>
-					<h1>
-						Compose the system.
-						<br />
-						Play what emerges.
-					</h1>
+					<p class="kicker">Generative ambient music</p>
+					<h1>Algorithmic Composition</h1>
 					<p class="hero__lede">
 						Play a phrase or draw a pattern, then shape how it repeats, transforms, and varies. Ambiente keeps each
 						result repeatable.
