@@ -49,55 +49,69 @@ See `docs/ROADMAP.md` for product direction and sequencing. The other files in
 
 ### Document model
 
-- [ ] Implement `Document`.
-- [ ] Implement `Piece`.
-- [ ] Implement document metadata.
-- [ ] Implement stable IDs/references.
-- [ ] Implement validation.
-- [ ] Implement document operations rather than relying on arbitrary mutable access.
+- [x] Implement `Document`.
+- [x] Implement `Piece`.
+- [x] Implement document metadata.
+- [x] Implement stable IDs/references.
+- [x] Implement validation.
+- [x] Implement document operations rather than relying on arbitrary mutable access.
 
 Initial operations should cover:
 
-- [ ] add/remove voice
-- [ ] add/remove material
-- [ ] update material
-- [ ] insert/remove note
-- [ ] update matrix cell
-- [ ] set seed
-- [ ] update voice settings
+- [x] add/remove voice
+- [x] add/remove material
+- [x] update material
+- [x] insert/remove note
+- [x] update matrix cell
+- [x] set seed
+- [x] update voice settings
 
 ### Time
 
-- [ ] Implement absolute duration/time.
-- [ ] Implement beats/cycles.
-- [ ] Implement tempo.
-- [ ] Implement meter only where required by metric material.
-- [ ] Implement conversion between musical and absolute time.
-- [ ] Ensure processes can use independent absolute durations without requiring tempo
+- [x] Implement absolute duration/time.
+- [x] Implement beats/cycles.
+- [x] Implement tempo.
+- [x] Implement meter only where required by metric material.
+- [x] Implement conversion between musical and absolute time.
+- [x] Ensure processes can use independent absolute durations without requiring tempo
       synchronization.
 
 Test cases should include:
 
-- [ ] ordinary 4/4 metric pattern
-- [ ] 17.2-second cycle
-- [ ] 23.8-second cycle
-- [ ] overlapping independent clocks
+- [x] ordinary 4/4 metric pattern
+- [x] 17.2-second cycle
+- [x] 23.8-second cycle
+- [x] overlapping independent clocks
 
 ### Theory primitives
 
 Implement only primitives required by early composition workflows.
 
-- [ ] `Pitch`
-- [ ] pitch class / chromatic representation as appropriate
-- [ ] `Interval`
-- [ ] `PitchSet`
-- [ ] `Scale`
-- [ ] register/range helpers
-- [ ] transposition
+- [x] `Pitch`
+- [x] pitch class / chromatic representation as appropriate
+- [x] `Interval`
+- [x] `PitchSet`
+- [x] `Scale`
+- [x] register/range helpers
+- [x] transposition
 
 Defer sophisticated harmonic analysis and chord-generation APIs.
 
 ### Materials
+
+- [ ] Implement `Material` as the persisted sum type for authored source material.
+- [ ] Give every material a stable `MaterialId`.
+- [ ] Store materials in `Piece` independently from voices.
+- [ ] Support stable references from voices and later patterns to materials.
+- [ ] Define explicit serialized tags for each material type.
+- [ ] Implement add/remove/update material operations.
+- [ ] Validate duplicate IDs, broken references, and invalid material payloads.
+- [ ] Keep materials independent of sounds, Tone.js, MIDI, and UI state.
+- [ ] Initially support:
+  - [ ] `Phrase`
+  - [ ] `StepPattern`
+  - [ ] `PitchSet`
+- [ ] Defer `SampleSet` until sample playback provides a concrete requirement.
 
 ### Phrase
 
