@@ -1,0 +1,122 @@
+import { describe, expect, test } from 'vitest';
+
+import { LookAheadScheduler } from '../src/scheduler';
+import type { AudioBackend, AudioDocument, AudioEventSource, ScheduledNote, SchedulerTimer } from '../src/types';
+
+const event = {
+	kind: { note: { pitch: 60, velocity: 100 }, type: 'note' as const },
+	properties: {},
+	source: { material_id: 'material', row: 0, step: 0, type: 'step_cell' },
+	span: { end: { clock: 'metric' as const, value: '1/2' }, start: { clock: 'metric' as const, value: '0/1' } },
+	target: { id: 'voice', type: 'voice' as const }
+};
+
+class FakeBackend implements AudioBackend {
+	configured: AudioDocument[] = [];
+	disposed = false;
+	notes: ScheduledNote[] = [];
+	resets = 0;
+	time = 0;
+
+	configure(document: AudioDocument): void {
+		this.configured.push(document);
+	}
+
+	dispose(): void {
+		this.disposed = true;
+	}
+
+	now(): number {
+		return this.time;
+	}
+
+	reset(): void {
+		this.resets += 1;
+	}
+
+	schedule(note: ScheduledNote): void {
+		this.notes.push(note);
+	}
+
+	async start(): Promise<void> {}
+}
+
+class FakeTimer implements SchedulerTimer {
+	callback: (() => void) | undefined;
+	cleared = false;
+
+	clearInterval(): void {
+		this.cleared = true;
+	}
+
+	setInterval(callback: () => void): ReturnType<typeof setInterval> {
+		this.callback = callback;
+		return 1 as unknown as ReturnType<typeof setInterval>;
+	}
+}
+
+function source(): AudioEventSource {
+	return {
+		inspect: () => ({
+			documentId: 'document',
+			materialCount: 1,
+			seed: '000000000000002a',
+			tempo: '120/1',
+			title: 'Study',
+			voiceCount: 1,
+			voices: [{ enabled: true, id: 'voice', parameters: {}, sound: 'felt-piano' }]
+		}),
+		queryEvents: (query) => (query.clock === 'metric' ? [event] : [])
+	};
+}
+
+describe('look-ahead scheduler', () => {
+	test('starts from a user action and schedules Rust events over a short horizon', async () => {
+		const backend = new FakeBackend();
+		const timer = new FakeTimer();
+		const scheduler = new LookAheadScheduler(source(), backend, { latencySeconds: 0.02, lookAheadSeconds: 0.1, timer });
+
+		await scheduler.play();
+
+		expect(scheduler.state).toBe('playing');
+		expect(backend.notes).toEqual([
+			expect.objectContaining({ duration: 0.25, pitch: 60, time: 0.02, voiceId: 'voice' })
+		]);
+		expect(timer.callback).toBeTypeOf('function');
+
+		backend.time = 0.05;
+		timer.callback?.();
+		expect(backend.notes).toHaveLength(1);
+	});
+
+	test('pauses, resumes, seeks, stops, and refreshes a running document', async () => {
+		const backend = new FakeBackend();
+		const timer = new FakeTimer();
+		const scheduler = new LookAheadScheduler(source(), backend, { latencySeconds: 0, timer });
+		await scheduler.play();
+
+		backend.time = 0.1;
+		scheduler.pause();
+		expect(scheduler.state).toBe('paused');
+		expect(scheduler.positionSeconds).toBeCloseTo(0.1);
+
+		await scheduler.play();
+		scheduler.seek(0.25);
+		expect(scheduler.positionSeconds).toBeCloseTo(0.25);
+		expect(scheduler.state).toBe('playing');
+
+		scheduler.refreshDocument();
+		expect(backend.configured).toHaveLength(4);
+		expect(scheduler.state).toBe('playing');
+
+		scheduler.stop();
+		expect(scheduler.state).toBe('stopped');
+		expect(scheduler.positionSeconds).toBe(0);
+		expect(backend.resets).toBeGreaterThanOrEqual(3);
+	});
+
+	test('rejects invalid seek positions', () => {
+		const scheduler = new LookAheadScheduler(source(), new FakeBackend());
+		expect(() => scheduler.seek(-1)).toThrow(RangeError);
+	});
+});

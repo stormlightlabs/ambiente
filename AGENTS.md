@@ -7,6 +7,7 @@
 ### Rust
 
 - Use the writing-rust and review-rust skills as appropriate.
+- `cargo clean` regularly to conserve disk space
 
 ### TypeScript
 

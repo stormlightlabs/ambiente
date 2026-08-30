@@ -20,7 +20,7 @@
 		"test": "pnpm test:rust && pnpm test:web",
 		"test:rust": "cargo test --workspace --all-features",
 		"test:wasm": "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER=wasm-bindgen-test-runner cargo test --package ambiente-wasm --test conformance --target wasm32-unknown-unknown",
-		"test:web": "pnpm build:wasm && pnpm --filter @ambiente/wasm test:types && pnpm --filter @ambiente/wasm test && pnpm --filter @ambiente/web test:types && pnpm --filter @ambiente/web test",
+		"test:web": "pnpm build:wasm && pnpm --filter @ambiente/wasm test:types && pnpm --filter @ambiente/wasm test && pnpm --filter @ambiente/audio test:types && pnpm --filter @ambiente/audio test && pnpm --filter @ambiente/web test:types && pnpm --filter @ambiente/web test",
 		"check": "pnpm format:check && pnpm lint && pnpm test"
 	},
 	"devDependencies": {

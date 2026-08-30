@@ -38,13 +38,29 @@ export type ApplicationDiagnostic = Readonly<{
 	severity: 'error' | 'warning';
 }>;
 
-/** The document state needed by current Studio views. */
+/** One backend-independent persisted parameter value. */
+export type ApplicationParameterValue =
+	| Readonly<{ type: 'boolean'; value: boolean }>
+	| Readonly<{ type: 'integer'; value: number }>
+	| Readonly<{ type: 'text'; value: string }>;
+
+/** Playback settings for one canonical voice. */
+export type ApplicationVoice = Readonly<{
+	enabled: boolean;
+	id: string;
+	parameters: Readonly<Record<string, ApplicationParameterValue>>;
+	sound: string;
+}>;
+
+/** The document state needed by current Studio and audio views. */
 export type DocumentInspection = Readonly<{
 	documentId: string;
 	materialCount: number;
 	seed: string;
+	tempo: string;
 	title: string;
 	voiceCount: number;
+	voices: readonly ApplicationVoice[];
 }>;
 
 /** The command/query API consumed by browser interfaces. */

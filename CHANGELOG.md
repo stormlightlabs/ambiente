@@ -39,6 +39,11 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   validation, event queries, and document inspection.
 - Added shared event fixtures that verify identical normalized output through
   native Rust and WebAssembly runtimes.
+- Added the shared `@ambiente/audio` package with a short-horizon Tone.js/Web
+  Audio scheduler, complete transport lifecycle, live document refresh, and six
+  stable semantic sound presets with gain, pan, filter, and reverb controls.
+- Connected Studio playback to a Rust-authored document through the production
+  WASM facade and browser audio package.
 - Added Pagefind indexing, in-page search, and scroll-aware section navigation
   for the prerendered documentation.
 

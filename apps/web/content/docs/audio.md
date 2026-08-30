@@ -93,14 +93,14 @@ A persisted voice contains a stable symbolic `SoundRef` and backend-independent
 parameters. The browser sound library resolves that reference to a concrete
 instrument or sample graph.
 
-The initial sound library will have a small set of roles:
+The browser sound library provides six stable semantic presets:
 
-- felt or piano-like;
-- bell or glass;
-- warm drone;
-- soft pluck;
-- noise or air texture;
-- simple percussion.
+- `felt-piano` for a felt or piano-like voice;
+- `glass` for a bell or glass voice;
+- `warm-drone` for sustained tones;
+- `soft-pluck` for short plucked notes;
+- `air` for a noise texture;
+- `percussion` for simple percussion.
 
 A stable ID names the intended sound, not a Tone.js class. A preset can change
 its implementation while keeping its documented musical role. If a sound is
@@ -108,9 +108,10 @@ missing, the runtime reports a diagnostic and uses a defined fallback or silence
 the document remains valid.
 
 Gain, pan, filter, and effects belong to the audio adapter when they describe
-rendering. A voice can persist semantic parameters that an adapter maps to those
-controls. Backend-specific node topology, sample URLs, buffer state, audio
-context IDs, and scheduling handles are never serialized in the document.
+rendering. The browser adapter maps integer `gain` and `reverb` values from
+0–100, `pan` values from -100–100, and `filter_hz` values from 80–20,000 Hz.
+Backend-specific node topology, sample URLs, buffer state, audio context IDs, and
+scheduling handles are never serialized in the document.
 
 ## Samples and assets
 

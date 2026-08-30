@@ -6,39 +6,6 @@ summarized in `CHANGELOG.md`.
 See `ROADMAP.md` for product direction and sequencing. Architecture and design
 rationale live with the web documentation source under `apps/web/content/docs/`.
 
-## M5 — WASM and browser audio
-
-### Audio package
-
-- [ ] Create browser audio package.
-- [ ] Implement Web Audio/Tone.js scheduler.
-- [ ] Query a short future scheduling horizon instead of pre-rendering entire pieces.
-- [ ] Handle transport start.
-- [ ] Handle stop.
-- [ ] Handle pause/resume.
-- [ ] Handle seek.
-- [ ] Handle document changes while playing.
-- [ ] Avoid using Tone.js sequences as canonical composition state.
-
-### Initial sounds
-
-Build a small, useful palette.
-
-- [ ] felt/piano-like sound
-- [ ] bell/glass sound
-- [ ] warm drone
-- [ ] soft pluck
-- [ ] noise/air texture
-- [ ] simple percussion
-- [ ] Give sounds stable semantic IDs.
-- [ ] Separate sound presets from composition semantics.
-- [ ] Add basic gain, pan, filter, and effects handling.
-
-### Done when
-
-- [ ] A Rust document plays continuously in a browser.
-- [ ] No pattern-generation code is duplicated in TypeScript.
-
 ## M6 — Instrument Studio
 
 ### Transport

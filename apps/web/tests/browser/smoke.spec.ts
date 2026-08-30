@@ -33,10 +33,14 @@ test('documentation search uses the generated Pagefind index', async ({ page }) 
 	await expect(page.getByLabel('Search results')).toContainText('Architecture');
 });
 
-test('Studio boots against the temporary facade without WASM', async ({ page }) => {
+test('Studio loads Rust events and the browser transport', async ({ page }) => {
 	await page.goto('/studio');
 
 	await expect(page.getByRole('heading', { level: 1, name: 'Pattern workspace' })).toBeVisible();
-	await expect(page.getByText('Studio is in preview.')).toBeVisible();
-	await expect(page.getByRole('button', { name: 'Play' })).toBeDisabled();
+	await expect(page.getByText('Rust events are ready to play.')).toBeVisible();
+	await expect(page.getByText('Rust audio ready')).toBeVisible();
+	await page.getByRole('button', { name: 'Play' }).click();
+	await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible();
+	await page.getByRole('button', { name: 'Pause' }).click();
+	await expect(page.getByRole('button', { name: 'Play' })).toBeVisible();
 });

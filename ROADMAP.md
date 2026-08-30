@@ -170,6 +170,7 @@ Deliver:
 - `ambiente-wasm` and generated TypeScript declarations;
 - an implementation of the M4 TypeScript facade over the WASM bindings;
 - shared native/WASM event fixtures;
+- the shared browser audio package under `packages/audio`;
 - a look-ahead scheduler over Tone.js and Web Audio;
 - transport and audio lifecycle handling;
 - a small palette for felt piano, glass, drone, pluck, air, and percussion.
@@ -297,32 +298,27 @@ interesting.
 
 ## Next implementation slice
 
-The first vertical slice now reaches a browser shell around deterministic Rust
-events:
+The browser slice now plays deterministic Rust events through the shared audio
+package:
 
 ```text
-Document -> StepPattern -> pattern query -> Events
-                                      ↓
-                         Vike + Solid application
+Document -> pattern query -> WASM events -> look-ahead scheduler -> Tone.js / Web Audio
 ```
 
-The TypeScript facade and WASM implementation now expose canonical document
-operations and deterministic events with native/WASM conformance fixtures. The
-next slice should complete browser playback in this order:
+The next slice starts Instrument Studio with canonical matrix editing:
 
 ```text
-WASM events
-     ↓
-Tone.js scheduler
-     ↓
-Matrix UI
-     ↓
-sound
+StepPattern document operations
+             ↓
+         Matrix UI
+             ↓
+      running audio
 ```
 
-Use the existing WASM facade for Studio and documentation consumers. Do not fill
-remaining browser gaps with a TypeScript composition engine. After matrix
-playback works, repeat the path with piano recording into a canonical `Phrase`.
+Use the existing WASM facade and audio package for Studio and documentation
+consumers. Do not fill remaining browser gaps with a TypeScript composition
+engine. After matrix editing works, repeat the path with piano recording into a
+canonical `Phrase`.
 
 ## Non-goals for the reboot
 

@@ -17,11 +17,16 @@ describe('WASM application', () => {
 			documentId: '9f8d76b0-0dd1-4fea-9ad9-43ae8f94f860',
 			materialCount: 1,
 			seed: '000000000000002a',
+			tempo: '120/1',
 			title: 'Cross-runtime study',
-			voiceCount: 1
+			voiceCount: 1,
+			voices: [{ enabled: true, id: '826b8913-4c23-43e1-b150-594737909a58', parameters: {}, sound: 'felt-piano' }]
 		});
 		expect(application.validate()).toEqual([]);
 		expect(application.queryEvents({ clock: 'metric', start: '0/1', end: '2/1' })).toEqual(expected);
+		const repeated = application.queryEvents({ clock: 'metric', start: '2/1', end: '4/1' });
+		expect(repeated).toHaveLength(4);
+		expect(repeated[0]?.span.start.value).toBe('2/1');
 		expect(application.apply({ kind: 'set_seed', payload: '000000000000002b' })).toEqual([]);
 		expect(application.serialize()).toContain('"seed": "000000000000002b"');
 

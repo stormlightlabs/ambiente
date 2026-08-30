@@ -1,5 +1,7 @@
 //! WebAssembly command and query boundary for Ambiente.
 
+use std::collections::BTreeMap;
+
 use ambiente_core::prelude::*;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
@@ -89,16 +91,28 @@ impl AmbienteWasm {
     #[must_use]
     pub fn inspect(&self) -> String {
         let piece = self.document.piece();
+        let voices = piece
+            .voices()
+            .values()
+            .map(|voice| AudioVoiceInspection {
+                enabled: voice.settings().enabled(),
+                id: voice.id().to_string(),
+                parameters: voice.settings().parameters(),
+                sound: voice.settings().sound().as_str(),
+            })
+            .collect();
         json(&DocumentInspection {
             document_id: self.document.id().to_string(),
             material_count: piece.materials().len(),
             seed: self.document.seed().to_string(),
+            tempo: piece.transport().tempo().to_string(),
             title: self
                 .document
                 .metadata()
                 .title()
                 .unwrap_or("Untitled system"),
             voice_count: piece.voices().len(),
+            voices,
         })
     }
 }
@@ -163,8 +177,19 @@ struct DocumentInspection<'a> {
     document_id: String,
     material_count: usize,
     seed: String,
+    tempo: String,
     title: &'a str,
     voice_count: usize,
+    voices: Vec<AudioVoiceInspection<'a>>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AudioVoiceInspection<'a> {
+    enabled: bool,
+    id: String,
+    parameters: &'a BTreeMap<String, ParameterValue>,
+    sound: &'a str,
 }
 
 #[derive(Serialize)]

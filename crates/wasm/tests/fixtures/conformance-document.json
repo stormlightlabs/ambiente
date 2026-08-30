@@ -30,7 +30,11 @@
 				"id": "826b8913-4c23-43e1-b150-594737909a58",
 				"settings": {
 					"name": "Piano",
-					"pattern": { "type": "material", "material_id": "313b2f8d-8c00-4d82-82f6-cdb7aeb112de" },
+					"pattern": {
+						"type": "repeat",
+						"pattern": { "type": "material", "material_id": "313b2f8d-8c00-4d82-82f6-cdb7aeb112de" },
+						"count": null
+					},
 					"sound": "felt-piano",
 					"enabled": true,
 					"parameters": {}
