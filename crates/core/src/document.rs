@@ -12,7 +12,7 @@ use uuid::{Uuid, Version};
 use crate::prelude::*;
 
 /// The current persisted document schema version.
-pub const SCHEMA_VERSION: u32 = 2;
+pub const SCHEMA_VERSION: u32 = 3;
 const FORMAT: &str = "ambiente";
 
 /// An error produced while parsing or constructing an entity ID.
@@ -106,6 +106,14 @@ entity_id!(PieceId, "The stable identity of a playable piece.");
 entity_id!(MaterialId, "The stable identity of authored material.");
 entity_id!(VoiceId, "The stable identity of a voice.");
 entity_id!(NoteId, "The stable identity of a phrase note.");
+entity_id!(
+    MacroId,
+    "The stable identity of a published high-level control."
+);
+entity_id!(
+    PurposePresetId,
+    "The stable identity of a listener-purpose preset."
+);
 
 /// Document-level descriptive information.
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
@@ -284,6 +292,9 @@ pub enum DocumentValueError {
     /// A phrase attempted to reuse a note identity.
     #[error("phrase note IDs must be unique")]
     DuplicateNote,
+    /// A normalized macro value exceeded one hundred.
+    #[error("macro value must be between 0 and 100")]
+    MacroOutOfRange,
 }
 
 /// A note's position and duration in one explicit clock domain.
@@ -676,6 +687,236 @@ pub enum ParameterValue {
     Text(String),
 }
 
+/// A normalized macro position from zero through one hundred.
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
+#[serde(transparent)]
+pub struct MacroValue(u8);
+
+impl MacroValue {
+    /// Constructs a normalized macro value.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`DocumentValueError::MacroOutOfRange`] when `value` exceeds 100.
+    pub const fn new(value: u8) -> Result<Self, DocumentValueError> {
+        if value <= 100 {
+            Ok(Self(value))
+        } else {
+            Err(DocumentValueError::MacroOutOfRange)
+        }
+    }
+
+    /// Returns the normalized integer value.
+    #[must_use]
+    pub const fn value(self) -> u8 {
+        self.0
+    }
+
+    fn interpolate(self, minimum: i64, maximum: i64) -> i64 {
+        let span = i128::from(maximum) - i128::from(minimum);
+        let scaled = span * i128::from(self.0);
+        let rounded = (if scaled >= 0 {
+            scaled + 50
+        } else {
+            scaled - 50
+        }) / 100;
+        i64::try_from(i128::from(minimum) + rounded).unwrap_or(if span >= 0 {
+            i64::MAX
+        } else {
+            i64::MIN
+        })
+    }
+}
+
+impl<'de> Deserialize<'de> for MacroValue {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Self::new(u8::deserialize(deserializer)?).map_err(de::Error::custom)
+    }
+}
+
+/// The listener-facing meaning of a published macro.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MacroSemantic {
+    /// Controls how much activity is heard.
+    Density,
+    /// Controls the amount of audible change or modulation.
+    Motion,
+    /// Controls ambience and perceived spaciousness.
+    Space,
+    /// Controls spectral softness and harmonic warmth.
+    Warmth,
+    /// Controls overall energy without changing the transport volume.
+    Intensity,
+    /// Leaves the meaning entirely to the composer.
+    Custom,
+}
+
+/// One low-level value driven by a published macro.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+pub enum MacroMapping {
+    /// Maps the macro onto one integral semantic sound parameter.
+    VoiceParameter {
+        /// Voice receiving the resolved parameter.
+        voice_id: VoiceId,
+        /// Backend-independent parameter name.
+        parameter: String,
+        /// Value produced at macro position zero.
+        minimum: i64,
+        /// Value produced at macro position one hundred.
+        maximum: i64,
+    },
+    /// Maps the macro onto an omit or conditional process probability.
+    ProcessProbability {
+        /// Stable stochastic process identity.
+        pattern_id: PatternId,
+        /// Percentage produced at macro position zero.
+        minimum: MacroValue,
+        /// Percentage produced at macro position one hundred.
+        maximum: MacroValue,
+    },
+}
+
+/// A composer-published high-level control over one or more canonical values.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Macro {
+    id: MacroId,
+    name: String,
+    semantic: MacroSemantic,
+    value: MacroValue,
+    mappings: Vec<MacroMapping>,
+}
+
+impl Macro {
+    /// Constructs a published macro and its initial position.
+    #[must_use]
+    pub fn new(
+        id: MacroId,
+        name: impl Into<String>,
+        semantic: MacroSemantic,
+        value: MacroValue,
+    ) -> Self {
+        Self {
+            id,
+            name: name.into(),
+            semantic,
+            value,
+            mappings: Vec::new(),
+        }
+    }
+
+    /// Adds one underlying value controlled by this macro.
+    #[must_use]
+    pub fn with_mapping(mut self, mapping: MacroMapping) -> Self {
+        self.mappings.push(mapping);
+        self
+    }
+
+    /// Returns the stable macro identity.
+    #[must_use]
+    pub const fn id(&self) -> MacroId {
+        self.id
+    }
+
+    /// Returns the composer-facing label.
+    #[must_use]
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Returns the high-level semantic role.
+    #[must_use]
+    pub const fn semantic(&self) -> &MacroSemantic {
+        &self.semantic
+    }
+
+    /// Returns the current normalized position.
+    #[must_use]
+    pub const fn value(&self) -> MacroValue {
+        self.value
+    }
+
+    /// Returns all underlying mappings in authored order.
+    #[must_use]
+    pub fn mappings(&self) -> &[MacroMapping] {
+        &self.mappings
+    }
+}
+
+/// A composer-authored listening purpose without product-wide efficacy claims.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Purpose {
+    /// A restrained setting intended for concentration.
+    Focus,
+    /// A more active setting intended for making or ideation.
+    Create,
+    /// A quiet setting intended for unwinding.
+    Rest,
+    /// A composer-defined purpose.
+    Custom,
+}
+
+/// A named set of authored macro values offered to listeners.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct PurposePreset {
+    id: PurposePresetId,
+    name: String,
+    purpose: Purpose,
+    #[serde(deserialize_with = "deserialize_unique_map")]
+    macro_values: BTreeMap<MacroId, MacroValue>,
+}
+
+impl PurposePreset {
+    /// Constructs an empty authored purpose preset.
+    #[must_use]
+    pub fn new(id: PurposePresetId, name: impl Into<String>, purpose: Purpose) -> Self {
+        Self {
+            id,
+            name: name.into(),
+            purpose,
+            macro_values: BTreeMap::new(),
+        }
+    }
+
+    /// Adds or replaces one macro value in the preset.
+    #[must_use]
+    pub fn with_macro(mut self, macro_id: MacroId, value: MacroValue) -> Self {
+        self.macro_values.insert(macro_id, value);
+        self
+    }
+
+    /// Returns the stable preset identity.
+    #[must_use]
+    pub const fn id(&self) -> PurposePresetId {
+        self.id
+    }
+
+    /// Returns the listener-facing preset name.
+    #[must_use]
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Returns the authored purpose category.
+    #[must_use]
+    pub const fn purpose(&self) -> &Purpose {
+        &self.purpose
+    }
+
+    /// Returns the macro values applied by this preset.
+    #[must_use]
+    pub const fn macro_values(&self) -> &BTreeMap<MacroId, MacroValue> {
+        &self.macro_values
+    }
+}
+
 /// Editable voice properties.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -807,6 +1048,10 @@ pub struct Piece {
     materials: BTreeMap<MaterialId, Material>,
     #[serde(deserialize_with = "deserialize_unique_map")]
     voices: BTreeMap<VoiceId, Voice>,
+    #[serde(deserialize_with = "deserialize_unique_map")]
+    macros: BTreeMap<MacroId, Macro>,
+    #[serde(deserialize_with = "deserialize_unique_map")]
+    purpose_presets: BTreeMap<PurposePresetId, PurposePreset>,
 }
 
 impl Piece {
@@ -818,6 +1063,8 @@ impl Piece {
             transport,
             materials: BTreeMap::new(),
             voices: BTreeMap::new(),
+            macros: BTreeMap::new(),
+            purpose_presets: BTreeMap::new(),
         }
     }
 
@@ -843,6 +1090,18 @@ impl Piece {
     #[must_use]
     pub const fn voices(&self) -> &BTreeMap<VoiceId, Voice> {
         &self.voices
+    }
+
+    /// Returns composer-published macros in stable ID order.
+    #[must_use]
+    pub const fn macros(&self) -> &BTreeMap<MacroId, Macro> {
+        &self.macros
+    }
+
+    /// Returns authored listener-purpose presets in stable ID order.
+    #[must_use]
+    pub const fn purpose_presets(&self) -> &BTreeMap<PurposePresetId, PurposePreset> {
+        &self.purpose_presets
     }
 }
 
@@ -965,6 +1224,7 @@ impl Document {
             for version in schema..SCHEMA_VERSION {
                 value = match version {
                     1 => migrate_v1_to_v2(value)?,
+                    2 => migrate_v2_to_v3(value)?,
                     _ => {
                         return Err(MigrationError::UnsupportedSource(version).into());
                     }
@@ -1008,7 +1268,7 @@ impl Document {
             if !voice.settings.enabled {
                 continue;
             }
-            if let Some(pattern) = &voice.settings.pattern {
+            if let Some(pattern) = self.resolved_pattern(voice) {
                 events.extend(pattern.query(self, voice.id, span, seed)?);
             }
         }
@@ -1024,6 +1284,56 @@ impl Document {
         });
         events.dedup();
         Ok(events)
+    }
+
+    /// Resolves a voice's authored parameters through all published macro mappings.
+    #[must_use]
+    pub fn resolved_voice_parameters(
+        &self,
+        voice_id: VoiceId,
+    ) -> Option<BTreeMap<String, ParameterValue>> {
+        let voice = self.piece.voices.get(&voice_id)?;
+        let mut parameters = voice.settings.parameters.clone();
+        for published in self.piece.macros.values() {
+            for mapping in &published.mappings {
+                if let MacroMapping::VoiceParameter {
+                    voice_id: target,
+                    parameter,
+                    minimum,
+                    maximum,
+                } = mapping
+                    && *target == voice_id
+                {
+                    parameters.insert(
+                        parameter.clone(),
+                        ParameterValue::Integer(published.value.interpolate(*minimum, *maximum)),
+                    );
+                }
+            }
+        }
+        Some(parameters)
+    }
+
+    fn resolved_pattern(&self, voice: &Voice) -> Option<Pattern> {
+        let mut pattern = voice.settings.pattern.clone()?;
+        for published in self.piece.macros.values() {
+            for mapping in &published.mappings {
+                if let MacroMapping::ProcessProbability {
+                    pattern_id,
+                    minimum,
+                    maximum,
+                } = mapping
+                {
+                    let percentage = published
+                        .value
+                        .interpolate(i64::from(minimum.value()), i64::from(maximum.value()));
+                    let probability =
+                        Probability::new(u32::try_from(percentage).ok()?, 100).ok()?;
+                    pattern.set_process_probability(*pattern_id, probability);
+                }
+            }
+        }
+        Some(pattern)
     }
 
     /// Reports all independent semantic problems in this document.
@@ -1069,6 +1379,8 @@ impl Document {
             }
             validate_voice(voice, &self.piece.materials, &mut diagnostics);
         }
+        validate_macros(&self.piece, &mut diagnostics);
+        validate_purpose_presets(&self.piece, &mut diagnostics);
         diagnostics
     }
 
@@ -1098,6 +1410,74 @@ impl Document {
             Operation::SetMetadata(metadata) => self.metadata = metadata,
             Operation::SetSeed(seed) => self.seed = seed,
             Operation::SetTempo(tempo) => self.piece.transport.tempo = tempo,
+            Operation::AddMacro(published) => {
+                let id = published.id;
+                if self.piece.macros.insert(id, published).is_some() {
+                    return Err(OperationError::AlreadyExists {
+                        entity: "macro",
+                        id: id.to_string(),
+                    });
+                }
+            }
+            Operation::RemoveMacro(id) => {
+                self.piece
+                    .macros
+                    .remove(&id)
+                    .ok_or_else(|| OperationError::NotFound {
+                        entity: "macro",
+                        id: id.to_string(),
+                    })?;
+            }
+            Operation::SetMacroValue { id, value } => {
+                let published =
+                    self.piece
+                        .macros
+                        .get_mut(&id)
+                        .ok_or_else(|| OperationError::NotFound {
+                            entity: "macro",
+                            id: id.to_string(),
+                        })?;
+                published.value = value;
+            }
+            Operation::AddPurposePreset(preset) => {
+                let id = preset.id;
+                if self.piece.purpose_presets.insert(id, preset).is_some() {
+                    return Err(OperationError::AlreadyExists {
+                        entity: "purpose preset",
+                        id: id.to_string(),
+                    });
+                }
+            }
+            Operation::RemovePurposePreset(id) => {
+                self.piece
+                    .purpose_presets
+                    .remove(&id)
+                    .ok_or_else(|| OperationError::NotFound {
+                        entity: "purpose preset",
+                        id: id.to_string(),
+                    })?;
+            }
+            Operation::ApplyPurposePreset(id) => {
+                let values = self
+                    .piece
+                    .purpose_presets
+                    .get(&id)
+                    .ok_or_else(|| OperationError::NotFound {
+                        entity: "purpose preset",
+                        id: id.to_string(),
+                    })?
+                    .macro_values
+                    .clone();
+                for (macro_id, value) in values {
+                    let published = self.piece.macros.get_mut(&macro_id).ok_or_else(|| {
+                        OperationError::NotFound {
+                            entity: "macro",
+                            id: macro_id.to_string(),
+                        }
+                    })?;
+                    published.value = value;
+                }
+            }
             Operation::AddMaterial(material) => {
                 let id = material.id();
                 if self.piece.materials.insert(id, material).is_some() {
@@ -1275,6 +1655,23 @@ pub enum Operation {
     SetSeed(Seed),
     /// Changes the constant metric tempo while preserving the meter.
     SetTempo(Tempo),
+    /// Publishes a composer-authored high-level control.
+    AddMacro(Macro),
+    /// Removes a published macro that no purpose preset references.
+    RemoveMacro(MacroId),
+    /// Changes one published macro's normalized position.
+    SetMacroValue {
+        /// Target macro.
+        id: MacroId,
+        /// New normalized position.
+        value: MacroValue,
+    },
+    /// Adds an authored listener-purpose preset.
+    AddPurposePreset(PurposePreset),
+    /// Removes an authored listener-purpose preset.
+    RemovePurposePreset(PurposePresetId),
+    /// Applies every macro value stored in one purpose preset.
+    ApplyPurposePreset(PurposePresetId),
     /// Adds authored material.
     AddMaterial(Material),
     /// Removes unreferenced authored material.
@@ -1519,6 +1916,21 @@ pub struct Diagnostic {
 }
 
 impl Diagnostic {
+    fn warning(
+        code: DiagnosticCode,
+        location: Option<DiagnosticLocation>,
+        message: impl Into<String>,
+        help: Option<String>,
+    ) -> Self {
+        Self {
+            code,
+            severity: Severity::Warning,
+            message: message.into(),
+            location,
+            help,
+        }
+    }
+
     fn error(
         code: DiagnosticCode,
         location: Option<DiagnosticLocation>,
@@ -1688,6 +2100,26 @@ fn migrate_v1_to_v2(mut value: serde_json::Value) -> Result<serde_json::Value, M
         };
         settings.insert("pattern".to_owned(), pattern);
     }
+    root.insert("schema_version".to_owned(), serde_json::Value::from(2));
+    Ok(value)
+}
+
+fn migrate_v2_to_v3(mut value: serde_json::Value) -> Result<serde_json::Value, MigrationError> {
+    let root = value
+        .as_object_mut()
+        .ok_or(MigrationError::MissingField("document root"))?;
+    let piece = root
+        .get_mut("piece")
+        .and_then(serde_json::Value::as_object_mut)
+        .ok_or(MigrationError::MissingField("piece"))?;
+    piece.insert(
+        "macros".to_owned(),
+        serde_json::Value::Object(serde_json::Map::new()),
+    );
+    piece.insert(
+        "purpose_presets".to_owned(),
+        serde_json::Value::Object(serde_json::Map::new()),
+    );
     root.insert(
         "schema_version".to_owned(),
         serde_json::Value::from(SCHEMA_VERSION),
@@ -1870,6 +2302,158 @@ fn quantize_phrase(phrase: &mut Phrase, grid: QuantizationGrid) -> Result<(), Ti
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
+fn validate_macros(piece: &Piece, diagnostics: &mut Vec<Diagnostic>) {
+    let mut targets = BTreeMap::<String, MacroId>::new();
+    for (id, published) in &piece.macros {
+        let location = |field: &str| {
+            Some(DiagnosticLocation::new(
+                id.to_string(),
+                Some(field.to_owned()),
+            ))
+        };
+        if *id != published.id {
+            diagnostics.push(Diagnostic::error(
+                DiagnosticCode::IdentityMismatch,
+                Some(DiagnosticLocation::new(id.to_string(), None)),
+                "macro map key does not match the macro ID",
+                None,
+            ));
+        }
+        if published.name.trim().is_empty() {
+            diagnostics.push(Diagnostic::error(
+                DiagnosticCode::ValueEmpty,
+                location("name"),
+                "macro name must not be empty",
+                Some("provide a listener-facing macro name".to_owned()),
+            ));
+        }
+        if published.mappings.is_empty() {
+            diagnostics.push(Diagnostic::error(
+                DiagnosticCode::ReferenceMissing,
+                location("mappings"),
+                "a published macro must control at least one value",
+                Some("add a voice parameter or process probability mapping".to_owned()),
+            ));
+        }
+        for mapping in &published.mappings {
+            let target = match mapping {
+                MacroMapping::VoiceParameter {
+                    voice_id,
+                    parameter,
+                    minimum,
+                    maximum,
+                } => {
+                    if !piece.voices.contains_key(voice_id) {
+                        diagnostics.push(Diagnostic::error(
+                            DiagnosticCode::ReferenceMissing,
+                            location("mappings"),
+                            format!("mapped voice `{voice_id}` does not exist"),
+                            None,
+                        ));
+                    }
+                    if parameter.trim().is_empty() {
+                        diagnostics.push(Diagnostic::error(
+                            DiagnosticCode::ValueEmpty,
+                            location("mappings"),
+                            "mapped parameter name must not be empty",
+                            None,
+                        ));
+                    }
+                    if minimum == maximum {
+                        diagnostics.push(Diagnostic::warning(
+                            DiagnosticCode::RangeInvalid,
+                            location("mappings"),
+                            "macro mapping has no audible range",
+                            Some("use different minimum and maximum values".to_owned()),
+                        ));
+                    }
+                    format!("voice:{voice_id}:{parameter}")
+                }
+                MacroMapping::ProcessProbability { pattern_id, .. } => {
+                    let occurrences = piece
+                        .voices
+                        .values()
+                        .filter_map(|voice| voice.settings.pattern.as_ref())
+                        .map(|pattern| pattern.process_occurrences(*pattern_id))
+                        .sum::<usize>();
+                    match occurrences {
+                        0 => diagnostics.push(Diagnostic::error(
+                            DiagnosticCode::ReferenceMissing,
+                            location("mappings"),
+                            format!("mapped process `{pattern_id}` does not exist"),
+                            None,
+                        )),
+                        1 => {}
+                        _ => diagnostics.push(Diagnostic::error(
+                            DiagnosticCode::IdentityMismatch,
+                            location("mappings"),
+                            format!("mapped process ID `{pattern_id}` occurs more than once"),
+                            Some("give every mapped stochastic process a unique ID".to_owned()),
+                        )),
+                    }
+                    format!("process:{pattern_id}:probability")
+                }
+            };
+            if let Some(previous) = targets.insert(target.clone(), *id) {
+                diagnostics.push(Diagnostic::error(
+                    DiagnosticCode::IdentityMismatch,
+                    location("mappings"),
+                    format!(
+                        "mapping target `{target}` is already controlled by macro `{previous}`"
+                    ),
+                    Some("publish each underlying value from only one macro".to_owned()),
+                ));
+            }
+        }
+    }
+}
+
+fn validate_purpose_presets(piece: &Piece, diagnostics: &mut Vec<Diagnostic>) {
+    for (id, preset) in &piece.purpose_presets {
+        let location = |field: &str| {
+            Some(DiagnosticLocation::new(
+                id.to_string(),
+                Some(field.to_owned()),
+            ))
+        };
+        if *id != preset.id {
+            diagnostics.push(Diagnostic::error(
+                DiagnosticCode::IdentityMismatch,
+                Some(DiagnosticLocation::new(id.to_string(), None)),
+                "purpose preset map key does not match the preset ID",
+                None,
+            ));
+        }
+        if preset.name.trim().is_empty() {
+            diagnostics.push(Diagnostic::error(
+                DiagnosticCode::ValueEmpty,
+                location("name"),
+                "purpose preset name must not be empty",
+                Some("provide a listener-facing preset name".to_owned()),
+            ));
+        }
+        if preset.macro_values.is_empty() {
+            diagnostics.push(Diagnostic::error(
+                DiagnosticCode::ReferenceMissing,
+                location("macro_values"),
+                "purpose preset must set at least one published macro",
+                None,
+            ));
+        }
+        for macro_id in preset.macro_values.keys() {
+            if !piece.macros.contains_key(macro_id) {
+                diagnostics.push(Diagnostic::error(
+                    DiagnosticCode::ReferenceMissing,
+                    location("macro_values"),
+                    format!("preset macro `{macro_id}` does not exist"),
+                    None,
+                ));
+            }
+        }
+    }
+}
+
 fn validate_voice(
     voice: &Voice,
     materials: &BTreeMap<MaterialId, Material>,
@@ -1966,7 +2550,7 @@ mod tests {
         let json = document.to_json().unwrap();
         assert!(json.ends_with('\n'));
         assert!(json.contains("\"format\": \"ambiente\""));
-        assert!(json.contains("\"schema_version\": 2"));
+        assert!(json.contains("\"schema_version\": 3"));
         assert!(json.contains("\"seed\": \"000000000000002a\""));
         let loaded = Document::from_json(&json).unwrap();
         assert_eq!(loaded, document);
@@ -2212,6 +2796,106 @@ mod tests {
         assert_eq!(document.seed(), Seed::new(7));
         assert!(document.piece().materials().is_empty());
         assert!(document.piece().voices().is_empty());
+    }
+
+    #[test]
+    fn macros_resolve_multiple_values_and_purpose_presets_atomically() {
+        let mut document = fixture();
+        let material_id = id("0f87ac6e-ea2c-43e7-9694-04b90e776f61");
+        let voice_id = id("826b8913-4c23-43e1-b150-594737909a58");
+        let process_id = id("57e45f20-e8a4-40fb-b115-4f3cb0963aa0");
+        let macro_id = id("4a5ff1e6-0995-4c50-a774-41246cabcacf");
+        let preset_id = id("75bb83d3-5aa1-491f-a865-4bdd4f17c169");
+        document
+            .apply(Operation::AddMaterial(Material::phrase(
+                material_id,
+                "Phrase",
+                Phrase::new(),
+            )))
+            .unwrap();
+        document
+            .apply(Operation::AddVoice(Voice::new(
+                voice_id,
+                VoiceSettings::new("Piano", SoundRef::new("felt-piano").unwrap())
+                    .with_pattern(
+                        Pattern::material(material_id)
+                            .omit(process_id, Probability::new(1, 10).unwrap()),
+                    )
+                    .with_parameter("gain", ParameterValue::Integer(20)),
+            )))
+            .unwrap();
+        document
+            .apply(Operation::AddMacro(
+                Macro::new(
+                    macro_id,
+                    "Intensity",
+                    MacroSemantic::Intensity,
+                    MacroValue::new(25).unwrap(),
+                )
+                .with_mapping(MacroMapping::VoiceParameter {
+                    voice_id,
+                    parameter: "gain".to_owned(),
+                    minimum: 20,
+                    maximum: 80,
+                })
+                .with_mapping(MacroMapping::ProcessProbability {
+                    pattern_id: process_id,
+                    minimum: MacroValue::new(50).unwrap(),
+                    maximum: MacroValue::new(0).unwrap(),
+                }),
+            ))
+            .unwrap();
+        document
+            .apply(Operation::AddPurposePreset(
+                PurposePreset::new(preset_id, "Create", Purpose::Create)
+                    .with_macro(macro_id, MacroValue::new(75).unwrap()),
+            ))
+            .unwrap();
+
+        assert_eq!(
+            document.resolved_voice_parameters(voice_id).unwrap()["gain"],
+            ParameterValue::Integer(35)
+        );
+        let voice = &document.piece.voices[&voice_id];
+        let resolved = document.resolved_pattern(voice).unwrap();
+        assert!(
+            serde_json::to_string(&resolved)
+                .unwrap()
+                .contains("\"probability\":{\"numerator\":37,\"denominator\":100}")
+        );
+
+        document
+            .apply(Operation::ApplyPurposePreset(preset_id))
+            .unwrap();
+        assert_eq!(
+            document.piece.macros[&macro_id].value(),
+            MacroValue::new(75).unwrap()
+        );
+        assert_eq!(
+            document.resolved_voice_parameters(voice_id).unwrap()["gain"],
+            ParameterValue::Integer(65)
+        );
+        assert_eq!(
+            Document::from_json(&document.to_json().unwrap()).unwrap(),
+            document
+        );
+    }
+
+    #[test]
+    fn schema_two_documents_gain_empty_listener_controls() {
+        let document = fixture();
+        let mut old: serde_json::Value =
+            serde_json::from_str(&document.to_json().unwrap()).unwrap();
+        old["schema_version"] = serde_json::Value::from(2);
+        old["piece"].as_object_mut().unwrap().remove("macros");
+        old["piece"]
+            .as_object_mut()
+            .unwrap()
+            .remove("purpose_presets");
+
+        let loaded = Document::from_json(&serde_json::to_string(&old).unwrap()).unwrap();
+        assert!(loaded.piece().macros().is_empty());
+        assert!(loaded.piece().purpose_presets().is_empty());
     }
 
     fn step_pattern(document: &Document, material_id: MaterialId) -> &StepPattern {

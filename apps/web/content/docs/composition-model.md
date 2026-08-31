@@ -292,10 +292,16 @@ state. Transition behavior must be explicit.
 
 ### Macro
 
-A control published by the composer. A macro maps one visible value to one or
-more parameters or process values. Names such as density, space, brightness,
-motion, and intensity are conventions rather than fixed engine semantics. Each
-piece defines the meaning and range of its macros.
+A control published by the composer. A macro stores a value from 0 through 100
+and maps it to one or more voice parameters or stochastic process probabilities.
+Each underlying value can belong to only one macro. Ambiente provides density,
+motion, space, warmth, intensity, and custom semantic labels, but the piece still
+defines the audible range and meaning.
+
+A purpose preset is a composer-authored set of macro values. A piece can publish
+Focus, Create, Rest, or a custom purpose. Applying a preset changes its declared
+macros atomically. These names describe the composer's intended listening setting;
+they do not claim a neurological or medical effect.
 
 ### Capture
 

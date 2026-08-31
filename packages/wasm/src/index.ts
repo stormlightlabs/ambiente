@@ -77,6 +77,22 @@ export type ApplicationMaterial =
 	  }>
 	| Readonly<{ id: string; name: string; pitches: readonly number[]; type: 'pitch_set' }>;
 
+/** One composer-published high-level control. */
+export type ApplicationMacro = Readonly<{
+	id: string;
+	name: string;
+	semantic: 'custom' | 'density' | 'intensity' | 'motion' | 'space' | 'warmth';
+	value: number;
+}>;
+
+/** One composer-authored listener-purpose preset. */
+export type ApplicationPurposePreset = Readonly<{
+	id: string;
+	macroValues: Readonly<Record<string, number>>;
+	name: string;
+	purpose: 'create' | 'custom' | 'focus' | 'rest';
+}>;
+
 /** Playback and editor settings for one canonical voice. */
 export type ApplicationVoice = Readonly<{
 	enabled: boolean;
@@ -93,6 +109,8 @@ export type DocumentInspection = Readonly<{
 	documentId: string;
 	materialCount: number;
 	materials: readonly ApplicationMaterial[];
+	macros: readonly ApplicationMacro[];
+	purposePresets: readonly ApplicationPurposePreset[];
 	seed: string;
 	tempo: string;
 	title: string;

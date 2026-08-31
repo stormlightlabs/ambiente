@@ -33,10 +33,12 @@ export class LookAheadScheduler {
 	private readonly lookAheadSeconds: number;
 	private readonly scheduledEvents = new Map<string, number>();
 	private readonly timer: SchedulerTimer;
+	private activate: (() => void) | undefined;
 	private anchorAudioTime = 0;
 	private anchorPosition = 0;
 	private intervalId: ReturnType<typeof setInterval> | undefined;
 	private queryEnd = 0;
+	private release: (() => void) | undefined;
 	private stateValue: TransportState = 'stopped';
 	private tempo = 120;
 
@@ -65,9 +67,16 @@ export class LookAheadScheduler {
 			: this.anchorPosition;
 	}
 
+	/** Registers ownership callbacks used to keep one browser playback session active. */
+	coordinate(activate: () => void, release: () => void): void {
+		this.activate = activate;
+		this.release = release;
+	}
+
 	/** Starts playback or resumes it from the preserved position. */
 	async play(): Promise<void> {
 		if (this.stateValue === 'playing' || this.stateValue === 'starting') return;
+		this.activate?.();
 		this.setState('starting');
 		try {
 			await this.backend.start();
@@ -87,6 +96,7 @@ export class LookAheadScheduler {
 	async previewNoteOn(voiceId: string, pitch: number, velocity = 100 / 127): Promise<void> {
 		const identity = previewIdentity(voiceId, pitch);
 		if (this.heldPreviewNotes.has(identity)) return;
+		this.activate?.();
 		this.heldPreviewNotes.add(identity);
 		try {
 			await this.backend.start();
@@ -184,8 +194,10 @@ export class LookAheadScheduler {
 	dispose(): void {
 		this.heldPreviewNotes.clear();
 		this.stopScheduling();
+		this.backend.reset(this.backend.now());
 		this.backend.dispose();
 		this.listeners.clear();
+		this.release?.();
 	}
 
 	private fillHorizon(): void {

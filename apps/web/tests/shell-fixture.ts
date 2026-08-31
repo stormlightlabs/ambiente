@@ -12,6 +12,8 @@ const fixtureInspection: DocumentInspection = {
 	documentId: 'fixture-document',
 	materialCount: 1,
 	materials: [],
+	macros: [],
+	purposePresets: [],
 	seed: '000000000000002a',
 	tempo: '120/1',
 	title: 'Untitled system',
@@ -29,7 +31,7 @@ const fixtureInspection: DocumentInspection = {
 	]
 };
 
-const fixtureDocument = JSON.stringify({ format: 'ambiente', fixture: true, schema_version: 2 });
+const fixtureDocument = JSON.stringify({ format: 'ambiente', fixture: true, schema_version: 3 });
 
 /**
  * Temporary shell adapter that proves the facade without implementing musical

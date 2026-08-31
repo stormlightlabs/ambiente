@@ -79,21 +79,35 @@ export class ToneAudioBackend implements AudioBackend {
 }
 
 /** Values mapped from semantic voice parameters into one browser sound graph. */
-export type SoundControls = Readonly<{ filterHz: number; gain: number; motion: number; pan: number; reverb: number }>;
+export type SoundControls = Readonly<{
+	delay: number;
+	drive: number;
+	filterHz: number;
+	gain: number;
+	motion: number;
+	pan: number;
+	reverb: number;
+	width: number;
+	wowFlutter: number;
+}>;
 
 /**
  * Maps backend-independent integer controls to safe Web Audio ranges.
- * `gain` and `reverb` use 0–100; `pan` uses -100–100; `filter_hz` uses hertz.
+ * Most effect controls use 0–100; `pan` uses -100–100; `filter_hz` uses hertz.
  * Gain follows a -36 dB to 0 dB curve so several voices can mix without each
  * midrange setting consuming half of the available linear headroom.
  */
 export function soundControls(parameters: Readonly<Record<string, AudioParameterValue>>): SoundControls {
 	return {
+		delay: clamp(integerParameter(parameters.delay, 0), 0, 100) / 100,
+		drive: clamp(integerParameter(parameters.drive, 0), 0, 100) / 100,
 		filterHz: clamp(integerParameter(parameters.filter_hz, 12_000), 80, 20_000),
 		gain: semanticGain(integerParameter(parameters.gain, 80)),
 		motion: clamp(integerParameter(parameters.motion, 0), 0, 100) / 100,
 		pan: clamp(integerParameter(parameters.pan, 0), -100, 100) / 100,
-		reverb: clamp(integerParameter(parameters.reverb, 15), 0, 100) / 100
+		reverb: clamp(integerParameter(parameters.reverb, 15), 0, 100) / 100,
+		width: clamp(integerParameter(parameters.width, 0), 0, 100) / 100,
+		wowFlutter: clamp(integerParameter(parameters.wow_flutter, 0), 0, 100) / 100
 	};
 }
 
@@ -101,13 +115,21 @@ function createVoiceGraph(voice: AudioVoice, output: Tone.Gain): VoiceGraph {
 	const sound = isSoundId(voice.sound) ? voice.sound : 'felt-piano';
 	const controls = soundControls(voice.parameters);
 	const filter = new Tone.Filter(controls.filterHz, 'lowpass');
+	const drive = new Tone.Distortion({ distortion: controls.drive * 0.28, oversample: '2x', wet: controls.drive });
+	const wowFlutter = new Tone.Chorus({
+		depth: 0.08 + controls.wowFlutter * 0.16,
+		delayTime: 8,
+		frequency: 0.12 + controls.wowFlutter * 0.28,
+		spread: 0,
+		wet: controls.wowFlutter * 0.18
+	}).start();
 	const panner = new Tone.Panner(controls.pan);
 	const gain = new Tone.Gain(controls.gain);
+	const delay = new Tone.FeedbackDelay({ delayTime: 0.375, feedback: 0.18, wet: controls.delay * 0.35 });
 	const reverb = new Tone.Reverb({ decay: reverbDecay(sound), wet: controls.reverb });
-	filter.connect(panner);
-	panner.connect(gain);
-	gain.connect(reverb);
-	reverb.connect(output);
+	const safeWidth = sound === 'warm-drone' ? Math.min(0.25, controls.width * 0.5) : controls.width * 0.65;
+	const widener = new Tone.StereoWidener(safeWidth);
+	filter.chain(drive, wowFlutter, panner, gain, delay, reverb, widener, output);
 
 	const instrument = createInstrument(sound);
 	instrument.output.connect(filter);
@@ -118,9 +140,13 @@ function createVoiceGraph(voice: AudioVoice, output: Tone.Gain): VoiceGraph {
 			modulation?.dispose();
 			instrument.dispose();
 			filter.dispose();
+			drive.dispose();
+			wowFlutter.dispose();
 			panner.dispose();
 			gain.dispose();
+			delay.dispose();
 			reverb.dispose();
+			widener.dispose();
 		},
 		previewNoteOff: instrument.previewNoteOff,
 		previewNoteOn: instrument.previewNoteOn,
@@ -219,6 +245,15 @@ function createInstrument(sound: SoundId): VoiceGraph & { output: Tone.ToneAudio
 			});
 			return pitchedInstrument(synth, (_pitch, at) => synth.triggerRelease(at));
 		}
+		case 'broad-pad': {
+			const synth = new Tone.PolySynth(Tone.AMSynth, {
+				envelope: { attack: 1.8, decay: 1.2, release: 5, sustain: 0.72 },
+				harmonicity: 1.5,
+				modulationEnvelope: { attack: 2.4, decay: 1.5, release: 4, sustain: 0.45 },
+				oscillator: { type: 'sine4' }
+			});
+			return pitchedInstrument(synth, (pitch, at) => synth.triggerRelease(midiFrequency(pitch), at));
+		}
 	}
 }
 
@@ -270,7 +305,8 @@ function reverbDecay(sound: SoundId): number {
 		glass: 4,
 		percussion: 1.5,
 		'soft-pluck': 1.5,
-		'warm-drone': 3
+		'warm-drone': 3,
+		'broad-pad': 5
 	};
 	return decayBySound[sound];
 }

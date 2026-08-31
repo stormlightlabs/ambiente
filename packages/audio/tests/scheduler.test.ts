@@ -52,7 +52,11 @@ class FakeBackend implements AudioBackend {
 		this.volumes.push(volume);
 	}
 
-	async start(): Promise<void> {}
+	startError: Error | undefined;
+
+	async start(): Promise<void> {
+		if (this.startError) throw this.startError;
+	}
 }
 
 class FakeTimer implements SchedulerTimer {
@@ -75,6 +79,8 @@ function source(): AudioEventSource {
 			documentId: 'document',
 			materialCount: 1,
 			materials: [],
+			macros: [],
+			purposePresets: [],
 			seed: '000000000000002a',
 			tempo: '120/1',
 			title: 'Study',
@@ -159,6 +165,22 @@ describe('look-ahead scheduler', () => {
 		scheduler.setVolume(2);
 		expect(backend.volumes).toEqual([0.65, 1]);
 		expect(() => scheduler.setVolume(Number.NaN)).toThrow(RangeError);
+	});
+
+	test('recovers from a failed audio-context start and releases nodes on disposal', async () => {
+		const backend = new FakeBackend();
+		backend.startError = new Error('context suspended');
+		const scheduler = new LookAheadScheduler(source(), backend);
+
+		await expect(scheduler.play()).rejects.toThrow('context suspended');
+		expect(scheduler.state).toBe('stopped');
+		backend.startError = undefined;
+		await scheduler.play();
+		expect(scheduler.state).toBe('playing');
+
+		scheduler.dispose();
+		expect(backend.disposed).toBe(true);
+		expect(backend.resets).toBeGreaterThan(0);
 	});
 
 	test('rejects invalid seek positions', () => {

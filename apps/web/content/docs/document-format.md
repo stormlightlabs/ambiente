@@ -57,7 +57,7 @@ Standalone reboot projects use the `.ambiente.json` extension. Each document
 starts with a format sentinel and an integer schema version:
 
 ```json
-{ "format": "ambiente", "schema_version": 2, "id": "9f8d76b0-0dd1-4fea-9ad9-43ae8f94f860", "piece": {} }
+{ "format": "ambiente", "schema_version": 3, "id": "9f8d76b0-0dd1-4fea-9ad9-43ae8f94f860", "piece": {} }
 ```
 
 JSON works in browsers, has mature Serde support, is readable in source control,
@@ -65,9 +65,10 @@ and can be migrated through `serde_json::Value`.[^serde] A future `.ambiente`
 container may bundle assets, but the versioned JSON document remains the musical
 schema.
 
-Schema 2 replaces each voice's optional `material` field with an optional
-`pattern`. Loading schema 1 wraps a non-null material ID in a `material` source
-pattern and preserves a null value as no pattern.
+Schema 2 replaced each voice's optional `material` field with an optional
+`pattern`. Schema 3 adds piece-level macros and purpose presets. Loading an older
+document runs both migrations in order and adds empty listener controls when a
+schema 2 piece has none.
 
 The following rules define the canonical representation:
 

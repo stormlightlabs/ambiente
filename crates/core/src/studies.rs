@@ -135,6 +135,7 @@ pub fn phase_study() -> Result<Document, StudyError> {
             .with_parameter("reverb", ParameterValue::Integer(42));
         document.apply(Operation::AddVoice(Voice::new(id(voice_id)?, settings)))?;
     }
+    add_phase_controls(&mut document)?;
     Ok(document)
 }
 
@@ -250,6 +251,7 @@ pub fn pattern_study() -> Result<Document, StudyError> {
             .with_parameter("reverb", ParameterValue::Integer(reverb));
         document.apply(Operation::AddVoice(Voice::new(id(voice_id)?, settings)))?;
     }
+    add_pattern_controls(&mut document)?;
     Ok(document)
 }
 
@@ -345,7 +347,224 @@ pub fn drone_study() -> Result<Document, StudyError> {
     for voice in &voices {
         add_drone_voice(&mut document, voice)?;
     }
+    add_drone_controls(&mut document)?;
     Ok(document)
+}
+
+fn add_phase_controls(document: &mut Document) -> Result<(), StudyError> {
+    let space_id = id("10000000-0000-4000-8000-000000000501")?;
+    let density_id = id("10000000-0000-4000-8000-000000000502")?;
+    let intensity_id = id("10000000-0000-4000-8000-000000000503")?;
+    let mut space = Macro::new(
+        space_id,
+        "Space",
+        MacroSemantic::Space,
+        MacroValue::new(55)?,
+    );
+    let mut intensity = Macro::new(
+        intensity_id,
+        "Intensity",
+        MacroSemantic::Intensity,
+        MacroValue::new(45)?,
+    );
+    for voice_id in [
+        "10000000-0000-4000-8000-000000000201",
+        "10000000-0000-4000-8000-000000000202",
+        "10000000-0000-4000-8000-000000000203",
+    ] {
+        let voice_id = id(voice_id)?;
+        space = space.with_mapping(MacroMapping::VoiceParameter {
+            voice_id,
+            parameter: "reverb".to_owned(),
+            minimum: 20,
+            maximum: 72,
+        });
+        intensity = intensity.with_mapping(MacroMapping::VoiceParameter {
+            voice_id,
+            parameter: "gain".to_owned(),
+            minimum: 34,
+            maximum: 66,
+        });
+    }
+    let density = Macro::new(
+        density_id,
+        "Density",
+        MacroSemantic::Density,
+        MacroValue::new(55)?,
+    )
+    .with_mapping(MacroMapping::ProcessProbability {
+        pattern_id: PatternId::from_str("10000000-0000-4000-8000-000000000301")?,
+        minimum: MacroValue::new(42)?,
+        maximum: MacroValue::new(4)?,
+    })
+    .with_mapping(MacroMapping::ProcessProbability {
+        pattern_id: PatternId::from_str("10000000-0000-4000-8000-000000000302")?,
+        minimum: MacroValue::new(42)?,
+        maximum: MacroValue::new(4)?,
+    });
+    document.apply(Operation::AddMacro(space))?;
+    document.apply(Operation::AddMacro(density))?;
+    document.apply(Operation::AddMacro(intensity))?;
+    add_standard_purpose_presets(
+        document,
+        "10000000-0000-4000-8000-00000000060",
+        &[
+            (space_id, 45, 65, 78),
+            (density_id, 42, 72, 25),
+            (intensity_id, 35, 68, 22),
+        ],
+    )
+}
+
+fn add_pattern_controls(document: &mut Document) -> Result<(), StudyError> {
+    let density_id = id("30000000-0000-4000-8000-000000000501")?;
+    let intensity_id = id("30000000-0000-4000-8000-000000000502")?;
+    let mut density = Macro::new(
+        density_id,
+        "Density",
+        MacroSemantic::Density,
+        MacroValue::new(55)?,
+    );
+    for pattern_id in [
+        "30000000-0000-4000-8000-000000000301",
+        "30000000-0000-4000-8000-000000000302",
+        "30000000-0000-4000-8000-000000000303",
+    ] {
+        density = density.with_mapping(MacroMapping::ProcessProbability {
+            pattern_id: PatternId::from_str(pattern_id)?,
+            minimum: MacroValue::new(55)?,
+            maximum: MacroValue::new(3)?,
+        });
+    }
+    let mut intensity = Macro::new(
+        intensity_id,
+        "Intensity",
+        MacroSemantic::Intensity,
+        MacroValue::new(48)?,
+    );
+    for voice_id in [
+        "30000000-0000-4000-8000-000000000201",
+        "30000000-0000-4000-8000-000000000202",
+        "30000000-0000-4000-8000-000000000203",
+        "30000000-0000-4000-8000-000000000204",
+    ] {
+        intensity = intensity.with_mapping(MacroMapping::VoiceParameter {
+            voice_id: id(voice_id)?,
+            parameter: "gain".to_owned(),
+            minimum: 18,
+            maximum: 56,
+        });
+    }
+    document.apply(Operation::AddMacro(density))?;
+    document.apply(Operation::AddMacro(intensity))?;
+    add_standard_purpose_presets(
+        document,
+        "30000000-0000-4000-8000-00000000060",
+        &[(density_id, 45, 82, 24), (intensity_id, 38, 72, 22)],
+    )
+}
+
+fn add_drone_controls(document: &mut Document) -> Result<(), StudyError> {
+    let warmth_id = id("20000000-0000-4000-8000-000000000501")?;
+    let motion_id = id("20000000-0000-4000-8000-000000000502")?;
+    let space_id = id("20000000-0000-4000-8000-000000000503")?;
+    let mut warmth = Macro::new(
+        warmth_id,
+        "Warmth",
+        MacroSemantic::Warmth,
+        MacroValue::new(62)?,
+    );
+    let mut motion = Macro::new(
+        motion_id,
+        "Motion",
+        MacroSemantic::Motion,
+        MacroValue::new(38)?,
+    );
+    let mut space = Macro::new(
+        space_id,
+        "Space",
+        MacroSemantic::Space,
+        MacroValue::new(68)?,
+    );
+    for voice_id in [
+        "20000000-0000-4000-8000-000000000201",
+        "20000000-0000-4000-8000-000000000202",
+        "20000000-0000-4000-8000-000000000203",
+        "20000000-0000-4000-8000-000000000204",
+    ] {
+        let voice_id = id(voice_id)?;
+        warmth = warmth
+            .with_mapping(MacroMapping::VoiceParameter {
+                voice_id,
+                parameter: "filter_hz".to_owned(),
+                minimum: 5_200,
+                maximum: 1_300,
+            })
+            .with_mapping(MacroMapping::VoiceParameter {
+                voice_id,
+                parameter: "drive".to_owned(),
+                minimum: 0,
+                maximum: 24,
+            });
+        motion = motion
+            .with_mapping(MacroMapping::VoiceParameter {
+                voice_id,
+                parameter: "motion".to_owned(),
+                minimum: 4,
+                maximum: 55,
+            })
+            .with_mapping(MacroMapping::VoiceParameter {
+                voice_id,
+                parameter: "wow_flutter".to_owned(),
+                minimum: 0,
+                maximum: 28,
+            });
+        space = space
+            .with_mapping(MacroMapping::VoiceParameter {
+                voice_id,
+                parameter: "reverb".to_owned(),
+                minimum: 28,
+                maximum: 78,
+            })
+            .with_mapping(MacroMapping::VoiceParameter {
+                voice_id,
+                parameter: "width".to_owned(),
+                minimum: 5,
+                maximum: 55,
+            });
+    }
+    document.apply(Operation::AddMacro(warmth))?;
+    document.apply(Operation::AddMacro(motion))?;
+    document.apply(Operation::AddMacro(space))?;
+    add_standard_purpose_presets(
+        document,
+        "20000000-0000-4000-8000-00000000060",
+        &[
+            (warmth_id, 58, 72, 82),
+            (motion_id, 22, 65, 12),
+            (space_id, 55, 68, 82),
+        ],
+    )
+}
+
+fn add_standard_purpose_presets(
+    document: &mut Document,
+    id_prefix: &str,
+    values: &[(MacroId, u8, u8, u8)],
+) -> Result<(), StudyError> {
+    for (suffix, name, purpose, value_index) in [
+        ('1', "Focus", Purpose::Focus, 0_usize),
+        ('2', "Create", Purpose::Create, 1_usize),
+        ('3', "Rest", Purpose::Rest, 2_usize),
+    ] {
+        let mut preset = PurposePreset::new(id(&format!("{id_prefix}{suffix}"))?, name, purpose);
+        for &(macro_id, focus, create, rest) in values {
+            let choices = [focus, create, rest];
+            preset = preset.with_macro(macro_id, MacroValue::new(choices[value_index])?);
+        }
+        document.apply(Operation::AddPurposePreset(preset))?;
+    }
+    Ok(())
 }
 
 struct DroneVoice {

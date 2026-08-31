@@ -44,7 +44,10 @@ real-time DSP until a musical workflow exposes a browser limitation.
 
 The scheduler queries a short span ahead of the transport, converts each event to
 audio-context time, and schedules it before it must play. It neither renders an
-endless piece from time zero nor keeps pattern state inside Tone.js.
+endless piece from time zero nor keeps pattern state inside Tone.js. One browser
+playback coordinator covers Listen, Studio, examples, and direct piano input.
+Starting sound in one surface stops the active scheduler from another surface,
+so two independent transports cannot play over each other.
 
 The look-ahead scheduler owns:
 
@@ -95,14 +98,15 @@ A persisted voice contains a stable symbolic `SoundRef` and backend-independent
 parameters. The browser sound library resolves that reference to a concrete
 instrument or sample graph.
 
-The browser sound library provides six stable semantic presets:
+The browser sound library groups seven stable IDs by musical role:
 
-- `felt-piano` for a felt or piano-like voice;
-- `glass` for a bell or glass voice;
-- `warm-drone` for sustained tones;
-- `soft-pluck` for short plucked notes;
-- `air` for a noise texture;
-- `percussion` for simple percussion.
+- piano: `felt-piano`;
+- resonant mallet: `glass`;
+- drone: `warm-drone`;
+- pluck: `soft-pluck`;
+- texture: `air`;
+- percussion: `percussion`;
+- pad: `broad-pad`.
 
 A stable ID names the intended sound, not a Tone.js class. A preset can change
 its implementation while keeping its documented musical role. If a sound is missing, the browser runtime currently falls back to felt piano;
@@ -111,10 +115,19 @@ the document remains valid.
 Gain, pan, filter, and effects belong to the audio adapter when they describe
 rendering. The browser adapter maps integer `gain` values from 0–100 onto a
 -36 dB to 0 dB curve, rather than treating the value as linear amplitude. This
-leaves mix headroom when several Study voices overlap. It maps `reverb` from
-0–100, `pan` from -100–100, and `filter_hz` from 80–20,000 Hz. An integer
-`motion` value from 0–100 adds slow filter and pan movement within the sound
-graph. It is a preset control for rendering, not a canonical continuous signal.
+leaves mix headroom when several Study voices overlap. It maps `reverb`, `drive`,
+`wow_flutter`, `delay`, and `width` from 0–100, `pan` from -100–100, and
+`filter_hz` from 80–20,000 Hz. `motion` adds slow filter and pan movement.
+
+Drive and wow/flutter stay subtle inside each curated graph. Width uses mid-side
+processing and is capped further for `warm-drone` so low sustained tones remain
+centered and survive mono playback. Delay has one restrained semantic control;
+feedback and timing remain part of the sound implementation. The current reverb
+already uses a generated impulse response through Tone.js's convolution reverb.
+No Study exposed a reason to replace it with a second algorithmic implementation,
+so convolution remains the default.
+
+These controls describe rendering, not canonical continuous signals.
 Backend-specific node topology, sample URLs, buffer state, audio context IDs,
 and scheduling handles are never serialized in the document.
 
@@ -128,9 +141,9 @@ metric cell from its transformations.
 
 The Studies exposed one shared mix problem: linear gain controls made ordinary
 multi-voice settings too loud. The decibel gain curve fixes that without adding
-piece-specific routing. No Study currently requires another sound ID. The next
-palette additions should follow a named piece rather than duplicate these six
-roles.
+piece-specific routing. `broad-pad` fills the sustained harmonic role that was too wide and bright for
+`warm-drone`. Granular and formant sounds remain deferred until a named piece and
+portable asset semantics define what they need.
 
 ## Samples and assets
 

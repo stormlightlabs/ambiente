@@ -470,6 +470,70 @@ impl Pattern {
         Self::Material { material_id }
     }
 
+    /// Counts omit and conditional processes with the named stable identity.
+    #[must_use]
+    pub(crate) fn process_occurrences(&self, target: PatternId) -> usize {
+        match self {
+            Self::Material { .. } => 0,
+            Self::Sequence { patterns }
+            | Self::Stack { patterns }
+            | Self::Choose { patterns, .. } => patterns
+                .iter()
+                .map(|pattern| pattern.process_occurrences(target))
+                .sum(),
+            Self::WeightedChoose { patterns, .. } => patterns
+                .iter()
+                .map(|pattern| pattern.pattern.process_occurrences(target))
+                .sum(),
+            Self::Repeat { pattern, .. } | Self::Transform { pattern, .. } => {
+                pattern.process_occurrences(target)
+            }
+            Self::Omit { id, pattern, .. } | Self::Sometimes { id, pattern, .. } => {
+                usize::from(*id == target) + pattern.process_occurrences(target)
+            }
+        }
+    }
+
+    /// Replaces one omit or conditional-transformation probability in this tree.
+    pub(crate) fn set_process_probability(
+        &mut self,
+        target: PatternId,
+        probability: Probability,
+    ) -> bool {
+        match self {
+            Self::Material { .. } => false,
+            Self::Sequence { patterns }
+            | Self::Stack { patterns }
+            | Self::Choose { patterns, .. } => patterns
+                .iter_mut()
+                .any(|pattern| pattern.set_process_probability(target, probability)),
+            Self::WeightedChoose { patterns, .. } => patterns
+                .iter_mut()
+                .any(|pattern| pattern.pattern.set_process_probability(target, probability)),
+            Self::Repeat { pattern, .. } | Self::Transform { pattern, .. } => {
+                pattern.set_process_probability(target, probability)
+            }
+            Self::Omit {
+                id,
+                probability: current,
+                pattern,
+            }
+            | Self::Sometimes {
+                id,
+                probability: current,
+                pattern,
+                ..
+            } => {
+                if *id == target {
+                    *current = probability;
+                    true
+                } else {
+                    pattern.set_process_probability(target, probability)
+                }
+            }
+        }
+    }
+
     /// Places patterns consecutively.
     #[must_use]
     pub fn sequence(patterns: impl IntoIterator<Item = Self>) -> Self {

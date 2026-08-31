@@ -1,7 +1,18 @@
 import type { AmbienteApplication, ApplicationEvent } from '@ambiente/wasm';
 
 /** Stable semantic IDs for the browser sound palette. */
-export const SOUND_IDS = ['felt-piano', 'glass', 'warm-drone', 'soft-pluck', 'air', 'percussion'] as const;
+export const SOUND_IDS = ['felt-piano', 'glass', 'warm-drone', 'soft-pluck', 'air', 'percussion', 'broad-pad'] as const;
+
+/** Curated semantic family and musical role for every stable sound ID. */
+export const SOUND_FAMILIES = {
+	air: { family: 'texture', role: 'Soft air and noise' },
+	'broad-pad': { family: 'pad', role: 'Broad sustained harmony' },
+	'felt-piano': { family: 'piano', role: 'Soft piano-like notes' },
+	glass: { family: 'mallet', role: 'Resonant glass and bell tones' },
+	percussion: { family: 'percussion', role: 'Restrained low percussion' },
+	'soft-pluck': { family: 'pluck', role: 'Short softened plucks' },
+	'warm-drone': { family: 'drone', role: 'Warm sustained tones' }
+} as const satisfies Record<SoundId, Readonly<{ family: string; role: string }>>;
 
 /** One stable semantic browser sound ID. */
 export type SoundId = (typeof SOUND_IDS)[number];

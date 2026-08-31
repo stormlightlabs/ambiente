@@ -1,6 +1,6 @@
 {
 	"format": "ambiente",
-	"schema_version": 2,
+	"schema_version": 3,
 	"id": "9f8d76b0-0dd1-4fea-9ad9-43ae8f94f860",
 	"metadata": { "title": "Cross-runtime study", "composer": null, "description": null },
 	"seed": "000000000000002a",
@@ -40,6 +40,8 @@
 					"parameters": {}
 				}
 			}
-		}
+		},
+		"macros": {},
+		"purpose_presets": {}
 	}
 }

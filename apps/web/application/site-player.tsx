@@ -2,7 +2,7 @@ import { createContext, createSignal, onCleanup, useContext, type Accessor, type
 
 import type { LookAheadScheduler, TransportState } from '@ambiente/audio';
 
-import type { ApplicationEvent, WasmApplication } from './facade';
+import type { ApplicationEvent, ApplicationMacro, ApplicationPurposePreset, WasmApplication } from './facade';
 
 /** A canonical piece that the persistent site player can load. */
 export type PlayablePiece = Readonly<{
@@ -16,15 +16,21 @@ export type PlayablePiece = Readonly<{
 /** Shared state and controls for persistent piece playback across the site shell. */
 export type SitePlayer = Readonly<{
 	activeEvents: Accessor<readonly ApplicationEvent[]>;
+	activePurposePreset: Accessor<string | undefined>;
+	applyPurposePreset: (presetId: string) => Promise<void>;
 	download: (piece: PlayablePiece) => Promise<void>;
 	error: Accessor<string | undefined>;
+	macros: Accessor<readonly ApplicationMacro[]>;
 	nextVariation: (piece?: PlayablePiece) => Promise<void>;
 	pieces: readonly PlayablePiece[];
 	playPiece: (piece: PlayablePiece) => Promise<void>;
+	prepare: () => Promise<void>;
 	position: Accessor<number>;
+	purposePresets: Accessor<readonly ApplicationPurposePreset[]>;
 	seed: Accessor<string>;
 	selectedPiece: Accessor<PlayablePiece>;
 	selectPiece: (piece: PlayablePiece) => void;
+	setMacro: (macroId: string, value: number) => Promise<void>;
 	setVolume: (volume: number) => void;
 	state: Accessor<TransportState>;
 	stop: () => void;
@@ -43,6 +49,9 @@ export type SitePlayerProviderProps = Readonly<{
 /** Owns the single audio scheduler shared by global and embedded piece controls. */
 export function SitePlayerProvider(props: SitePlayerProviderProps) {
 	const [selectedPiece, setSelectedPiece] = createSignal(props.pieces[0]);
+	const [macros, setMacros] = createSignal<readonly ApplicationMacro[]>([]);
+	const [purposePresets, setPurposePresets] = createSignal<readonly ApplicationPurposePreset[]>([]);
+	const [activePurposePreset, setActivePurposePreset] = createSignal<string>();
 	const [state, setState] = createSignal<TransportState>('stopped');
 	const [position, setPosition] = createSignal(0);
 	const [activeEvents, setActiveEvents] = createSignal<readonly ApplicationEvent[]>([]);
@@ -64,6 +73,9 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 		initialization = undefined;
 		activityTick = -1;
 		setActiveEvents([]);
+		setMacros([]);
+		setPurposePresets([]);
+		setActivePurposePreset(undefined);
 	}
 
 	onCleanup(disposeAudio);
@@ -76,7 +88,10 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 			const [{ createBrowserAudio }, nextApplication] = await Promise.all([import('@ambiente/audio'), piece.load()]);
 			if (piece.id !== selectedPiece().id) return;
 			application = nextApplication;
-			setSeed(application.inspect().seed);
+			const inspection = application.inspect();
+			setSeed(inspection.seed);
+			setMacros(inspection.macros);
+			setPurposePresets(inspection.purposePresets);
 			audio = createBrowserAudio(application);
 			audio.setVolume(volume());
 			unsubscribe = audio.subscribe((nextState, nextPosition) => {
@@ -118,6 +133,10 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 		}
 	}
 
+	async function prepare() {
+		await run(initialize, 'This piece could not be loaded.');
+	}
+
 	async function togglePlayback() {
 		await run(async () => {
 			await initialize();
@@ -145,6 +164,34 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 		const normalized = Math.min(1, Math.max(0, nextVolume));
 		setVolumeSignal(normalized);
 		audio?.setVolume(normalized);
+	}
+
+	async function setMacro(macroId: string, value: number) {
+		await run(async () => {
+			await initialize();
+			if (!application || !audio) return;
+			const diagnostic = application
+				.apply({ kind: 'set_macro_value', payload: { id: macroId, value: Math.round(value) } })
+				.find((item) => item.severity === 'error');
+			if (diagnostic) throw new Error(diagnostic.message);
+			setMacros(application.inspect().macros);
+			setActivePurposePreset(undefined);
+			audio.refreshDocument();
+		}, 'The control could not be changed.');
+	}
+
+	async function applyPurposePreset(presetId: string) {
+		await run(async () => {
+			await initialize();
+			if (!application || !audio) return;
+			const diagnostic = application
+				.apply({ kind: 'apply_purpose_preset', payload: presetId })
+				.find((item) => item.severity === 'error');
+			if (diagnostic) throw new Error(diagnostic.message);
+			setMacros(application.inspect().macros);
+			setActivePurposePreset(presetId);
+			audio.refreshDocument();
+		}, 'The listening mode could not be applied.');
 	}
 
 	async function nextVariation(piece = selectedPiece()) {
@@ -178,15 +225,21 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 
 	const player: SitePlayer = {
 		activeEvents,
+		activePurposePreset,
+		applyPurposePreset,
 		download,
 		error,
+		macros,
 		nextVariation,
 		pieces: props.pieces,
 		playPiece,
+		prepare,
 		position,
+		purposePresets,
 		seed,
 		selectedPiece,
 		selectPiece,
+		setMacro,
 		setVolume,
 		state,
 		stop,

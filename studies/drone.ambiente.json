@@ -1,6 +1,6 @@
 {
   "format": "ambiente",
-  "schema_version": 2,
+  "schema_version": 3,
   "id": "20000000-0000-4000-8000-000000000010",
   "metadata": {
     "title": "Drone Study",
@@ -366,6 +366,232 @@
               "value": 55
             }
           }
+        }
+      }
+    },
+    "macros": {
+      "20000000-0000-4000-8000-000000000501": {
+        "id": "20000000-0000-4000-8000-000000000501",
+        "name": "Warmth",
+        "semantic": "warmth",
+        "value": 62,
+        "mappings": [
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000201",
+            "parameter": "filter_hz",
+            "minimum": 5200,
+            "maximum": 1300
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000201",
+            "parameter": "drive",
+            "minimum": 0,
+            "maximum": 24
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000202",
+            "parameter": "filter_hz",
+            "minimum": 5200,
+            "maximum": 1300
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000202",
+            "parameter": "drive",
+            "minimum": 0,
+            "maximum": 24
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000203",
+            "parameter": "filter_hz",
+            "minimum": 5200,
+            "maximum": 1300
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000203",
+            "parameter": "drive",
+            "minimum": 0,
+            "maximum": 24
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000204",
+            "parameter": "filter_hz",
+            "minimum": 5200,
+            "maximum": 1300
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000204",
+            "parameter": "drive",
+            "minimum": 0,
+            "maximum": 24
+          }
+        ]
+      },
+      "20000000-0000-4000-8000-000000000502": {
+        "id": "20000000-0000-4000-8000-000000000502",
+        "name": "Motion",
+        "semantic": "motion",
+        "value": 38,
+        "mappings": [
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000201",
+            "parameter": "motion",
+            "minimum": 4,
+            "maximum": 55
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000201",
+            "parameter": "wow_flutter",
+            "minimum": 0,
+            "maximum": 28
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000202",
+            "parameter": "motion",
+            "minimum": 4,
+            "maximum": 55
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000202",
+            "parameter": "wow_flutter",
+            "minimum": 0,
+            "maximum": 28
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000203",
+            "parameter": "motion",
+            "minimum": 4,
+            "maximum": 55
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000203",
+            "parameter": "wow_flutter",
+            "minimum": 0,
+            "maximum": 28
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000204",
+            "parameter": "motion",
+            "minimum": 4,
+            "maximum": 55
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000204",
+            "parameter": "wow_flutter",
+            "minimum": 0,
+            "maximum": 28
+          }
+        ]
+      },
+      "20000000-0000-4000-8000-000000000503": {
+        "id": "20000000-0000-4000-8000-000000000503",
+        "name": "Space",
+        "semantic": "space",
+        "value": 68,
+        "mappings": [
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000201",
+            "parameter": "reverb",
+            "minimum": 28,
+            "maximum": 78
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000201",
+            "parameter": "width",
+            "minimum": 5,
+            "maximum": 55
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000202",
+            "parameter": "reverb",
+            "minimum": 28,
+            "maximum": 78
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000202",
+            "parameter": "width",
+            "minimum": 5,
+            "maximum": 55
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000203",
+            "parameter": "reverb",
+            "minimum": 28,
+            "maximum": 78
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000203",
+            "parameter": "width",
+            "minimum": 5,
+            "maximum": 55
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000204",
+            "parameter": "reverb",
+            "minimum": 28,
+            "maximum": 78
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "20000000-0000-4000-8000-000000000204",
+            "parameter": "width",
+            "minimum": 5,
+            "maximum": 55
+          }
+        ]
+      }
+    },
+    "purpose_presets": {
+      "20000000-0000-4000-8000-000000000601": {
+        "id": "20000000-0000-4000-8000-000000000601",
+        "name": "Focus",
+        "purpose": "focus",
+        "macro_values": {
+          "20000000-0000-4000-8000-000000000501": 58,
+          "20000000-0000-4000-8000-000000000502": 22,
+          "20000000-0000-4000-8000-000000000503": 55
+        }
+      },
+      "20000000-0000-4000-8000-000000000602": {
+        "id": "20000000-0000-4000-8000-000000000602",
+        "name": "Create",
+        "purpose": "create",
+        "macro_values": {
+          "20000000-0000-4000-8000-000000000501": 72,
+          "20000000-0000-4000-8000-000000000502": 65,
+          "20000000-0000-4000-8000-000000000503": 68
+        }
+      },
+      "20000000-0000-4000-8000-000000000603": {
+        "id": "20000000-0000-4000-8000-000000000603",
+        "name": "Rest",
+        "purpose": "rest",
+        "macro_values": {
+          "20000000-0000-4000-8000-000000000501": 82,
+          "20000000-0000-4000-8000-000000000502": 12,
+          "20000000-0000-4000-8000-000000000503": 82
         }
       }
     }

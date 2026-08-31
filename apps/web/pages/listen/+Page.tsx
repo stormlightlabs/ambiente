@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createMemo, createSignal } from 'solid-js';
+import { For, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js';
 
 import type { ApplicationEvent } from '../../application/facade';
 import type { PlayablePiece } from '../../application/site-player';
@@ -43,6 +43,8 @@ export default function Page() {
 	});
 	let selectedId = player.selectedPiece().id;
 
+	onMount(() => void player.prepare());
+
 	createEffect(() => {
 		const nextId = player.selectedPiece().id;
 		if (nextId !== selectedId) {
@@ -63,6 +65,7 @@ export default function Page() {
 
 	function choosePiece(piece: PlayablePiece) {
 		player.selectPiece(piece);
+		void player.prepare();
 	}
 
 	function chooseDuration(minutes: number) {
@@ -166,8 +169,40 @@ export default function Page() {
 
 				<aside class="listen-session" aria-labelledby="session-title">
 					<div>
-						<p class="listen-kicker">Session</p>
-						<h2 id="session-title">How long would you like to listen?</h2>
+						<p class="listen-kicker">Listening mode</p>
+						<h2 id="session-title">Shape the piece for this moment</h2>
+					</div>
+					<div class="listen-purpose" role="group" aria-label="Listening mode">
+						<For each={player.purposePresets()}>
+							{(preset) => (
+								<button
+									type="button"
+									classList={{ 'is-selected': player.activePurposePreset() === preset.id }}
+									aria-pressed={player.activePurposePreset() === preset.id}
+									onClick={() => void player.applyPurposePreset(preset.id)}>
+									{preset.name}
+								</button>
+							)}
+						</For>
+					</div>
+					<div class="listen-macros">
+						<For each={player.macros()}>
+							{(macro) => (
+								<label>
+									<span>{macro.name}</span>
+									<input
+										type="range"
+										min="0"
+										max="100"
+										value={macro.value}
+										onChange={(event) => void player.setMacro(macro.id, event.currentTarget.valueAsNumber)}
+									/>
+								</label>
+							)}
+						</For>
+					</div>
+					<div>
+						<p class="listen-kicker">Session length</p>
 					</div>
 					<div class="listen-session__durations" role="group" aria-label="Session duration">
 						<For each={sessionDurations}>

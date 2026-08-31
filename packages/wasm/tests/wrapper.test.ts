@@ -63,7 +63,26 @@ describe('WASM application', () => {
 		expect(created.inspect()).toMatchObject({ materialCount: 0, tempo: '120/1', title: 'Fresh piece', voiceCount: 0 });
 
 		const study = await WasmApplication.createStudy('pattern');
-		expect(study.inspect()).toMatchObject({ materialCount: 2, title: 'Pattern Study', voiceCount: 4 });
+		expect(study.inspect()).toMatchObject({
+			macros: [
+				expect.objectContaining({ name: 'Density', semantic: 'density' }),
+				expect.objectContaining({ name: 'Intensity', semantic: 'intensity' })
+			],
+			materialCount: 2,
+			purposePresets: [
+				expect.objectContaining({ name: 'Focus', purpose: 'focus' }),
+				expect.objectContaining({ name: 'Create', purpose: 'create' }),
+				expect.objectContaining({ name: 'Rest', purpose: 'rest' })
+			],
+			title: 'Pattern Study',
+			voiceCount: 4
+		});
+		const createPreset = study.inspect().purposePresets.find((preset) => preset.purpose === 'create')!;
+		expect(study.apply({ kind: 'apply_purpose_preset', payload: createPreset.id })).toEqual([]);
+		expect(study.inspect().macros).toMatchObject([
+			expect.objectContaining({ name: 'Density', value: 82 }),
+			expect.objectContaining({ name: 'Intensity', value: 72 })
+		]);
 		expect(study.queryEvents({ clock: 'metric', start: '0/1', end: '8/1' }).length).toBeGreaterThan(10);
 
 		const beforeInvalidLoad = application.serialize();

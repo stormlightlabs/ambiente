@@ -80,6 +80,12 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added a dedicated Listen mode with a first-party piece browser, endless and
   timed sessions, seed variations, listener-focused controls, and event-driven
   artwork.
+- Added canonical composer-published macros, multi-target voice and process
+  mappings, and authored Focus, Create, and Rest presets for the Three Studies.
+- Added semantic sound-family metadata, a broad pad, and curated drive,
+  wow/flutter, filter motion, delay, reverb, and mono-conscious width controls.
+- Added unified browser playback ownership plus audio-context retry and graph
+  disposal coverage across Listen, Studio, examples, and direct input.
 
 ### Changed
 
@@ -102,6 +108,8 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   lives here.
 - Corrected browser pitch rendering so canonical chromatic pitches are converted
   from MIDI-style semitone values to Tone.js frequencies.
+- Advanced the document schema to version 3 for piece-level macros and purpose
+  presets; schema 1 and 2 documents migrate in sequence.
 - Changed semantic gain mapping from linear amplitude to a -36 dB to 0 dB curve
   so multi-voice pieces retain mix headroom.
 - Added restrained seeded omissions to Phase while retaining one complete phrase

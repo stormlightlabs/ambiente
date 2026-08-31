@@ -33,6 +33,10 @@ test('Listen mode browses first-party pieces without composition controls', asyn
 	await expect(page.getByRole('button', { name: /Phase/ })).toHaveAttribute('aria-pressed', 'true');
 	await page.getByRole('button', { name: /Drone/ }).click();
 	await expect(page.getByRole('heading', { level: 2, name: 'Drone' })).toBeVisible();
+	await expect(page.getByRole('slider', { name: 'Warmth' })).toHaveValue('62');
+	await page.getByRole('button', { name: 'Rest', exact: true }).click();
+	await expect(page.getByRole('slider', { name: 'Warmth' })).toHaveValue('82');
+	await expect(page.getByRole('button', { name: 'Rest', exact: true })).toHaveAttribute('aria-pressed', 'true');
 	await page.getByRole('button', { name: '30 min' }).click();
 	await expect(page.getByRole('button', { name: '30 min' })).toHaveAttribute('aria-pressed', 'true');
 	await page.getByRole('button', { name: 'Play', exact: true }).click();
@@ -100,7 +104,7 @@ test('Studio loads Rust events and the browser transport', async ({ page }) => {
 
 	await expect(page.getByRole('heading', { level: 1, name: 'Play and record' })).toBeVisible();
 	await expect(page.getByRole('heading', { name: 'Local pieces' })).toBeVisible();
-	await expect(page.getByText('Format 2')).toBeVisible();
+	await expect(page.getByText('Format 3')).toBeVisible();
 	await expect(page.getByLabel('Playback volume')).toHaveValue('0.8');
 
 	await page.getByRole('button', { name: 'Play', exact: true }).click();

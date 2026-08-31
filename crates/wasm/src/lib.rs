@@ -145,15 +145,44 @@ impl AmbienteWasm {
                     .and_then(sole_material)
                     .map(|id| id.to_string()),
                 name: voice.settings().name(),
-                parameters: voice.settings().parameters(),
+                parameters: self
+                    .document
+                    .resolved_voice_parameters(voice.id())
+                    .unwrap_or_default(),
                 pattern: voice.settings().pattern(),
                 sound: voice.settings().sound().as_str(),
+            })
+            .collect();
+        let macros = piece
+            .macros()
+            .values()
+            .map(|published| MacroInspection {
+                id: published.id().to_string(),
+                name: published.name(),
+                semantic: published.semantic(),
+                value: published.value().value(),
+            })
+            .collect();
+        let purpose_presets = piece
+            .purpose_presets()
+            .values()
+            .map(|preset| PurposePresetInspection {
+                id: preset.id().to_string(),
+                macro_values: preset
+                    .macro_values()
+                    .iter()
+                    .map(|(id, value)| (id.to_string(), value.value()))
+                    .collect(),
+                name: preset.name(),
+                purpose: preset.purpose(),
             })
             .collect();
         json(&DocumentInspection {
             document_id: self.document.id().to_string(),
             material_count: piece.materials().len(),
             materials,
+            macros,
+            purpose_presets,
             seed: self.document.seed().to_string(),
             tempo: piece.transport().tempo().to_string(),
             title: self
@@ -251,6 +280,8 @@ struct DocumentInspection<'a> {
     document_id: String,
     material_count: usize,
     materials: Vec<&'a Material>,
+    macros: Vec<MacroInspection<'a>>,
+    purpose_presets: Vec<PurposePresetInspection<'a>>,
     seed: String,
     tempo: String,
     title: &'a str,
@@ -265,9 +296,27 @@ struct AudioVoiceInspection<'a> {
     id: String,
     material_id: Option<String>,
     name: &'a str,
-    parameters: &'a BTreeMap<String, ParameterValue>,
+    parameters: BTreeMap<String, ParameterValue>,
     pattern: Option<&'a Pattern>,
     sound: &'a str,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MacroInspection<'a> {
+    id: String,
+    name: &'a str,
+    semantic: &'a MacroSemantic,
+    value: u8,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PurposePresetInspection<'a> {
+    id: String,
+    macro_values: BTreeMap<String, u8>,
+    name: &'a str,
+    purpose: &'a Purpose,
 }
 
 #[derive(Serialize)]

@@ -1,6 +1,6 @@
 {
   "format": "ambiente",
-  "schema_version": 2,
+  "schema_version": 3,
   "id": "30000000-0000-4000-8000-000000000010",
   "metadata": {
     "title": "Pattern Study",
@@ -614,6 +614,99 @@
               "value": 12
             }
           }
+        }
+      }
+    },
+    "macros": {
+      "30000000-0000-4000-8000-000000000501": {
+        "id": "30000000-0000-4000-8000-000000000501",
+        "name": "Density",
+        "semantic": "density",
+        "value": 55,
+        "mappings": [
+          {
+            "type": "process_probability",
+            "pattern_id": "30000000-0000-4000-8000-000000000301",
+            "minimum": 55,
+            "maximum": 3
+          },
+          {
+            "type": "process_probability",
+            "pattern_id": "30000000-0000-4000-8000-000000000302",
+            "minimum": 55,
+            "maximum": 3
+          },
+          {
+            "type": "process_probability",
+            "pattern_id": "30000000-0000-4000-8000-000000000303",
+            "minimum": 55,
+            "maximum": 3
+          }
+        ]
+      },
+      "30000000-0000-4000-8000-000000000502": {
+        "id": "30000000-0000-4000-8000-000000000502",
+        "name": "Intensity",
+        "semantic": "intensity",
+        "value": 48,
+        "mappings": [
+          {
+            "type": "voice_parameter",
+            "voice_id": "30000000-0000-4000-8000-000000000201",
+            "parameter": "gain",
+            "minimum": 18,
+            "maximum": 56
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "30000000-0000-4000-8000-000000000202",
+            "parameter": "gain",
+            "minimum": 18,
+            "maximum": 56
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "30000000-0000-4000-8000-000000000203",
+            "parameter": "gain",
+            "minimum": 18,
+            "maximum": 56
+          },
+          {
+            "type": "voice_parameter",
+            "voice_id": "30000000-0000-4000-8000-000000000204",
+            "parameter": "gain",
+            "minimum": 18,
+            "maximum": 56
+          }
+        ]
+      }
+    },
+    "purpose_presets": {
+      "30000000-0000-4000-8000-000000000601": {
+        "id": "30000000-0000-4000-8000-000000000601",
+        "name": "Focus",
+        "purpose": "focus",
+        "macro_values": {
+          "30000000-0000-4000-8000-000000000501": 45,
+          "30000000-0000-4000-8000-000000000502": 38
+        }
+      },
+      "30000000-0000-4000-8000-000000000602": {
+        "id": "30000000-0000-4000-8000-000000000602",
+        "name": "Create",
+        "purpose": "create",
+        "macro_values": {
+          "30000000-0000-4000-8000-000000000501": 82,
+          "30000000-0000-4000-8000-000000000502": 72
+        }
+      },
+      "30000000-0000-4000-8000-000000000603": {
+        "id": "30000000-0000-4000-8000-000000000603",
+        "name": "Rest",
+        "purpose": "rest",
+        "macro_values": {
+          "30000000-0000-4000-8000-000000000501": 24,
+          "30000000-0000-4000-8000-000000000502": 22
         }
       }
     }

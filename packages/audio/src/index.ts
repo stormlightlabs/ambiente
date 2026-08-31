@@ -2,6 +2,7 @@
 export { LookAheadScheduler } from './scheduler';
 export { soundControls, ToneAudioBackend, type SoundControls } from './sounds';
 export {
+	SOUND_FAMILIES,
 	SOUND_IDS,
 	eventIdentity,
 	isSoundId,
@@ -22,7 +23,31 @@ import type { AudioEventSource, SchedulerOptions } from './types';
 import { LookAheadScheduler } from './scheduler';
 import { ToneAudioBackend } from './sounds';
 
-/** Creates the production look-ahead scheduler over Tone.js and Web Audio. */
+/** Coordinates browser surfaces so only one scheduler or direct instrument owns audio. */
+export class BrowserPlaybackCoordinator {
+	private active: LookAheadScheduler | undefined;
+
+	/** Creates a scheduler and transfers browser playback ownership to it. */
+	create(source: AudioEventSource, options?: SchedulerOptions): LookAheadScheduler {
+		const scheduler = new LookAheadScheduler(source, new ToneAudioBackend(), options);
+		this.active?.stop();
+		this.active = scheduler;
+		scheduler.coordinate(
+			() => {
+				if (this.active !== scheduler) this.active?.stop();
+				this.active = scheduler;
+			},
+			() => {
+				if (this.active === scheduler) this.active = undefined;
+			}
+		);
+		return scheduler;
+	}
+}
+
+const browserPlayback = new BrowserPlaybackCoordinator();
+
+/** Creates one production scheduler participating in unified browser playback. */
 export function createBrowserAudio(source: AudioEventSource, options?: SchedulerOptions): LookAheadScheduler {
-	return new LookAheadScheduler(source, new ToneAudioBackend(), options);
+	return browserPlayback.create(source, options);
 }

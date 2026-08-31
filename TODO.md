@@ -22,37 +22,6 @@ listening pass.
 
 ## M8 — Listen mode
 
-### Macros
-
-- [ ] Add canonical `Macro` model.
-- [ ] Allow composers to publish selected high-level controls.
-- [ ] Map one macro to multiple underlying parameters/process values.
-- [ ] Define useful semantic controls such as density, motion, space, warmth, and
-      intensity where appropriate.
-
-### Purpose presets
-
-- [ ] Allow a piece to offer optional modes such as `Focus`, `Create`, or `Rest`.
-- [ ] Implement these as authored macro/scene presets.
-- [ ] Do not encode unsupported neuroscience claims into the engine or UI.
-
-### Sound and browser audio
-
-Add sounds and controls only when a Study or first-party piece needs them.
-
-- [ ] Define semantic sound families and stable IDs.
-- [ ] Add a broad pad if `warm-drone` does not cover the needed role.
-- [ ] Add tape-style drive and subtle wow/flutter inside curated sound implementations.
-- [ ] Add modulated-filter support, reusing `motion` where possible.
-- [ ] Add stereo width without harming mono or low-frequency behavior.
-- [ ] Evaluate convolution/IR reverb against the current implementation.
-- [ ] Add delay only if it works as a reusable semantic voice control.
-- [ ] Prototype granular sample playback with Tone.js `GrainPlayer` after asset
-      semantics exist.
-- [ ] Add formant/vocal-like sound only for a named piece.
-- [ ] Test audio-context resume/recovery and disposal of effects, samples, and
-      long-running voices.
-
 ### Process visualization
 
 - [ ] Visualize independent cycles and phase.
@@ -431,8 +400,7 @@ Possible tasks:
 
 ## Cross-cutting reliability and accessibility
 
-- [ ] Test audio-context start, resume, and recovery states.
-- [ ] Test sample decoding, loading failures, and audio-node/buffer disposal.
+- [ ] Test sample decoding, loading failures, and buffer disposal when sample assets are added.
 - [ ] Add or verify transport shortcuts and piano, matrix, and lesson keyboard access.
 - [ ] Add ARIA labels, roles, and focus behavior for interactive music controls.
 - [ ] Measure scheduler and audio performance before adding workers or native DSP.

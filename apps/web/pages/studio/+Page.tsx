@@ -27,6 +27,8 @@ const initialInspection: DocumentInspection = {
 	documentId: '',
 	materialCount: 0,
 	materials: [],
+	macros: [],
+	purposePresets: [],
 	seed: '0000000000000000',
 	tempo: '120/1',
 	title: 'Loading piece',
@@ -55,7 +57,8 @@ const sounds = [
 	{ id: 'warm-drone', label: 'Warm drone' },
 	{ id: 'soft-pluck', label: 'Soft pluck' },
 	{ id: 'air', label: 'Air' },
-	{ id: 'percussion', label: 'Percussion' }
+	{ id: 'percussion', label: 'Percussion' },
+	{ id: 'broad-pad', label: 'Broad pad' }
 ] as const;
 
 type StudioView = (typeof views)[number];
