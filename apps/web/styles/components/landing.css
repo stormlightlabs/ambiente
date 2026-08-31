@@ -230,12 +230,8 @@
 		max-width: 38rem;
 	}
 	.principle-band {
-		align-items: end;
 		background: var(--forest-dark);
 		color: var(--inverse-paper);
-		display: grid;
-		gap: 2rem;
-		grid-template-columns: 1fr auto;
 		padding: clamp(3rem, 7vw, 6rem) var(--page-pad);
 	}
 	.principle-band blockquote {
@@ -283,13 +279,6 @@
 	}
 	.pathway p {
 		grid-column: 2;
-	}
-	.principle-band {
-		display: block;
-	}
-	.principle-band .text-link {
-		display: inline-block;
-		margin-top: 2rem;
 	}
 }
 

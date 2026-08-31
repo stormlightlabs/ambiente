@@ -12,16 +12,16 @@ import type {
 	DocumentInspection,
 	DocumentOperation,
 	WasmApplication
-} from '../../src/application/facade';
+} from '../../application/facade';
 import type {
 	BrowserPieceStorage,
 	DebouncedPieceAutosave,
 	PersistenceStatus,
 	StoredPiece,
 	StoredPieceDocument
-} from '../../src/application/piece-storage';
-import { MatrixEditor } from '../../src/components/MatrixEditor';
-import { PianoKeyboard, pitchName } from '../../src/components/PianoKeyboard';
+} from '../../application/piece-storage';
+import { MatrixEditor } from '../../components/MatrixEditor';
+import { PianoKeyboard, pitchName } from '../../components/PianoKeyboard';
 
 const initialInspection: DocumentInspection = {
 	documentId: '',
@@ -126,8 +126,8 @@ export default function Page() {
 		try {
 			const [{ createBrowserAudio }, facade, pieceStorage] = await Promise.all([
 				import('@ambiente/audio'),
-				import('../../src/application/facade'),
-				import('../../src/application/piece-storage')
+				import('../../application/facade'),
+				import('../../application/piece-storage')
 			]);
 			storage = new pieceStorage.BrowserPieceStorage();
 			setPersistence(await pieceStorage.requestPersistentStorage().catch(() => 'prompt-denied' as const));
@@ -258,7 +258,7 @@ export default function Page() {
 		if (!storage || !application) return;
 		try {
 			await autosave?.flush();
-			const { WasmApplication } = await import('../../src/application/facade');
+			const { WasmApplication } = await import('../../application/facade');
 			const createdApplication = await WasmApplication.createNew('Untitled piece');
 			const created = await storage.create(createdApplication.serialize());
 			await refreshLibrary();
@@ -303,7 +303,7 @@ export default function Page() {
 		input.value = '';
 		if (!file || !storage) return;
 		try {
-			const { WasmApplication } = await import('../../src/application/facade');
+			const { WasmApplication } = await import('../../application/facade');
 			const imported = await WasmApplication.create(await file.text());
 			const created = await storage.create(imported.serialize());
 			await refreshLibrary();
@@ -319,7 +319,7 @@ export default function Page() {
 		await autosave?.flush();
 		const stored = await storage.get(active.id);
 		if (!stored) return;
-		const { downloadPiece } = await import('../../src/application/piece-storage');
+		const { downloadPiece } = await import('../../application/piece-storage');
 		downloadPiece(stored);
 	}
 

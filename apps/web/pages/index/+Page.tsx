@@ -118,10 +118,6 @@ export default function Page() {
 						Brian Eno, <a href="https://www.inmotionmagazine.com/eno1.html">“Generative Music” (1996)</a>
 					</cite>
 				</blockquote>
-				<a class="text-link text-link--light" href="/docs/architecture">
-					Explore the architecture
-					<span class="icon i-ri-arrow-right-line" aria-hidden="true" />
-				</a>
 			</section>
 		</>
 	);

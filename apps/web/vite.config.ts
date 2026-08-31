@@ -6,8 +6,8 @@ import solid from 'vite-plugin-solid';
 import vike from 'vike/plugin';
 import vikeSolid from 'vike-solid/vite';
 
-import { collectMdxHeadings, headingAnchors } from './src/content/heading-anchors';
-import { documentationLinks } from './src/content/documentation-links';
+import { collectMdxHeadings, headingAnchors } from './content/heading-anchors';
+import { documentationLinks } from './content/documentation-links';
 
 export default defineConfig({
 	plugins: [

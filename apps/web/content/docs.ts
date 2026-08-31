@@ -24,7 +24,7 @@ type MdxModule = {
 	headings?: ContentHeading[];
 };
 
-const modules = import.meta.glob<MarkdownModule | MdxModule>('../../content/docs/**/*.{md,mdx}', { eager: true });
+const modules = import.meta.glob<MarkdownModule | MdxModule>('./docs/**/*.{md,mdx}', { eager: true });
 
 /** Removes inline markup from Sätteri-rendered heading labels. */
 export function textFromHeadingHtml(value: string): string {
@@ -57,7 +57,7 @@ export function headingsFromHtml(html: string): ContentHeading[] {
 
 function slugFromPath(path: string): string {
 	return path
-		.replace(/^\.\.\/\.\.\/content\/docs\//, '')
+		.replace(/^\.\/docs\//, '')
 		.replace(/\.(md|mdx)$/, '')
 		.replace(/\/index$/, '');
 }

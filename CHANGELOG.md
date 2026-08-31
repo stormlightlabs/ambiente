@@ -88,6 +88,9 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Updated the web shell to use Google Sans and Instrument Sans variable fonts,
   an Everforest-inspired light and dark palette, the favicon background for the
   navigation bar, UnoCSS-backed icons, a fuller footer, and clearer public copy.
+- Flattened the web application around root-level `application`, `components`,
+  `content`, `pages`, and `styles` directories. Improved light-mode contrast and
+  removed the landing-page architecture call to action and header-mark border.
 - Revised the published guides for current product behavior and added an
   Instrument Studio guide for playing, recording, voice editing, and local
   saving.

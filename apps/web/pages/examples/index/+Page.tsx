@@ -1,6 +1,6 @@
 import { For } from 'solid-js';
 
-import { PlayableExample, type PlayableExampleKind } from '../../../src/components/PlayableExample';
+import { PlayableExample, type PlayableExampleKind } from '../../../components/PlayableExample';
 
 const examples: ReadonlyArray<
 	Readonly<{ description: string; id: PlayableExampleKind; number: string; title: string }>

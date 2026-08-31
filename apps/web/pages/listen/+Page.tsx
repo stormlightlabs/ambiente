@@ -1,9 +1,9 @@
 import { For, Show, createEffect, createMemo, createSignal } from 'solid-js';
 
-import type { ApplicationEvent } from '../../src/application/facade';
-import type { PlayablePiece } from '../../src/application/site-player';
-import { useSitePlayer } from '../../src/application/site-player';
-import { BrandMark } from '../../src/components/BrandMark';
+import type { ApplicationEvent } from '../../application/facade';
+import type { PlayablePiece } from '../../application/site-player';
+import { useSitePlayer } from '../../application/site-player';
+import { BrandMark } from '../../components/BrandMark';
 
 const listenerCopy = {
 	phase: {

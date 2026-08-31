@@ -3,7 +3,7 @@ import 'fake-indexeddb/auto';
 import Dexie from 'dexie';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { BrowserPieceStorage, DebouncedPieceAutosave } from '../src/application/piece-storage';
+import { BrowserPieceStorage, DebouncedPieceAutosave } from '../application/piece-storage';
 
 const databaseNames: string[] = [];
 const document = JSON.stringify({

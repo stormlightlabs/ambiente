@@ -201,6 +201,7 @@ different rendering needs:
 /docs/**           prerendered
 /learn/**          prerendered
 /examples/**       prerendered with interactive components
+/listen            prerendered SPA shell
 /studio/**         prerendered SPA shell
 ```
 

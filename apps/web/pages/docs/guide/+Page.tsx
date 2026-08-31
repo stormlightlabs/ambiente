@@ -2,8 +2,8 @@ import { Dynamic } from 'solid-js/web';
 import { createEffect, createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
 import { usePageContext } from 'vike-solid/usePageContext';
 
-import { documentation, findDocumentation } from '../../../src/content/docs';
-import { startScrollSpy } from '../../../src/content/scroll-spy';
+import { documentation, findDocumentation } from '../../../content/docs';
+import { startScrollSpy } from '../../../content/scroll-spy';
 
 const mdxComponents = {
 	a: (props: JSX.IntrinsicElements['a']) => <a {...props} />,

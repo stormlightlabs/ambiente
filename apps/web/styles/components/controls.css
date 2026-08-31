@@ -40,7 +40,4 @@
 	.text-link:hover .icon {
 		transform: translateX(0.2rem);
 	}
-	.text-link--light {
-		color: var(--paper);
-	}
 }

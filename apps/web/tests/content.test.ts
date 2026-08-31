@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { documentation, headingsFromHtml } from '../src/content/docs';
+import { documentation, headingsFromHtml } from '../content/docs';
 
 describe('documentation discovery', () => {
 	test('derives stable routes from the canonical content directory', () => {

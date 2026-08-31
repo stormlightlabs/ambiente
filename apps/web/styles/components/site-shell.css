@@ -32,8 +32,6 @@
 	}
 	.wordmark__mark {
 		height: 2.1rem;
-		outline: 1px solid color-mix(in oklch, var(--inverse-paper) 28%, transparent);
-		outline-offset: -1px;
 		width: 2.1rem;
 	}
 	.site-header__actions,

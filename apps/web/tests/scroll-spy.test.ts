@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { findActiveHeading, type HeadingPosition, type ViewportPosition } from '../src/content/scroll-spy';
+import { findActiveHeading, type HeadingPosition, type ViewportPosition } from '../content/scroll-spy';
 
 const headings: HeadingPosition[] = [
 	{ id: 'first', scrollMarginTop: 32, top: 400 },

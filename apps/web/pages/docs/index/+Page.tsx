@@ -1,6 +1,6 @@
 import { For } from 'solid-js';
 
-import { documentation } from '../../../src/content/docs';
+import { documentation } from '../../../content/docs';
 
 export default function Page() {
 	return (

@@ -6,13 +6,13 @@ import '@fontsource-variable/google-sans';
 import '@fontsource-variable/instrument-sans';
 import 'virtual:uno.css';
 
-import { FIRST_PARTY_PIECES } from '../src/application/piece-catalog';
-import { SitePlayerProvider } from '../src/application/site-player';
-import { BrandMark } from '../src/components/BrandMark';
-import { DocsSearch } from '../src/components/DocsSearch';
-import { GlobalPlayer } from '../src/components/GlobalPlayer';
-import { ThemeToggle } from '../src/components/ThemeToggle';
-import '../src/styles/global.css';
+import { FIRST_PARTY_PIECES } from '../application/piece-catalog';
+import { SitePlayerProvider } from '../application/site-player';
+import { BrandMark } from '../components/BrandMark';
+import { DocsSearch } from '../components/DocsSearch';
+import { GlobalPlayer } from '../components/GlobalPlayer';
+import { ThemeToggle } from '../components/ThemeToggle';
+import '../styles/global.css';
 
 const navigation = [
 	{ href: '/listen', label: 'Listen' },

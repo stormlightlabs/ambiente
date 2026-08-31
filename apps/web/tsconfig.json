@@ -7,5 +7,15 @@
 		"skipLibCheck": true,
 		"types": ["node", "vite/client"]
 	},
-	"include": ["pages", "src", "tests", "vite.config.ts", "uno.config.ts", "playwright.config.ts"]
+	"include": [
+		"application",
+		"components",
+		"content",
+		"pages",
+		"tests",
+		"vite-env.d.ts",
+		"vite.config.ts",
+		"uno.config.ts",
+		"playwright.config.ts"
+	]
 }
