@@ -26,7 +26,9 @@ describe('prerendered output', () => {
 		expect(pagefind).toContain('search');
 	});
 
-	test('emits a client-rendered Studio HTML shell', async () => {
+	test('emits client-rendered Listen and Studio HTML shells', async () => {
+		const listen = await builtPage('listen');
+		expect(listen).toContain('<title>Listen — Ambiente</title>');
 		const studio = await builtPage('studio');
 		expect(studio).toContain('<title>Studio — Ambiente</title>');
 		expect(studio).not.toContain('Studio is in preview.');

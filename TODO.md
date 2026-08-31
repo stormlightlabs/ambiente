@@ -22,14 +22,6 @@ listening pass.
 
 ## M8 — Listen mode
 
-- [ ] Add dedicated listener-facing route/mode.
-- [ ] Hide composition implementation details.
-- [ ] Add first-party piece browser.
-- [ ] Support endless playback.
-- [ ] Add seed variation.
-- [ ] Add session duration controls.
-- [ ] Add restrained generative/process visualization.
-
 ### Macros
 
 - [ ] Add canonical `Macro` model.

@@ -26,6 +26,24 @@ test('site player keeps playing across navigation', async ({ page }) => {
 	await expect(player.getByRole('button', { name: 'Pause site music' })).toBeVisible();
 });
 
+test('Listen mode browses first-party pieces without composition controls', async ({ page }) => {
+	await page.goto('/listen');
+
+	await expect(page.getByRole('heading', { name: 'Music for the time you are in' })).toBeVisible();
+	await expect(page.getByRole('button', { name: /Phase/ })).toHaveAttribute('aria-pressed', 'true');
+	await page.getByRole('button', { name: /Drone/ }).click();
+	await expect(page.getByRole('heading', { level: 2, name: 'Drone' })).toBeVisible();
+	await page.getByRole('button', { name: '30 min' }).click();
+	await expect(page.getByRole('button', { name: '30 min' })).toHaveAttribute('aria-pressed', 'true');
+	await page.getByRole('button', { name: 'Play', exact: true }).click();
+	await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+	await expect(page.getByRole('img', { name: /Artwork responding/ })).toHaveClass(/is-playing/);
+	await expect(page.locator('.listener-artwork__event').first()).toBeVisible();
+	await page.getByRole('button', { name: 'New variation' }).click();
+	await expect(page.getByText(/Seed|BPM|material|voice/i)).toHaveCount(0);
+	await expect(page.getByRole('complementary', { name: 'Site music player' })).toHaveCount(0);
+});
+
 test('examples present musical primitives and lead to the Three Studies', async ({ page }) => {
 	await page.goto('/examples');
 	for (const example of ['Phrase', 'Matrix', 'Piano', 'Voice', 'Sound']) {

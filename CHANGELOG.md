@@ -77,6 +77,9 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added one persistent, volume-controlled piece player shared by embedded Study
   controls and the site shell, with playback that continues during client-side
   navigation.
+- Added a dedicated Listen mode with a first-party piece browser, endless and
+  timed sessions, seed variations, listener-focused controls, and event-driven
+  artwork.
 
 ### Changed
 

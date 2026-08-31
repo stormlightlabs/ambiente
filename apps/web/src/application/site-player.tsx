@@ -2,7 +2,7 @@ import { createContext, createSignal, onCleanup, useContext, type Accessor, type
 
 import type { LookAheadScheduler, TransportState } from '@ambiente/audio';
 
-import type { WasmApplication } from './facade';
+import type { ApplicationEvent, WasmApplication } from './facade';
 
 /** A canonical piece that the persistent site player can load. */
 export type PlayablePiece = Readonly<{
@@ -15,11 +15,13 @@ export type PlayablePiece = Readonly<{
 
 /** Shared state and controls for persistent piece playback across the site shell. */
 export type SitePlayer = Readonly<{
+	activeEvents: Accessor<readonly ApplicationEvent[]>;
 	download: (piece: PlayablePiece) => Promise<void>;
 	error: Accessor<string | undefined>;
 	nextVariation: (piece?: PlayablePiece) => Promise<void>;
 	pieces: readonly PlayablePiece[];
 	playPiece: (piece: PlayablePiece) => Promise<void>;
+	position: Accessor<number>;
 	seed: Accessor<string>;
 	selectedPiece: Accessor<PlayablePiece>;
 	selectPiece: (piece: PlayablePiece) => void;
@@ -42,6 +44,8 @@ export type SitePlayerProviderProps = Readonly<{
 export function SitePlayerProvider(props: SitePlayerProviderProps) {
 	const [selectedPiece, setSelectedPiece] = createSignal(props.pieces[0]);
 	const [state, setState] = createSignal<TransportState>('stopped');
+	const [position, setPosition] = createSignal(0);
+	const [activeEvents, setActiveEvents] = createSignal<readonly ApplicationEvent[]>([]);
 	const [seed, setSeed] = createSignal('');
 	const [volume, setVolumeSignal] = createSignal(0.8);
 	const [error, setError] = createSignal<string>();
@@ -49,6 +53,7 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 	let audio: LookAheadScheduler | undefined;
 	let unsubscribe: (() => void) | undefined;
 	let initialization: Promise<void> | undefined;
+	let activityTick = -1;
 
 	function disposeAudio() {
 		unsubscribe?.();
@@ -57,6 +62,8 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 		audio = undefined;
 		application = undefined;
 		initialization = undefined;
+		activityTick = -1;
+		setActiveEvents([]);
 	}
 
 	onCleanup(disposeAudio);
@@ -72,7 +79,18 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 			setSeed(application.inspect().seed);
 			audio = createBrowserAudio(application);
 			audio.setVolume(volume());
-			unsubscribe = audio.subscribe(setState);
+			unsubscribe = audio.subscribe((nextState, nextPosition) => {
+				setState(nextState);
+				setPosition(nextPosition);
+				const nextTick = Math.floor(nextPosition * 10);
+				if (nextState !== 'playing') {
+					activityTick = -1;
+					setActiveEvents([]);
+				} else if (nextTick !== activityTick && application) {
+					activityTick = nextTick;
+					setActiveEvents(queryActiveEvents(application, nextPosition));
+				}
+			});
 		})();
 		try {
 			await initialization;
@@ -85,6 +103,7 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 		if (piece.id === selectedPiece().id) return;
 		disposeAudio();
 		setState('stopped');
+		setPosition(0);
 		setSeed('');
 		setError(undefined);
 		setSelectedPiece(piece);
@@ -158,11 +177,13 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 	}
 
 	const player: SitePlayer = {
+		activeEvents,
 		download,
 		error,
 		nextVariation,
 		pieces: props.pieces,
 		playPiece,
+		position,
 		seed,
 		selectedPiece,
 		selectPiece,
@@ -181,4 +202,36 @@ export function useSitePlayer(): SitePlayer {
 	const player = useContext(SitePlayerContext);
 	if (!player) throw new Error('SitePlayerProvider is missing from the application layout.');
 	return player;
+}
+
+function queryActiveEvents(application: WasmApplication, position: number): readonly ApplicationEvent[] {
+	const inspection = application.inspect();
+	const tempo = exactToNumber(inspection.tempo);
+	const start = Math.max(0, position - 0.05);
+	const end = position + 0.35;
+	return [
+		...application.queryEvents({ clock: 'absolute', start: numberToExact(start), end: numberToExact(end) }),
+		...application.queryEvents({
+			clock: 'metric',
+			start: numberToExact((start * tempo) / 60),
+			end: numberToExact((end * tempo) / 60)
+		})
+	];
+}
+
+function exactToNumber(value: string): number {
+	const [numerator, denominator] = value.split('/').map(Number);
+	return denominator ? numerator! / denominator : Number.NaN;
+}
+
+function numberToExact(value: number): string {
+	const denominator = 1000;
+	const numerator = Math.max(0, Math.round(value * denominator));
+	const divisor = greatestCommonDivisor(numerator, denominator);
+	return `${numerator / divisor}/${denominator / divisor}`;
+}
+
+function greatestCommonDivisor(left: number, right: number): number {
+	while (right !== 0) [left, right] = [right, left % right];
+	return left;
 }

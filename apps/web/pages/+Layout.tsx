@@ -15,6 +15,7 @@ import { ThemeToggle } from '../src/components/ThemeToggle';
 import '../src/styles/global.css';
 
 const navigation = [
+	{ href: '/listen', label: 'Listen' },
 	{ href: '/docs', label: 'Docs' },
 	{ href: '/learn', label: 'Learn' },
 	{ href: '/examples', label: 'Examples' },
@@ -25,11 +26,12 @@ const navigation = [
 export function Layout(props: { children?: JSX.Element }) {
 	const pageContext = usePageContext();
 	const pathname = () => pageContext.urlPathname;
+	const isListen = () => pathname().startsWith('/listen');
 	const isStudio = () => pathname().startsWith('/studio');
 
 	return (
 		<SitePlayerProvider pieces={FIRST_PARTY_PIECES}>
-			<div classList={{ 'site-frame': true, 'site-frame--studio': isStudio() }}>
+			<div classList={{ 'site-frame': true, 'site-frame--listen': isListen(), 'site-frame--studio': isStudio() }}>
 				<a class="skip-link" href="#main-content">
 					Skip to content
 				</a>
@@ -59,10 +61,12 @@ export function Layout(props: { children?: JSX.Element }) {
 				<main id="main-content" class="site-main">
 					{props.children}
 				</main>
-				<Show when={!isStudio()}>
+				<Show when={!isStudio() && !isListen()}>
 					<SiteFooter />
 				</Show>
-				<GlobalPlayer />
+				<Show when={!isListen()}>
+					<GlobalPlayer />
+				</Show>
 			</div>
 		</SitePlayerProvider>
 	);
