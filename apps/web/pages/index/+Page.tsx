@@ -23,8 +23,7 @@ export default function Page() {
 		<>
 			<section class="hero">
 				<div class="hero__copy">
-					<p class="kicker">Generative ambient music</p>
-					<h1>Algorithmic Composition</h1>
+					<h1>Algorithmic Ambient Composition</h1>
 					<p class="hero__lede">
 						Play a phrase or draw a pattern, then shape how it repeats, transforms, and varies. Ambiente keeps each
 						result repeatable.
@@ -90,7 +89,6 @@ export default function Page() {
 
 			<section class="pathways" aria-labelledby="pathways-title">
 				<div class="section-heading">
-					<p class="kicker">One musical document</p>
 					<h2 id="pathways-title">
 						Start with a phrase.
 						<br />

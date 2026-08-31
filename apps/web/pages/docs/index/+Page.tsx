@@ -1,23 +1,16 @@
 import { For } from 'solid-js';
 
-import { DocsSearch } from '../../../src/components/DocsSearch';
 import { documentation } from '../../../src/content/docs';
 
 export default function Page() {
 	return (
 		<div class="content-index">
 			<header class="content-index__intro">
-				<p class="kicker">Documentation</p>
-				<h1>
-					Understand
-					<br />
-					Ambiente.
-				</h1>
+				<h1>Learn how Ambiente turns musical material into repeatable events.</h1>
 				<p>
-					Learn how Ambiente represents a piece, produces repeatable variation, stores documents, and turns events into
-					sound.
+					Read how Ambiente represents a piece, produces seeded variation, stores documents, and turns events into
+					sound. Search from the top bar or browse every guide below.
 				</p>
-				<DocsSearch />
 			</header>
 			<div class="content-index__list">
 				<For each={documentation}>

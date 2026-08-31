@@ -2,11 +2,14 @@ import type { JSX } from 'solid-js';
 import { Show } from 'solid-js';
 import { usePageContext } from 'vike-solid/usePageContext';
 
+import '@fontsource-variable/google-sans';
 import '@fontsource-variable/instrument-sans';
-import '@fontsource-variable/literata';
 import 'virtual:uno.css';
 
+import { FIRST_PARTY_PIECES } from '../src/application/piece-catalog';
+import { SitePlayerProvider } from '../src/application/site-player';
 import { BrandMark } from '../src/components/BrandMark';
+import { DocsSearch } from '../src/components/DocsSearch';
 import { GlobalPlayer } from '../src/components/GlobalPlayer';
 import { ThemeToggle } from '../src/components/ThemeToggle';
 import '../src/styles/global.css';
@@ -25,40 +28,43 @@ export function Layout(props: { children?: JSX.Element }) {
 	const isStudio = () => pathname().startsWith('/studio');
 
 	return (
-		<div classList={{ 'site-frame': true, 'site-frame--studio': isStudio() }}>
-			<a class="skip-link" href="#main-content">
-				Skip to content
-			</a>
-			<header class="site-header" data-pagefind-ignore>
-				<div class="site-header__inner">
-					<a class="wordmark" href="/" aria-label="Ambiente home">
-						<BrandMark class="wordmark__mark" />
-						<span>ambiente</span>
-					</a>
-					<div class="site-header__actions">
-						<nav class="site-nav" aria-label="Primary navigation">
-							{navigation.map((item) => {
-								const isActive = () =>
-									item.href === '/' ? pathname() === item.href : pathname().startsWith(item.href);
-								return (
-									<a href={item.href} aria-current={isActive() ? 'page' : undefined}>
-										{item.label}
-									</a>
-								);
-							})}
-						</nav>
-						<ThemeToggle />
+		<SitePlayerProvider pieces={FIRST_PARTY_PIECES}>
+			<div classList={{ 'site-frame': true, 'site-frame--studio': isStudio() }}>
+				<a class="skip-link" href="#main-content">
+					Skip to content
+				</a>
+				<header class="site-header" data-pagefind-ignore>
+					<div class="site-header__inner">
+						<a class="wordmark" href="/" aria-label="Ambiente home">
+							<BrandMark class="wordmark__mark" />
+							<span>ambiente</span>
+						</a>
+						<div class="site-header__actions">
+							<DocsSearch />
+							<nav class="site-nav" aria-label="Primary navigation">
+								{navigation.map((item) => {
+									const isActive = () =>
+										item.href === '/' ? pathname() === item.href : pathname().startsWith(item.href);
+									return (
+										<a href={item.href} aria-current={isActive() ? 'page' : undefined}>
+											{item.label}
+										</a>
+									);
+								})}
+							</nav>
+							<ThemeToggle />
+						</div>
 					</div>
-				</div>
-			</header>
-			<main id="main-content" class="site-main">
-				{props.children}
-			</main>
-			<Show when={!isStudio()}>
-				<SiteFooter />
-			</Show>
-			<GlobalPlayer />
-		</div>
+				</header>
+				<main id="main-content" class="site-main">
+					{props.children}
+				</main>
+				<Show when={!isStudio()}>
+					<SiteFooter />
+				</Show>
+				<GlobalPlayer />
+			</div>
+		</SitePlayerProvider>
 	);
 }
 

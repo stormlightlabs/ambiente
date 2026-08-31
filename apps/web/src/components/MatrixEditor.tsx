@@ -48,10 +48,7 @@ export function MatrixEditor(props: MatrixEditorProps) {
 			{(material) => (
 				<section class="matrix-editor" aria-label={`${material().name} matrix editor`}>
 					<header class="matrix-editor__header">
-						<div>
-							<p class="kicker">Matrix</p>
-							<h2>{material().name}</h2>
-						</div>
+						<h2>{material().name}</h2>
 						<div class="matrix-editor__settings">
 							<label>
 								<span>Steps</span>

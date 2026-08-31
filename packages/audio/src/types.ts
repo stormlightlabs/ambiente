@@ -47,6 +47,7 @@ export type AudioBackend = {
 	previewNoteOn(voiceId: string, pitch: number, velocity: number, at: number): void;
 	reset(at: number): void;
 	schedule(note: ScheduledNote): void;
+	setVolume(volume: number): void;
 	start(): Promise<void>;
 };
 

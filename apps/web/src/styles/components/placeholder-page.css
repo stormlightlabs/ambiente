@@ -8,7 +8,7 @@
 	.placeholder-page h1 {
 		font-size: clamp(3rem, 6vw, 6rem);
 	}
-	.placeholder-page > p:not(.kicker) {
+	.placeholder-page > p {
 		color: var(--ink-soft);
 		font-size: 1.1rem;
 		max-width: 42rem;
@@ -32,15 +32,12 @@
 		gap: 0 clamp(2rem, 7vw, 7rem);
 		grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 0.7fr);
 	}
-	.examples-page__intro .kicker {
-		grid-column: 1 / -1;
-	}
 	.examples-page__intro h1 {
 		font: 500 clamp(3rem, 6vw, 6rem)/0.95 var(--font-display);
 		letter-spacing: -0.055em;
 		margin-bottom: 1.5rem;
 	}
-	.examples-page__intro > p:not(.kicker) {
+	.examples-page__intro > p {
 		align-self: end;
 		color: var(--ink-soft);
 		font-size: 1rem;
@@ -95,8 +92,14 @@
 		justify-content: space-between;
 		padding-top: 2rem;
 	}
+	.examples-page__more strong {
+		display: block;
+		font-size: 0.95rem;
+		margin-bottom: 0.25rem;
+	}
 	.examples-page__more p {
 		color: var(--ink-soft);
+		font-size: 0.86rem;
 		margin: 0;
 	}
 

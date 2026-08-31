@@ -6,7 +6,7 @@ import type {
 	DocumentOperation,
 	EventQuery,
 	SerializedDocument
-} from './facade';
+} from '../src/application/facade';
 
 const fixtureInspection: DocumentInspection = {
 	documentId: 'fixture-document',

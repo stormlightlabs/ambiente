@@ -221,7 +221,11 @@
 		background: var(--forest);
 		border-color: var(--forest);
 		color: var(--white);
-		padding-left: 0.25rem;
+		padding: 0;
+	}
+	.transport__play .icon {
+		display: block;
+		line-height: 1;
 	}
 	.transport__position,
 	.transport__tempo {
@@ -253,6 +257,17 @@
 	}
 	.transport__position input {
 		width: 3.8rem;
+	}
+	.transport__volume {
+		align-items: center;
+		color: var(--ink-soft);
+		display: flex;
+		gap: 0.35rem;
+		margin-left: 0.35rem;
+	}
+	.transport__volume input {
+		accent-color: var(--forest);
+		width: 4.5rem;
 	}
 	.transport__save {
 		align-items: center;
@@ -294,9 +309,6 @@
 	.studio-canvas > header > span {
 		color: var(--ink-soft);
 		font-size: 0.72rem;
-	}
-	.studio-canvas .kicker {
-		margin-bottom: 0.2rem;
 	}
 	.matrix-editor {
 		background: var(--white);

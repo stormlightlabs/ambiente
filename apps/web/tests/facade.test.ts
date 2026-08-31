@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { ShellFixtureApplication } from '../src/application/shell-fixture';
+import { ShellFixtureApplication } from './shell-fixture';
 
 describe('shell fixture application', () => {
 	test('passes serialized documents through without interpreting them', () => {

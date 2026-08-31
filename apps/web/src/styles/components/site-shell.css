@@ -4,7 +4,7 @@
 		padding-bottom: var(--player-height);
 	}
 	.site-header {
-		background: var(--forest-dark);
+		background: var(--nav-background);
 		border-bottom: 1px solid color-mix(in oklch, var(--inverse-paper) 15%, var(--forest-dark));
 		color: var(--inverse-paper);
 		height: var(--header-height);

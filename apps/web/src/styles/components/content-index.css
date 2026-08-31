@@ -8,21 +8,14 @@
 		display: grid;
 		grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr);
 	}
-	.content-index__intro .kicker {
-		grid-column: 1 / -1;
-	}
 	.content-index__intro h1 {
 		font-size: clamp(2.8rem, 5vw, 5.5rem);
 	}
-	.content-index__intro > p:not(.kicker) {
+	.content-index__intro > p {
 		align-self: end;
 		color: var(--ink-soft);
 		max-width: 30rem;
 		padding-bottom: 1rem;
-	}
-	.content-index__intro .docs-search {
-		grid-column: 2;
-		max-width: 30rem;
 	}
 	.content-index__list {
 		margin-left: 20%;
@@ -64,9 +57,6 @@
 @media (max-width: 48rem) {
 	.content-index__intro {
 		display: block;
-	}
-	.content-index__intro .docs-search {
-		margin-top: 1.5rem;
 	}
 	.content-index__list {
 		margin-left: 0;

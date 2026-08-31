@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('landing page presents the product and Studio path', async ({ page }) => {
 	await page.goto('/');
 
-	await expect(page.getByRole('heading', { level: 1 })).toContainText('Algorithmic Composition');
+	await expect(page.getByRole('heading', { level: 1 })).toContainText('Algorithmic Ambient Composition');
 	await expect(page.locator('.wordmark__mark')).toHaveAttribute('src', '/favicon.svg');
 	await expect(page.getByRole('link', { name: 'Open Studio' })).toHaveAttribute('href', '/studio');
 	await expect(page.locator('.site-footer__links').getByRole('heading')).toHaveCount(3);
@@ -14,26 +14,26 @@ test('landing page presents the product and Studio path', async ({ page }) => {
 test('site player keeps playing across navigation', async ({ page }) => {
 	await page.goto('/');
 	const player = page.getByRole('complementary', { name: 'Site music player' });
-	const listen = player.getByRole('button', { name: 'Listen to site music' });
-	await expect(listen).toBeEnabled();
-	await listen.click();
+	const play = player.getByRole('button', { name: 'Play site music' });
+	await expect(play).toBeEnabled();
+	await play.click();
 	await expect(player.getByText('Seed 5048415345000001')).toBeVisible();
-	await expect(player.getByRole('button', { name: 'Suspend site music' })).toBeVisible();
+	await expect(player.getByRole('button', { name: 'Pause site music' })).toBeVisible();
+	await expect(player.getByLabel('Site player volume')).toHaveValue('0.8');
 
 	await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Docs' }).click();
 	await expect(page).toHaveURL(/\/docs$/);
-	await expect(player.getByRole('button', { name: 'Suspend site music' })).toBeVisible();
+	await expect(player.getByRole('button', { name: 'Pause site music' })).toBeVisible();
 });
 
-test('examples present playable studies with documentation links', async ({ page }) => {
+test('examples present musical primitives and lead to the Three Studies', async ({ page }) => {
 	await page.goto('/examples');
-	for (const study of ['Phase', 'Drone', 'Pattern']) {
-		await expect(page.getByRole('heading', { level: 2, name: study })).toBeVisible();
-		await expect(page.getByRole('region', { name: `${study} Study study player` })).toBeVisible();
+	for (const example of ['Phrase', 'Matrix', 'Piano', 'Voice', 'Sound']) {
+		await expect(page.getByLabel(`${example} playable example`)).toBeVisible();
 	}
-	await expect(page.getByRole('link', { name: 'Read the study' }).first()).toHaveAttribute(
+	await expect(page.getByRole('link', { name: 'Listen to the Three Studies' })).toHaveAttribute(
 		'href',
-		'/docs/three-studies#phase'
+		'/docs/three-studies'
 	);
 });
 
@@ -49,43 +49,46 @@ test('documentation renders canonical Markdown', async ({ page }) => {
 		.poll(() => page.locator('#web-and-desktop').evaluate((heading) => heading.getBoundingClientRect().top))
 		.toBeLessThan(40);
 	await expect(webSection).toHaveAttribute('aria-current', 'location');
-
-	await page.goto('/docs/solid-components');
-	await expect(page.getByRole('heading', { level: 1, name: 'Playable examples' })).toBeVisible();
-	await expect(page.getByLabel('Phrase playable example')).toBeVisible();
-	await expect(page.getByLabel('Matrix playable example')).toBeVisible();
-	await page.getByRole('button', { name: 'Play phrase' }).click();
-	await expect(page.getByRole('button', { name: 'Stop' })).toBeVisible();
 });
 
-test('Three Studies load canonical pieces and change seed', async ({ page }) => {
+test('embedded Studies and the global player share playback state', async ({ page }) => {
 	await page.goto('/docs/three-studies');
 	const pattern = page.getByRole('region', { name: 'Pattern Study study player' });
+	const player = page.getByRole('complementary', { name: 'Site music player' });
 	await expect(
 		pattern.getByText('One metric cell transformed across direction, register, density, and pace.')
 	).toBeVisible();
+	await pattern.getByRole('button', { name: 'Play study' }).click();
+	await expect(player.getByRole('button', { name: 'Pause site music' })).toBeVisible();
+	await expect(player.getByRole('combobox')).toHaveValue('pattern');
+	await expect(pattern.getByRole('button', { name: 'Stop' })).toBeVisible();
+	await player.getByRole('button', { name: 'Stop site music' }).click();
+	await expect(pattern.getByRole('button', { name: 'Play study' })).toBeVisible();
 	await pattern.getByRole('button', { name: 'Next variation' }).click();
 	await expect(pattern.getByText('Seed 5041545445520002')).toBeVisible();
 });
 
-test('documentation search uses the generated Pagefind index', async ({ page }) => {
+test('top-bar command palette searches the generated Pagefind index', async ({ page }) => {
 	await page.goto('/docs');
-	await page.getByRole('searchbox', { name: 'Search documentation' }).fill('event engine');
+	await page.getByRole('button', { name: /Open documentation search/ }).click();
+	await page.getByRole('combobox', { name: 'Search documentation' }).fill('event engine');
 	await expect(page.getByLabel('Search results')).toContainText('Architecture');
+	await page.keyboard.press('Escape');
+	await expect(page.getByRole('dialog')).not.toBeVisible();
 });
 
 test('Studio loads Rust events and the browser transport', async ({ page }) => {
 	await page.goto('/studio');
 
 	await expect(page.getByRole('heading', { level: 1, name: 'Play and record' })).toBeVisible();
-	await expect(page.getByText('Ready to play')).toBeVisible();
 	await expect(page.getByRole('heading', { name: 'Local pieces' })).toBeVisible();
 	await expect(page.getByText('Format 2')).toBeVisible();
+	await expect(page.getByLabel('Playback volume')).toHaveValue('0.8');
 
-	await page.getByRole('button', { name: 'Play' }).click();
-	await expect(page.getByRole('button', { name: 'Pause' })).toBeEnabled();
-	await page.getByRole('button', { name: 'Pause' }).click();
-	await expect(page.getByRole('button', { name: 'Play' })).toBeEnabled();
+	await page.getByRole('button', { name: 'Play', exact: true }).click();
+	await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeEnabled();
+	await page.getByRole('button', { name: 'Pause', exact: true }).click();
+	await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeEnabled();
 	await page.getByLabel('Seek position in seconds').fill('8');
 	await page.getByLabel('Seek position in seconds').press('Tab');
 	await expect(page.getByLabel('Seek position in seconds')).toHaveValue('8');
@@ -114,7 +117,7 @@ test('Studio remains vertically scrollable on a narrow screen', async ({ page })
 
 test('Studio edits voices and records piano input as a phrase', async ({ page }) => {
 	await page.goto('/studio');
-	await expect(page.getByText('Ready to play')).toBeVisible();
+	await expect(page.getByLabel('Voice sound')).toBeVisible();
 
 	await page.getByLabel('Voice sound').selectOption('glass');
 	await expect(page.getByLabel('Voice sound')).toHaveValue('glass');
@@ -137,7 +140,7 @@ test('Studio edits voices and records piano input as a phrase', async ({ page })
 
 test('Studio edits and plays a canonical matrix', async ({ page }) => {
 	await page.goto('/studio');
-	await expect(page.getByText('Ready to play')).toBeVisible();
+	await expect(page.getByRole('button', { name: '+ Matrix' })).toBeVisible();
 
 	await page.getByRole('button', { name: '+ Matrix' }).click();
 	await page.getByRole('button', { name: 'Matrix', exact: true }).click();
@@ -150,8 +153,8 @@ test('Studio edits and plays a canonical matrix', async ({ page }) => {
 	await expect(page.getByRole('button', { name: 'C5, step 16' })).toBeVisible();
 
 	await page.getByLabel('Voice material').selectOption({ label: 'Matrix 2' });
-	await page.getByRole('button', { name: 'Play' }).click();
-	await expect(page.getByRole('button', { name: 'Pause' })).toBeEnabled();
+	await page.getByRole('button', { name: 'Play', exact: true }).click();
+	await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeEnabled();
 	await page.getByRole('button', { name: /^Save$/ }).click();
 	await expect(page.getByRole('button', { name: 'Saved' })).toBeVisible();
 	await page.reload();

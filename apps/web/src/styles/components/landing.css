@@ -190,10 +190,8 @@
 		padding: clamp(4rem, 8vw, 7rem) 0;
 		width: calc(100% - var(--page-pad) * 2);
 	}
-	.section-heading {
-		display: grid;
-		gap: 2rem;
-		grid-template-columns: 1fr 2fr;
+	.section-heading h2 {
+		margin-left: 33.333%;
 	}
 	.section-heading h2 {
 		font-family: var(--font-display);
@@ -274,8 +272,8 @@
 		max-width: 32rem;
 		rotate: 0deg;
 	}
-	.section-heading {
-		display: block;
+	.section-heading h2 {
+		margin-left: 0;
 	}
 	.pathway-list {
 		margin-left: 0;

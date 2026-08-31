@@ -57,10 +57,10 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added canonical matrix reconfiguration, a playable Matrix editor with cell,
   pitch-row, length, subdivision, and transport-playhead controls, and live audio
   refresh after edits.
-- Added focused Phrase, Matrix, piano, voice, and sound guide examples that use
-  the production WASM document runtime and browser audio package.
-- Added Pagefind indexing, in-page search, and scroll-aware section navigation
-  for the prerendered documentation.
+- Added focused Phrase, Matrix, piano, voice, and sound examples that use the
+  production WASM document runtime and browser audio package.
+- Added Pagefind indexing, a top-bar command palette with local-development
+  search, and scroll-aware section navigation for the prerendered documentation.
 - Added first-party Phase and Drone studies as canonical documents and Rust
   builders. Phase uses three exact noncommensurate absolute-time cycles; Drone
   uses long events, rests, restrained seeded changes, and four voices over a
@@ -74,17 +74,17 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the canonical study builders through the WebAssembly application facade.
 - Added an interactive Three Studies guide with in-browser playback, adjacent
   seed variations, and canonical Studio downloads.
-- Added playable Three Studies to the examples page and a site-wide study player
-  that keeps playing during client-side navigation.
+- Added one persistent, volume-controlled piece player shared by embedded Study
+  controls and the site shell, with playback that continues during client-side
+  navigation.
 
 ### Changed
 
 - Matched the frontend Prettier rules used by related Stormlight Labs projects
   and expanded ESLint coverage for the Vike and Solid application.
-- Updated the web shell to use Literata and Instrument Sans variable fonts,
-  UnoCSS-backed Bootstrap and Remix icons, the favicon artwork as its header
-  mark, dark mode, a fuller site footer, and clearer public and documentation
-  copy.
+- Updated the web shell to use Google Sans and Instrument Sans variable fonts,
+  an Everforest-inspired light and dark palette, the favicon background for the
+  navigation bar, UnoCSS-backed icons, a fuller footer, and clearer public copy.
 - Revised the published guides for current product behavior and added an
   Instrument Studio guide for playing, recording, voice editing, and local
   saving.
@@ -101,5 +101,5 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added restrained seeded omissions to Phase while retaining one complete phrase
   voice and the three exact noncommensurate clocks.
 - Replaced the landing-page ornament with a document-to-events visualization,
-  matched the navigation to the Eno quote section, and restored page scrolling in
-  Studio across desktop and mobile layouts.
+  moved focused playable examples to `/examples`, linked them to the interactive
+  Three Studies guide, and restored Studio scrolling across desktop and mobile.

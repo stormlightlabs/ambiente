@@ -20,11 +20,19 @@ import type {
 	StoredPiece,
 	StoredPieceDocument
 } from '../../src/application/piece-storage';
-import { createShellFixtureApplication } from '../../src/application/shell-fixture';
 import { MatrixEditor } from '../../src/components/MatrixEditor';
 import { PianoKeyboard, pitchName } from '../../src/components/PianoKeyboard';
 
-const initialInspection = createShellFixtureApplication().inspect();
+const initialInspection: DocumentInspection = {
+	documentId: '',
+	materialCount: 0,
+	materials: [],
+	seed: '0000000000000000',
+	tempo: '120/1',
+	title: 'Loading piece',
+	voiceCount: 0,
+	voices: []
+};
 const views = ['Phrase', 'Matrix', 'System'] as const;
 const keyboardPitches: Readonly<Record<string, number>> = {
 	KeyA: 0,
@@ -57,6 +65,7 @@ export default function Page() {
 	const [inspection, setInspection] = createSignal<DocumentInspection>(initialInspection);
 	const [position, setPosition] = createSignal(0);
 	const [state, setState] = createSignal<TransportState>('stopped');
+	const [volume, setVolume] = createSignal(0.8);
 	const [ready, setReady] = createSignal(false);
 	const [audioError, setAudioError] = createSignal<string>();
 	const [libraryError, setLibraryError] = createSignal<string>();
@@ -140,6 +149,7 @@ export default function Page() {
 			setActivePiece(withoutDocument(stored));
 			updateInspection();
 			audio = createBrowserAudio(application);
+			audio.setVolume(volume());
 			unsubscribe = audio.subscribe((nextState, nextPosition) => {
 				setState(nextState);
 				setPosition(nextPosition);
@@ -608,10 +618,12 @@ export default function Page() {
 						</p>
 					</Show>
 				</section>
-				<div class="studio-rail__status">
-					<span aria-hidden="true" />
-					{ready() ? 'Ready to play' : 'Loading Studio'}
-				</div>
+				<Show when={!ready()}>
+					<div class="studio-rail__status" role="status">
+						<span aria-hidden="true" />
+						Loading Studio
+					</div>
+				</Show>
 			</aside>
 
 			<section class="studio-workspace">
@@ -668,6 +680,21 @@ export default function Page() {
 							/>
 							<span>BPM</span>
 						</label>
+						<label class="transport__volume">
+							<span class="icon i-ri-volume-up-line" aria-hidden="true" />
+							<span class="sr-only">Playback volume</span>
+							<input
+								type="range"
+								min="0"
+								max="1"
+								step="0.05"
+								value={volume()}
+								onInput={(event) => {
+									setVolume(event.currentTarget.valueAsNumber);
+									audio?.setVolume(event.currentTarget.valueAsNumber);
+								}}
+							/>
+						</label>
 					</div>
 					<button
 						class="transport__save"
@@ -689,10 +716,7 @@ export default function Page() {
 						</div>
 					</Show>
 					<header>
-						<div>
-							<p class="kicker">{activeView()}</p>
-							<h1>{viewTitle(activeView())}</h1>
-						</div>
+						<h1>{viewTitle(activeView())}</h1>
 						<span>
 							{inspection().materialCount} {plural(inspection().materialCount, 'material')} · {inspection().voiceCount}{' '}
 							{plural(inspection().voiceCount, 'voice')}

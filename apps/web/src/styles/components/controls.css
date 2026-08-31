@@ -1,12 +1,4 @@
 @layer components {
-	.kicker {
-		color: var(--ink-soft);
-		font-size: 0.72rem;
-		font-weight: 750;
-		letter-spacing: 0.12em;
-		margin-bottom: 1rem;
-		text-transform: uppercase;
-	}
 	.button {
 		align-items: center;
 		border: 1px solid var(--forest);

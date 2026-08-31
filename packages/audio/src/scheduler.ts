@@ -125,6 +125,12 @@ export class LookAheadScheduler {
 		this.setState('stopped');
 	}
 
+	/** Sets this scheduler's output volume from silence at zero to unity at one. */
+	setVolume(volume: number): void {
+		if (!Number.isFinite(volume)) throw new RangeError('volume must be finite');
+		this.backend.setVolume(Math.min(1, Math.max(0, volume)));
+	}
+
 	/** Seeks to an elapsed-second position and rebuilds the short active horizon. */
 	seek(positionSeconds: number): void {
 		if (!Number.isFinite(positionSeconds) || positionSeconds < 0) {

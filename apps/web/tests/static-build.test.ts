@@ -13,11 +13,12 @@ async function builtPage(path: string): Promise<string> {
 
 describe('prerendered output', () => {
 	test('emits the landing page and documentation as static HTML', async () => {
-		await expect(builtPage('')).resolves.toContain('Algorithmic Composition');
+		await expect(builtPage('')).resolves.toContain('Algorithmic Ambient Composition');
 		const architecture = await builtPage('docs/architecture');
 		expect(architecture).toContain('Ambiente keeps persisted musical state');
 		expect(architecture).toContain('href="/docs/document-format"');
-		await expect(builtPage('docs/solid-components')).resolves.toContain('Playable examples');
+		await expect(builtPage('docs/three-studies')).resolves.toContain('Three Studies');
+		await expect(builtPage('examples')).resolves.toContain('Hear Ambiente’s musical building blocks');
 	});
 
 	test('emits the Pagefind documentation index', async () => {

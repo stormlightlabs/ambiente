@@ -2,7 +2,6 @@ import { Dynamic } from 'solid-js/web';
 import { createEffect, createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
 import { usePageContext } from 'vike-solid/usePageContext';
 
-import { DocsSearch } from '../../../src/components/DocsSearch';
 import { documentation, findDocumentation } from '../../../src/content/docs';
 import { startScrollSpy } from '../../../src/content/scroll-spy';
 
@@ -55,7 +54,6 @@ export default function Page() {
 						<a class="docs-sidebar__index" href="/docs">
 							Documentation
 						</a>
-						<DocsSearch />
 						<nav>
 							<For each={documentation}>
 								{(entry) => (

@@ -16,6 +16,7 @@ type VoiceGraph = {
 export class ToneAudioBackend implements AudioBackend {
 	private document: AudioDocument = { tempo: '120/1', voices: [] };
 	private readonly graphs = new Map<string, VoiceGraph>();
+	private readonly output = new Tone.Gain(1).toDestination();
 
 	/** Creates or replaces the runtime graph for each enabled canonical voice. */
 	configure(document: AudioDocument): void {
@@ -48,6 +49,11 @@ export class ToneAudioBackend implements AudioBackend {
 		this.graphs.get(note.voiceId)?.trigger(note);
 	}
 
+	/** Sets the gain shared by every voice rendered through this backend. */
+	setVolume(volume: number): void {
+		this.output.gain.rampTo(Math.min(1, Math.max(0, volume)), 0.05);
+	}
+
 	/** Cancels the current short horizon by replacing all disposable voice graphs. */
 	reset(_at: number): void {
 		this.rebuild();
@@ -55,14 +61,19 @@ export class ToneAudioBackend implements AudioBackend {
 
 	/** Releases every graph and its Web Audio nodes. */
 	dispose(): void {
+		this.disposeGraphs();
+		this.output.dispose();
+	}
+
+	private disposeGraphs(): void {
 		for (const graph of this.graphs.values()) graph.dispose();
 		this.graphs.clear();
 	}
 
 	private rebuild(): void {
-		this.dispose();
+		this.disposeGraphs();
 		for (const voice of this.document.voices) {
-			if (voice.enabled) this.graphs.set(voice.id, createVoiceGraph(voice));
+			if (voice.enabled) this.graphs.set(voice.id, createVoiceGraph(voice, this.output));
 		}
 	}
 }
@@ -86,7 +97,7 @@ export function soundControls(parameters: Readonly<Record<string, AudioParameter
 	};
 }
 
-function createVoiceGraph(voice: AudioVoice): VoiceGraph {
+function createVoiceGraph(voice: AudioVoice, output: Tone.Gain): VoiceGraph {
 	const sound = isSoundId(voice.sound) ? voice.sound : 'felt-piano';
 	const controls = soundControls(voice.parameters);
 	const filter = new Tone.Filter(controls.filterHz, 'lowpass');
@@ -96,7 +107,7 @@ function createVoiceGraph(voice: AudioVoice): VoiceGraph {
 	filter.connect(panner);
 	panner.connect(gain);
 	gain.connect(reverb);
-	reverb.toDestination();
+	reverb.connect(output);
 
 	const instrument = createInstrument(sound);
 	instrument.output.connect(filter);

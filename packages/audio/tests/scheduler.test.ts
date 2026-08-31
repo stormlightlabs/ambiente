@@ -18,6 +18,7 @@ class FakeBackend implements AudioBackend {
 	previewed: string[] = [];
 	resets = 0;
 	time = 0;
+	volumes: number[] = [];
 
 	configure(document: AudioDocument): void {
 		this.configured.push(document);
@@ -45,6 +46,10 @@ class FakeBackend implements AudioBackend {
 
 	schedule(note: ScheduledNote): void {
 		this.notes.push(note);
+	}
+
+	setVolume(volume: number): void {
+		this.volumes.push(volume);
 	}
 
 	async start(): Promise<void> {}
@@ -144,6 +149,16 @@ describe('look-ahead scheduler', () => {
 		expect(scheduler.state).toBe('stopped');
 		expect(scheduler.positionSeconds).toBe(0);
 		expect(backend.resets).toBeGreaterThanOrEqual(3);
+	});
+
+	test('sets and clamps backend volume', () => {
+		const backend = new FakeBackend();
+		const scheduler = new LookAheadScheduler(source(), backend);
+
+		scheduler.setVolume(0.65);
+		scheduler.setVolume(2);
+		expect(backend.volumes).toEqual([0.65, 1]);
+		expect(() => scheduler.setVolume(Number.NaN)).toThrow(RangeError);
 	});
 
 	test('rejects invalid seek positions', () => {

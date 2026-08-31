@@ -1,12 +1,7 @@
 export default function Page() {
 	return (
 		<section class="placeholder-page">
-			<p class="kicker">Learn</p>
-			<h1>
-				Build an ear for
-				<br />
-				musical processes.
-			</h1>
+			<h1>Learn to hear how repetition, phase, and variation shape a piece.</h1>
 			<p>
 				Interactive lessons are not published yet. For now, the composition model explains how material, processes,
 				time, and seeds work together.

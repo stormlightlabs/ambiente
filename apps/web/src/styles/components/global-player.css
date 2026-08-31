@@ -13,7 +13,7 @@
 		align-items: center;
 		display: grid;
 		gap: clamp(0.75rem, 2vw, 1.5rem);
-		grid-template-columns: minmax(11rem, 1fr) minmax(10rem, 14rem) auto auto;
+		grid-template-columns: minmax(9rem, 1fr) minmax(9rem, 13rem) auto minmax(5rem, 8rem) auto;
 		margin: auto;
 		max-width: var(--content-width);
 		min-height: var(--player-height);
@@ -49,15 +49,15 @@
 	.global-player__pulse.is-playing {
 		animation: player-pulse 1.8s ease-out infinite;
 	}
-	.global-player__study {
+	.global-player__piece {
 		display: grid;
 		gap: 0.12rem;
 	}
-	.global-player__study span {
+	.global-player__piece span {
 		color: color-mix(in oklch, var(--inverse-paper) 62%, var(--forest-dark));
 		font-size: 0.55rem;
 	}
-	.global-player__study select {
+	.global-player__piece select {
 		appearance: none;
 		background: transparent;
 		border: 0;
@@ -66,7 +66,7 @@
 		min-height: 2rem;
 		padding: 0 1.5rem 0 0;
 	}
-	.global-player__study option {
+	.global-player__piece option {
 		background: var(--forest-dark);
 	}
 	.global-player__controls {
@@ -95,6 +95,17 @@
 		font-size: 0.9rem;
 		margin-right: 0.3rem;
 	}
+	.global-player__volume {
+		align-items: center;
+		color: color-mix(in oklch, var(--inverse-paper) 72%, var(--forest-dark));
+		display: flex;
+		gap: 0.35rem;
+	}
+	.global-player__volume input {
+		accent-color: var(--gold);
+		min-width: 0;
+		width: 100%;
+	}
 	.global-player__inner > a {
 		color: var(--inverse-paper);
 		font-size: 0.68rem;
@@ -120,9 +131,10 @@
 
 @media (max-width: 58rem) {
 	.global-player__inner {
-		grid-template-columns: minmax(9rem, 1fr) auto auto;
+		grid-template-columns: minmax(9rem, 1fr) auto;
 	}
-	.global-player__study {
+	.global-player__piece,
+	.global-player__volume {
 		display: none;
 	}
 	.global-player__inner > a {
