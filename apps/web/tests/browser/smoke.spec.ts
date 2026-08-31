@@ -11,6 +11,32 @@ test('landing page presents the product and Studio path', async ({ page }) => {
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });
 
+test('site player keeps playing across navigation', async ({ page }) => {
+	await page.goto('/');
+	const player = page.getByRole('complementary', { name: 'Site music player' });
+	const listen = player.getByRole('button', { name: 'Listen to site music' });
+	await expect(listen).toBeEnabled();
+	await listen.click();
+	await expect(player.getByText('Seed 5048415345000001')).toBeVisible();
+	await expect(player.getByRole('button', { name: 'Suspend site music' })).toBeVisible();
+
+	await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Docs' }).click();
+	await expect(page).toHaveURL(/\/docs$/);
+	await expect(player.getByRole('button', { name: 'Suspend site music' })).toBeVisible();
+});
+
+test('examples present playable studies with documentation links', async ({ page }) => {
+	await page.goto('/examples');
+	for (const study of ['Phase', 'Drone', 'Pattern']) {
+		await expect(page.getByRole('heading', { level: 2, name: study })).toBeVisible();
+		await expect(page.getByRole('region', { name: `${study} Study study player` })).toBeVisible();
+	}
+	await expect(page.getByRole('link', { name: 'Read the study' }).first()).toHaveAttribute(
+		'href',
+		'/docs/three-studies#phase'
+	);
+});
+
 test('documentation renders canonical Markdown', async ({ page }) => {
 	await page.goto('/docs/architecture');
 
@@ -73,6 +99,17 @@ test('Studio loads Rust events and the browser transport', async ({ page }) => {
 	await page.reload();
 	await expect(page.getByLabel('Composition seed')).toHaveValue('000000000000002b');
 	await expect(page.getByLabel('Tempo in beats per minute')).toHaveValue('96');
+});
+
+test('Studio remains vertically scrollable on a narrow screen', async ({ page }) => {
+	await page.setViewportSize({ width: 390, height: 844 });
+	await page.goto('/studio');
+	await expect(page.getByLabel('Voice sound')).toBeVisible();
+	const scrollHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+	const viewportHeight = await page.evaluate(() => document.documentElement.clientHeight);
+	expect(scrollHeight).toBeGreaterThan(viewportHeight);
+	await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+	await expect(page.getByLabel('Voice inspector')).toBeInViewport();
 });
 
 test('Studio edits voices and records piano input as a phrase', async ({ page }) => {

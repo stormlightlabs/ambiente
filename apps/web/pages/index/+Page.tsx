@@ -39,16 +39,53 @@ export default function Page() {
 						</a>
 					</div>
 				</div>
-				<div class="score-field" aria-hidden="true">
-					<div class="score-field__orbit score-field__orbit--one" />
-					<div class="score-field__orbit score-field__orbit--two" />
-					<span class="score-note score-note--one" />
-					<span class="score-note score-note--two" />
-					<span class="score-note score-note--three" />
-					<p>
-						material <i>→</i> process <i>→</i> events
-					</p>
-				</div>
+				<figure class="composition-map" aria-label="A four-note phrase unfolding into three repeating voices">
+					<header class="composition-map__header">
+						<div>
+							<span>Live document</span>
+							<strong>Phase Study</strong>
+						</div>
+						<small>seed 5048415345000001</small>
+					</header>
+					<div class="composition-map__material">
+						<span>Material</span>
+						<div class="phrase-cell" aria-hidden="true">
+							<i style="--step: 0; --pitch: 3" />
+							<i style="--step: 1; --pitch: 1" />
+							<i style="--step: 2; --pitch: 2" />
+							<i style="--step: 3; --pitch: 0" />
+						</div>
+						<small>four-note phrase</small>
+					</div>
+					<div class="composition-map__process">
+						<span>Process</span>
+						<div>
+							<i /> Repeat every 17.2s <b>high</b>
+						</div>
+						<div>
+							<i /> Repeat every 23.8s <b>middle</b>
+						</div>
+						<div>
+							<i /> Repeat every 31.1s <b>low</b>
+						</div>
+					</div>
+					<div class="composition-map__events" aria-hidden="true">
+						<span>Events · 60 seconds</span>
+						{[0, 1, 2].map((lane) => (
+							<div class={`event-lane event-lane--${lane + 1}`}>
+								<i />
+								<i />
+								<i />
+								<i />
+								<i />
+								<i />
+								<i />
+								<i />
+							</div>
+						))}
+					</div>
+					<figcaption>One phrase. Three exact clocks. The same result for the same seed.</figcaption>
+				</figure>
 			</section>
 
 			<section class="pathways" aria-labelledby="pathways-title">

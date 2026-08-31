@@ -5,6 +5,7 @@
 @import './base.css';
 @import './components/site-shell.css';
 @import './components/controls.css';
+@import './components/global-player.css';
 @import './components/landing.css';
 @import './components/content-index.css';
 @import './components/documentation.css';

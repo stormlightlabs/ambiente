@@ -1,16 +1,24 @@
 @layer components {
 	.site-frame {
 		min-height: 100vh;
+		padding-bottom: var(--player-height);
 	}
 	.site-header {
-		align-items: center;
-		border-bottom: 1px solid var(--line);
-		display: flex;
+		background: var(--forest-dark);
+		border-bottom: 1px solid color-mix(in oklch, var(--inverse-paper) 15%, var(--forest-dark));
+		color: var(--inverse-paper);
 		height: var(--header-height);
-		justify-content: space-between;
-		padding-inline: var(--page-pad);
 		position: relative;
 		z-index: 10;
+	}
+	.site-header__inner {
+		align-items: center;
+		display: flex;
+		height: 100%;
+		justify-content: space-between;
+		margin-inline: auto;
+		max-width: var(--content-width);
+		padding-inline: var(--page-pad);
 	}
 	.wordmark {
 		align-items: center;
@@ -23,8 +31,9 @@
 		text-decoration: none;
 	}
 	.wordmark__mark {
-		color: var(--forest);
 		height: 2.1rem;
+		outline: 1px solid color-mix(in oklch, var(--inverse-paper) 28%, transparent);
+		outline-offset: -1px;
 		width: 2.1rem;
 	}
 	.site-header__actions,
@@ -49,7 +58,7 @@
 		text-decoration: none;
 	}
 	.site-nav a::after {
-		background: var(--forest);
+		background: var(--gold);
 		bottom: 0.2rem;
 		content: '';
 		height: 2px;
@@ -80,9 +89,9 @@
 	.theme-toggle {
 		align-items: center;
 		background: transparent;
-		border: 1px solid var(--line);
+		border: 1px solid color-mix(in oklch, var(--inverse-paper) 30%, var(--forest-dark));
 		border-radius: 50%;
-		color: var(--ink);
+		color: var(--inverse-paper);
 		display: inline-flex;
 		flex: 0 0 auto;
 		height: 2.75rem;
@@ -90,7 +99,7 @@
 		width: 2.75rem;
 	}
 	.theme-toggle:hover {
-		background: var(--paper-deep);
+		background: color-mix(in oklch, var(--inverse-paper) 10%, var(--forest-dark));
 	}
 	.site-main {
 		min-height: calc(100vh - var(--header-height));
@@ -179,8 +188,11 @@
 
 @media (max-width: 48rem) {
 	.site-header {
-		align-items: start;
 		height: auto;
+	}
+	.site-header__inner {
+		align-items: start;
+		min-height: var(--header-height);
 		padding-block: 0.65rem;
 	}
 	.wordmark {

@@ -18,8 +18,10 @@
 		--font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 		--page-pad: clamp(1rem, 3.5vw, 3.5rem);
 		--header-height: 4.5rem;
+		--player-height: 4.25rem;
 		--content-width: 86rem;
 		--radius-sm: 0.4rem;
+		--radius-md: 0.7rem;
 		--focus: 0 0 0 3px color-mix(in oklch, var(--gold) 75%, transparent);
 	}
 

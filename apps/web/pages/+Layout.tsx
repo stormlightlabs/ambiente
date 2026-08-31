@@ -7,6 +7,7 @@ import '@fontsource-variable/literata';
 import 'virtual:uno.css';
 
 import { BrandMark } from '../src/components/BrandMark';
+import { GlobalPlayer } from '../src/components/GlobalPlayer';
 import { ThemeToggle } from '../src/components/ThemeToggle';
 import '../src/styles/global.css';
 
@@ -29,22 +30,25 @@ export function Layout(props: { children?: JSX.Element }) {
 				Skip to content
 			</a>
 			<header class="site-header" data-pagefind-ignore>
-				<a class="wordmark" href="/" aria-label="Ambiente home">
-					<BrandMark class="wordmark__mark" />
-					<span>ambiente</span>
-				</a>
-				<div class="site-header__actions">
-					<nav class="site-nav" aria-label="Primary navigation">
-						{navigation.map((item) => {
-							const isActive = () => (item.href === '/' ? pathname() === item.href : pathname().startsWith(item.href));
-							return (
-								<a href={item.href} aria-current={isActive() ? 'page' : undefined}>
-									{item.label}
-								</a>
-							);
-						})}
-					</nav>
-					<ThemeToggle />
+				<div class="site-header__inner">
+					<a class="wordmark" href="/" aria-label="Ambiente home">
+						<BrandMark class="wordmark__mark" />
+						<span>ambiente</span>
+					</a>
+					<div class="site-header__actions">
+						<nav class="site-nav" aria-label="Primary navigation">
+							{navigation.map((item) => {
+								const isActive = () =>
+									item.href === '/' ? pathname() === item.href : pathname().startsWith(item.href);
+								return (
+									<a href={item.href} aria-current={isActive() ? 'page' : undefined}>
+										{item.label}
+									</a>
+								);
+							})}
+						</nav>
+						<ThemeToggle />
+					</div>
 				</div>
 			</header>
 			<main id="main-content" class="site-main">
@@ -53,6 +57,7 @@ export function Layout(props: { children?: JSX.Element }) {
 			<Show when={!isStudio()}>
 				<SiteFooter />
 			</Show>
+			<GlobalPlayer />
 		</div>
 	);
 }
