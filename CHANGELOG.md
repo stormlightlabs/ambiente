@@ -118,3 +118,4 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Replaced the landing-page ornament with a document-to-events visualization,
   moved focused playable examples to `/examples`, linked them to the interactive
   Three Studies guide, and restored Studio scrolling across desktop and mobile.
+- Disabled viewport overscroll throughout the web application.

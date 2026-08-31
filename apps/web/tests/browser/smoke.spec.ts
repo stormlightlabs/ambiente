@@ -4,6 +4,7 @@ test('landing page presents the product and Studio path', async ({ page }) => {
 	await page.goto('/');
 
 	await expect(page.getByRole('heading', { level: 1 })).toContainText('Algorithmic Ambient Composition');
+	await expect(page.locator('html')).toHaveCSS('overscroll-behavior', 'none');
 	await expect(page.locator('.wordmark__mark')).toHaveAttribute('src', '/favicon.svg');
 	await expect(page.getByRole('link', { name: 'Open Studio' })).toHaveAttribute('href', '/studio');
 	await expect(page.locator('.site-footer__links').getByRole('heading')).toHaveCount(3);
