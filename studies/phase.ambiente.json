@@ -120,20 +120,28 @@
           "pattern": {
             "type": "repeat",
             "pattern": {
-              "type": "transform",
-              "transformation": {
-                "type": "transpose",
-                "interval": 7
+              "type": "omit",
+              "id": "10000000-0000-4000-8000-000000000301",
+              "probability": {
+                "numerator": 1,
+                "denominator": 9
               },
               "pattern": {
                 "type": "transform",
                 "transformation": {
-                  "type": "stretch",
-                  "factor": "119/50"
+                  "type": "transpose",
+                  "interval": 7
                 },
                 "pattern": {
-                  "type": "material",
-                  "material_id": "10000000-0000-4000-8000-000000000001"
+                  "type": "transform",
+                  "transformation": {
+                    "type": "stretch",
+                    "factor": "119/50"
+                  },
+                  "pattern": {
+                    "type": "material",
+                    "material_id": "10000000-0000-4000-8000-000000000001"
+                  }
                 }
               }
             },
@@ -164,20 +172,28 @@
           "pattern": {
             "type": "repeat",
             "pattern": {
-              "type": "transform",
-              "transformation": {
-                "type": "transpose",
-                "interval": 12
+              "type": "omit",
+              "id": "10000000-0000-4000-8000-000000000302",
+              "probability": {
+                "numerator": 1,
+                "denominator": 7
               },
               "pattern": {
                 "type": "transform",
                 "transformation": {
-                  "type": "stretch",
-                  "factor": "311/100"
+                  "type": "transpose",
+                  "interval": 12
                 },
                 "pattern": {
-                  "type": "material",
-                  "material_id": "10000000-0000-4000-8000-000000000001"
+                  "type": "transform",
+                  "transformation": {
+                    "type": "stretch",
+                    "factor": "311/100"
+                  },
+                  "pattern": {
+                    "type": "material",
+                    "material_id": "10000000-0000-4000-8000-000000000001"
+                  }
                 }
               }
             },

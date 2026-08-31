@@ -19,5 +19,6 @@ export {
 	type DocumentInspection,
 	type DocumentOperation,
 	type EventQuery,
-	type SerializedDocument
+	type SerializedDocument,
+	type StudyName
 } from '@ambiente/wasm';

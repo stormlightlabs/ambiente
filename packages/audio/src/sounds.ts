@@ -73,11 +73,13 @@ export type SoundControls = Readonly<{ filterHz: number; gain: number; motion: n
 /**
  * Maps backend-independent integer controls to safe Web Audio ranges.
  * `gain` and `reverb` use 0–100; `pan` uses -100–100; `filter_hz` uses hertz.
+ * Gain follows a -36 dB to 0 dB curve so several voices can mix without each
+ * midrange setting consuming half of the available linear headroom.
  */
 export function soundControls(parameters: Readonly<Record<string, AudioParameterValue>>): SoundControls {
 	return {
 		filterHz: clamp(integerParameter(parameters.filter_hz, 12_000), 80, 20_000),
-		gain: clamp(integerParameter(parameters.gain, 80), 0, 100) / 100,
+		gain: semanticGain(integerParameter(parameters.gain, 80)),
 		motion: clamp(integerParameter(parameters.motion, 0), 0, 100) / 100,
 		pan: clamp(integerParameter(parameters.pan, 0), -100, 100) / 100,
 		reverb: clamp(integerParameter(parameters.reverb, 15), 0, 100) / 100
@@ -235,6 +237,11 @@ function pitchedInstrument(
 /** Converts Ambiente's chromatic semitone pitch to the frequency expected by Tone.js. */
 export function midiFrequency(pitch: number): number {
 	return 440 * 2 ** ((pitch - 69) / 12);
+}
+
+function semanticGain(value: number): number {
+	const normalized = clamp(value, 0, 100);
+	return normalized === 0 ? 0 : Tone.dbToGain(-36 + normalized * 0.36);
 }
 
 function integerParameter(value: AudioParameterValue | undefined, fallback: number): number {

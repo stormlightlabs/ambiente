@@ -109,12 +109,28 @@ its implementation while keeping its documented musical role. If a sound is miss
 the document remains valid.
 
 Gain, pan, filter, and effects belong to the audio adapter when they describe
-rendering. The browser adapter maps integer `gain` and `reverb` values from
-0–100, `pan` values from -100–100, and `filter_hz` values from 80–20,000 Hz. An
-integer `motion` value from 0–100 adds slow filter and pan movement within the
-sound graph. It is a preset control for rendering, not a canonical continuous
-signal. Backend-specific node topology, sample URLs, buffer state, audio context
-IDs, and scheduling handles are never serialized in the document.
+rendering. The browser adapter maps integer `gain` values from 0–100 onto a
+-36 dB to 0 dB curve, rather than treating the value as linear amplitude. This
+leaves mix headroom when several Study voices overlap. It maps `reverb` from
+0–100, `pan` from -100–100, and `filter_hz` from 80–20,000 Hz. An integer
+`motion` value from 0–100 adds slow filter and pan movement within the sound
+graph. It is a preset control for rendering, not a canonical continuous signal.
+Backend-specific node topology, sample URLs, buffer state, audio context IDs,
+and scheduling handles are never serialized in the document.
+
+## The Three Studies
+
+The initial palette has been tested against three different roles. Phase uses
+felt piano, glass, and soft pluck to separate copies of one phrase. Drone uses
+warm drone, glass, and air for sustained pitch, high partials, and unpitched
+texture. Pattern uses felt piano, glass, soft pluck, and percussion to separate a
+metric cell from its transformations.
+
+The Studies exposed one shared mix problem: linear gain controls made ordinary
+multi-voice settings too loud. The decibel gain curve fixes that without adding
+piece-specific routing. No Study currently requires another sound ID. The next
+palette additions should follow a named piece rather than duplicate these six
+roles.
 
 ## Samples and assets
 

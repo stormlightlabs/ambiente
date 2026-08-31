@@ -285,6 +285,16 @@
 		line-height: 1.45;
 		margin: 0.15rem 0 0;
 	}
+	.playable-example__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		justify-content: flex-end;
+	}
+	.playable-example small {
+		color: var(--ink-soft);
+		font: 0.62rem var(--font-ui);
+	}
 	.playable-example label {
 		display: grid;
 		gap: 0.2rem;
@@ -360,6 +370,10 @@
 	.playable-example {
 		align-items: stretch;
 		grid-template-columns: 1fr;
+	}
+	.playable-example__actions {
+		display: grid;
+		justify-content: stretch;
 	}
 	.playable-example button,
 	.playable-example select {

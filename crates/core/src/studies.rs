@@ -87,7 +87,7 @@ pub fn phase_study() -> Result<Document, StudyError> {
         phrase,
     )))?;
 
-    for (voice_id, name, sound, factor, transpose, pan) in [
+    for (voice_id, name, sound, factor, transpose, pan, omission) in [
         (
             "10000000-0000-4000-8000-000000000201",
             "Near",
@@ -95,6 +95,7 @@ pub fn phase_study() -> Result<Document, StudyError> {
             (43, 25),
             0,
             -32,
+            None,
         ),
         (
             "10000000-0000-4000-8000-000000000202",
@@ -103,6 +104,7 @@ pub fn phase_study() -> Result<Document, StudyError> {
             (119, 50),
             7,
             28,
+            Some(("10000000-0000-4000-8000-000000000301", (1, 9))),
         ),
         (
             "10000000-0000-4000-8000-000000000203",
@@ -111,17 +113,141 @@ pub fn phase_study() -> Result<Document, StudyError> {
             (311, 100),
             12,
             4,
+            Some(("10000000-0000-4000-8000-000000000302", (1, 7))),
         ),
     ] {
         let pattern = Pattern::material(material_id)
             .stretch(TimeScale::new(factor.0, factor.1)?)
-            .transpose(Interval::semitones(transpose))
-            .repeat();
+            .transpose(Interval::semitones(transpose));
+        let pattern = if let Some((pattern_id, (numerator, denominator))) = omission {
+            pattern.omit(
+                PatternId::from_str(pattern_id)?,
+                Probability::new(numerator, denominator)?,
+            )
+        } else {
+            pattern
+        }
+        .repeat();
         let settings = VoiceSettings::new(name, SoundRef::new(sound)?)
             .with_pattern(pattern)
             .with_parameter("gain", ParameterValue::Integer(58))
             .with_parameter("pan", ParameterValue::Integer(pan))
             .with_parameter("reverb", ParameterValue::Integer(42));
+        document.apply(Operation::AddVoice(Voice::new(id(voice_id)?, settings)))?;
+    }
+    Ok(document)
+}
+
+/// Builds the Pattern study from two authored step patterns.
+///
+/// Four voices retain the source cells while rotation, reversal, transposition,
+/// stretching, omission, and conditional transposition develop their rhythm and
+/// register. The untransformed motif keeps the authored identity audible under
+/// every seed.
+///
+/// # Errors
+///
+/// Returns [`StudyError`] if fixed authored data no longer satisfies the document model.
+pub fn pattern_study() -> Result<Document, StudyError> {
+    let motif_id = id("30000000-0000-4000-8000-000000000101")?;
+    let pulse_id = id("30000000-0000-4000-8000-000000000102")?;
+    let mut document = study_document(
+        "Pattern Study",
+        "One syncopated cell keeps its shape while transformed copies change register, direction, density, and pace.",
+        "30000000-0000-4000-8000-000000000010",
+        "30000000-0000-4000-8000-000000000011",
+        0x5041_5454_4552_0001,
+    )?;
+    document.apply(Operation::SetTempo(Tempo::new(72, 1)?))?;
+
+    add_step_material(
+        &mut document,
+        motif_id,
+        "Turning cell",
+        &[60, 62, 67, 69, 72],
+        &[(0, 0), (2, 3), (1, 6), (3, 10), (2, 12), (4, 15)],
+    )?;
+    add_step_material(
+        &mut document,
+        pulse_id,
+        "Broken pulse",
+        &[36, 43],
+        &[(0, 0), (1, 3), (0, 6), (1, 10), (0, 12)],
+    )?;
+
+    let voices = [
+        (
+            "30000000-0000-4000-8000-000000000201",
+            "Cell",
+            "felt-piano",
+            Pattern::material(motif_id).repeat(),
+            45,
+            -18,
+            28,
+        ),
+        (
+            "30000000-0000-4000-8000-000000000202",
+            "Turn",
+            "glass",
+            Pattern::material(motif_id)
+                .reverse()
+                .rotate(TimeOffset::Metric(Beats::new(1, 2)?))
+                .transpose(Interval::semitones(12))
+                .omit(
+                    PatternId::from_str("30000000-0000-4000-8000-000000000301")?,
+                    Probability::new(1, 4)?,
+                )
+                .sometimes(
+                    PatternId::from_str("30000000-0000-4000-8000-000000000401")?,
+                    Probability::new(1, 3)?,
+                    Transformation::Transpose {
+                        interval: Interval::semitones(-5),
+                    },
+                )
+                .repeat(),
+            28,
+            26,
+            58,
+        ),
+        (
+            "30000000-0000-4000-8000-000000000203",
+            "Ground",
+            "soft-pluck",
+            Pattern::material(motif_id)
+                .transpose(Interval::semitones(-12))
+                .stretch(TimeScale::new(2, 1)?)
+                .omit(
+                    PatternId::from_str("30000000-0000-4000-8000-000000000302")?,
+                    Probability::new(1, 3)?,
+                )
+                .repeat(),
+            32,
+            -30,
+            32,
+        ),
+        (
+            "30000000-0000-4000-8000-000000000204",
+            "Pulse",
+            "percussion",
+            Pattern::material(pulse_id)
+                .rotate(TimeOffset::Metric(Beats::new(1, 2)?))
+                .omit(
+                    PatternId::from_str("30000000-0000-4000-8000-000000000303")?,
+                    Probability::new(1, 6)?,
+                )
+                .repeat(),
+            24,
+            8,
+            12,
+        ),
+    ];
+
+    for (voice_id, name, sound, pattern, gain, pan, reverb) in voices {
+        let settings = VoiceSettings::new(name, SoundRef::new(sound)?)
+            .with_pattern(pattern)
+            .with_parameter("gain", ParameterValue::Integer(gain))
+            .with_parameter("pan", ParameterValue::Integer(pan))
+            .with_parameter("reverb", ParameterValue::Integer(reverb));
         document.apply(Operation::AddVoice(Voice::new(id(voice_id)?, settings)))?;
     }
     Ok(document)
@@ -294,6 +420,34 @@ fn add_drone_voice(document: &mut Document, voice: &DroneVoice) -> Result<(), St
     Ok(())
 }
 
+fn add_step_material(
+    document: &mut Document,
+    material_id: MaterialId,
+    name: &str,
+    pitches: &[i16],
+    active_cells: &[(usize, usize)],
+) -> Result<(), StudyError> {
+    let pattern = StepPattern::new(
+        16,
+        Beats::new(1, 2)?,
+        pitches.iter().copied().map(Pitch::from_semitones),
+    )?;
+    document.apply(Operation::AddMaterial(Material::step_pattern(
+        material_id,
+        name,
+        pattern,
+    )))?;
+    for &(row, step) in active_cells {
+        document.apply(Operation::UpdateMatrixCell {
+            material_id,
+            row,
+            step,
+            active: true,
+        })?;
+    }
+    Ok(())
+}
+
 fn study_document(
     title: &str,
     description: &str,
@@ -349,16 +503,22 @@ mod tests {
     #[test]
     fn phase_study_keeps_exact_noncommensurate_cycles_for_ten_minutes() {
         let document = phase_study().unwrap();
-        let events = document
-            .query_events(
-                TimeSpan::absolute(Seconds::new(0, 1).unwrap(), Seconds::new(600, 1).unwrap())
-                    .unwrap(),
-            )
-            .unwrap();
+        let span =
+            TimeSpan::absolute(Seconds::new(0, 1).unwrap(), Seconds::new(600, 1).unwrap()).unwrap();
+        let events = document.query_events(span).unwrap();
+        let variations: Vec<_> = (2..=4)
+            .map(|index| {
+                document
+                    .query_events_with_seed(span, Seed::new(0x5048_4153_4500_0000 + index))
+                    .unwrap()
+            })
+            .collect();
 
         assert_eq!(document.piece().materials().len(), 1);
         assert_eq!(document.piece().voices().len(), 3);
-        assert!(events.len() > 250);
+        assert!(events.len() > 230);
+        assert!(variations.iter().all(|variation| variation.len() > 230));
+        assert!(variations.iter().all(|variation| variation != &events));
         assert!(events.iter().any(|event| {
             event.span().start() == TimePoint::Absolute(Seconds::new(258, 5).unwrap())
         }));
@@ -401,6 +561,44 @@ mod tests {
             drone_study().unwrap().to_json().unwrap(),
             include_str!("../../../studies/drone.ambiente.json")
         );
+        assert_eq!(
+            pattern_study().unwrap().to_json().unwrap(),
+            include_str!("../../../studies/pattern.ambiente.json")
+        );
+    }
+
+    #[test]
+    fn pattern_study_develops_authored_cells_across_seeds_for_ten_minutes() {
+        let document = pattern_study().unwrap();
+        let span =
+            TimeSpan::metric(Beats::new(0, 1).unwrap(), Beats::new(720, 1).unwrap()).unwrap();
+        let variations: Vec<_> = (1..=4)
+            .map(|index| {
+                document
+                    .query_events_with_seed(span, Seed::new(0x5041_5454_4552_0000 + index))
+                    .unwrap()
+            })
+            .collect();
+        let cell_voice: VoiceId = id("30000000-0000-4000-8000-000000000201").unwrap();
+
+        assert_eq!(document.piece().materials().len(), 2);
+        assert_eq!(document.piece().voices().len(), 4);
+        assert!(variations.windows(2).all(|pair| pair[0] != pair[1]));
+        for events in variations {
+            assert!((1_300..=2_000).contains(&events.len()));
+            assert_eq!(
+                events
+                    .iter()
+                    .filter(|event| event.target() == &EventTarget::Voice(cell_voice))
+                    .count(),
+                540
+            );
+            assert!(
+                events
+                    .iter()
+                    .all(|event| matches!(event.source(), EventSource::StepCell { .. }))
+            );
+        }
     }
 
     #[test]
@@ -408,20 +606,24 @@ mod tests {
         let document = drone_study().unwrap();
         let span =
             TimeSpan::absolute(Seconds::new(0, 1).unwrap(), Seconds::new(600, 1).unwrap()).unwrap();
-        let original = document.query_events(span).unwrap();
-        let variation = document
-            .query_events_with_seed(span, Seed::new(0x4452_4f4e_4500_0002))
-            .unwrap();
+        let variations: Vec<_> = (1..=4)
+            .map(|index| {
+                document
+                    .query_events_with_seed(span, Seed::new(0x4452_4f4e_4500_0000 + index))
+                    .unwrap()
+            })
+            .collect();
 
         assert_eq!(document.piece().voices().len(), 4);
-        assert!((30..=60).contains(&original.len()));
-        assert!((30..=60).contains(&variation.len()));
-        assert_ne!(original, variation);
-        assert!(
-            original
-                .iter()
-                .any(|event| event_duration_seconds(event) >= Seconds::new(35, 1).unwrap())
-        );
+        assert!(variations.windows(2).all(|pair| pair[0] != pair[1]));
+        for events in variations {
+            assert!((30..=60).contains(&events.len()));
+            assert!(
+                events
+                    .iter()
+                    .any(|event| event_duration_seconds(event) >= Seconds::new(35, 1).unwrap())
+            );
+        }
     }
 
     fn event_duration_seconds(event: &Event) -> Seconds {

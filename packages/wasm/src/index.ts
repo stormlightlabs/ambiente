@@ -3,6 +3,9 @@ import init, { AmbienteWasm, type InitInput } from '../generated/ambiente_wasm.j
 /** A serialized canonical Ambiente document. */
 export type SerializedDocument = string;
 
+/** The stable name of one bundled first-party study. */
+export type StudyName = 'drone' | 'pattern' | 'phase';
+
 /** A canonical operation interpreted by ambiente-core. */
 export type DocumentOperation = Readonly<{ kind: string; payload?: unknown }>;
 
@@ -123,6 +126,12 @@ export class WasmApplication implements AmbienteApplication {
 	static async createNew(title = 'Untitled piece', module?: InitInput): Promise<WasmApplication> {
 		await initialize(module);
 		return new WasmApplication(new AmbienteWasm(AmbienteWasm.newDocument(title)));
+	}
+
+	/** Loads one first-party study built by ambiente-core. */
+	static async createStudy(study: StudyName, module?: InitInput): Promise<WasmApplication> {
+		await initialize(module);
+		return new WasmApplication(new AmbienteWasm(AmbienteWasm.bundledStudy(study)));
 	}
 
 	/** Replaces the active document, leaving it unchanged when loading fails. */

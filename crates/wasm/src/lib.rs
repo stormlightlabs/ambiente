@@ -37,6 +37,24 @@ impl AmbienteWasm {
         document.to_json().map_err(|error| js_error(&error))
     }
 
+    /// Serializes one bundled first-party study by its lowercase name.
+    ///
+    /// # Errors
+    ///
+    /// Returns a JavaScript error when `name` is not `phase`, `drone`, or `pattern`,
+    /// or when the fixed study data cannot be constructed or serialized.
+    #[wasm_bindgen(js_name = bundledStudy)]
+    pub fn bundled_study(name: &str) -> Result<String, JsError> {
+        let document = match name {
+            "phase" => phase_study(),
+            "drone" => drone_study(),
+            "pattern" => pattern_study(),
+            _ => return Err(JsError::new("unknown bundled study")),
+        }
+        .map_err(|error| js_error(&error))?;
+        document.to_json().map_err(|error| js_error(&error))
+    }
+
     /// Loads the initial canonical document.
     ///
     /// # Errors

@@ -67,6 +67,13 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   ten-minute query span.
 - Added a semantic `motion` sound control for slow filter and pan modulation in
   the browser audio graphs.
+- Added the first-party Pattern study with authored metric cells, rotation,
+  reversal, stretching, transposition, deterministic omission, and conditional
+  transformation across four voices.
+- Added multi-seed ten-minute identity checks for all Three Studies and exposed
+  the canonical study builders through the WebAssembly application facade.
+- Added an interactive Three Studies guide with in-browser playback, adjacent
+  seed variations, and canonical Studio downloads.
 
 ### Changed
 
@@ -87,3 +94,7 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   lives here.
 - Corrected browser pitch rendering so canonical chromatic pitches are converted
   from MIDI-style semitone values to Tone.js frequencies.
+- Changed semantic gain mapping from linear amplitude to a -36 dB to 0 dB curve
+  so multi-voice pieces retain mix headroom.
+- Added restrained seeded omissions to Phase while retaining one complete phrase
+  voice and the three exact noncommensurate clocks.

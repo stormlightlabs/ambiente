@@ -1,0 +1,621 @@
+{
+  "format": "ambiente",
+  "schema_version": 2,
+  "id": "30000000-0000-4000-8000-000000000010",
+  "metadata": {
+    "title": "Pattern Study",
+    "composer": "Ambiente",
+    "description": "One syncopated cell keeps its shape while transformed copies change register, direction, density, and pace."
+  },
+  "seed": "5041545445520001",
+  "piece": {
+    "id": "30000000-0000-4000-8000-000000000011",
+    "transport": {
+      "tempo": "72/1",
+      "meter": {
+        "numerator": 4,
+        "denominator": 4
+      }
+    },
+    "materials": {
+      "30000000-0000-4000-8000-000000000101": {
+        "type": "step_pattern",
+        "id": "30000000-0000-4000-8000-000000000101",
+        "name": "Turning cell",
+        "pattern": {
+          "steps": 16,
+          "subdivision": "1/2",
+          "rows": [
+            {
+              "pitch": 60,
+              "cells": [
+                {
+                  "active": true
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                }
+              ]
+            },
+            {
+              "pitch": 62,
+              "cells": [
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": true
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                }
+              ]
+            },
+            {
+              "pitch": 67,
+              "cells": [
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": true
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": true
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                }
+              ]
+            },
+            {
+              "pitch": 69,
+              "cells": [
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": true
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                }
+              ]
+            },
+            {
+              "pitch": 72,
+              "cells": [
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": true
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "30000000-0000-4000-8000-000000000102": {
+        "type": "step_pattern",
+        "id": "30000000-0000-4000-8000-000000000102",
+        "name": "Broken pulse",
+        "pattern": {
+          "steps": 16,
+          "subdivision": "1/2",
+          "rows": [
+            {
+              "pitch": 36,
+              "cells": [
+                {
+                  "active": true
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": true
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": true
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                }
+              ]
+            },
+            {
+              "pitch": 43,
+              "cells": [
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": true
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": true
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                },
+                {
+                  "active": false
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "voices": {
+      "30000000-0000-4000-8000-000000000201": {
+        "id": "30000000-0000-4000-8000-000000000201",
+        "settings": {
+          "name": "Cell",
+          "pattern": {
+            "type": "repeat",
+            "pattern": {
+              "type": "material",
+              "material_id": "30000000-0000-4000-8000-000000000101"
+            },
+            "count": null
+          },
+          "sound": "felt-piano",
+          "enabled": true,
+          "parameters": {
+            "gain": {
+              "type": "integer",
+              "value": 45
+            },
+            "pan": {
+              "type": "integer",
+              "value": -18
+            },
+            "reverb": {
+              "type": "integer",
+              "value": 28
+            }
+          }
+        }
+      },
+      "30000000-0000-4000-8000-000000000202": {
+        "id": "30000000-0000-4000-8000-000000000202",
+        "settings": {
+          "name": "Turn",
+          "pattern": {
+            "type": "repeat",
+            "pattern": {
+              "type": "sometimes",
+              "id": "30000000-0000-4000-8000-000000000401",
+              "probability": {
+                "numerator": 1,
+                "denominator": 3
+              },
+              "transformation": {
+                "type": "transpose",
+                "interval": -5
+              },
+              "pattern": {
+                "type": "omit",
+                "id": "30000000-0000-4000-8000-000000000301",
+                "probability": {
+                  "numerator": 1,
+                  "denominator": 4
+                },
+                "pattern": {
+                  "type": "transform",
+                  "transformation": {
+                    "type": "transpose",
+                    "interval": 12
+                  },
+                  "pattern": {
+                    "type": "transform",
+                    "transformation": {
+                      "type": "rotate",
+                      "offset": {
+                        "clock": "metric",
+                        "value": "1/2"
+                      }
+                    },
+                    "pattern": {
+                      "type": "transform",
+                      "transformation": {
+                        "type": "reverse"
+                      },
+                      "pattern": {
+                        "type": "material",
+                        "material_id": "30000000-0000-4000-8000-000000000101"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "count": null
+          },
+          "sound": "glass",
+          "enabled": true,
+          "parameters": {
+            "gain": {
+              "type": "integer",
+              "value": 28
+            },
+            "pan": {
+              "type": "integer",
+              "value": 26
+            },
+            "reverb": {
+              "type": "integer",
+              "value": 58
+            }
+          }
+        }
+      },
+      "30000000-0000-4000-8000-000000000203": {
+        "id": "30000000-0000-4000-8000-000000000203",
+        "settings": {
+          "name": "Ground",
+          "pattern": {
+            "type": "repeat",
+            "pattern": {
+              "type": "omit",
+              "id": "30000000-0000-4000-8000-000000000302",
+              "probability": {
+                "numerator": 1,
+                "denominator": 3
+              },
+              "pattern": {
+                "type": "transform",
+                "transformation": {
+                  "type": "stretch",
+                  "factor": "2/1"
+                },
+                "pattern": {
+                  "type": "transform",
+                  "transformation": {
+                    "type": "transpose",
+                    "interval": -12
+                  },
+                  "pattern": {
+                    "type": "material",
+                    "material_id": "30000000-0000-4000-8000-000000000101"
+                  }
+                }
+              }
+            },
+            "count": null
+          },
+          "sound": "soft-pluck",
+          "enabled": true,
+          "parameters": {
+            "gain": {
+              "type": "integer",
+              "value": 32
+            },
+            "pan": {
+              "type": "integer",
+              "value": -30
+            },
+            "reverb": {
+              "type": "integer",
+              "value": 32
+            }
+          }
+        }
+      },
+      "30000000-0000-4000-8000-000000000204": {
+        "id": "30000000-0000-4000-8000-000000000204",
+        "settings": {
+          "name": "Pulse",
+          "pattern": {
+            "type": "repeat",
+            "pattern": {
+              "type": "omit",
+              "id": "30000000-0000-4000-8000-000000000303",
+              "probability": {
+                "numerator": 1,
+                "denominator": 6
+              },
+              "pattern": {
+                "type": "transform",
+                "transformation": {
+                  "type": "rotate",
+                  "offset": {
+                    "clock": "metric",
+                    "value": "1/2"
+                  }
+                },
+                "pattern": {
+                  "type": "material",
+                  "material_id": "30000000-0000-4000-8000-000000000102"
+                }
+              }
+            },
+            "count": null
+          },
+          "sound": "percussion",
+          "enabled": true,
+          "parameters": {
+            "gain": {
+              "type": "integer",
+              "value": 24
+            },
+            "pan": {
+              "type": "integer",
+              "value": 8
+            },
+            "reverb": {
+              "type": "integer",
+              "value": 12
+            }
+          }
+        }
+      }
+    }
+  }
+}

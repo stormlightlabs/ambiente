@@ -6,51 +6,19 @@ summarized in `CHANGELOG.md`.
 See `ROADMAP.md` for product direction and sequencing. Architecture and design
 rationale live with the web documentation source under `apps/web/content/docs/`.
 
-## M7 — Three Studies quality gate
+## M7 — Three Studies listening sign-off
 
-Do not proceed by adding broad product surface until these studies work musically.
+The three canonical Studies, multi-seed ten-minute checks, sound-palette audit,
+and interactive guide are complete. Broad feature work remains gated on a human
+listening pass.
 
-### Pattern study
-
-- [ ] Compose from Phrase and/or StepPattern material.
-- [ ] Exercise transformations.
-- [ ] Exercise deterministic probability.
-- [ ] Exercise stronger rhythmic behavior.
-- [ ] Verify transformations preserve the authored identity of the material.
-
-### Quality review
-
-For each study:
-
-- [ ] aim for no more than five voices unless the music requires more
-- [ ] support 5–10 minutes of convincing playback, with longer runs where the piece
-      supports them
-- [ ] test several seeds
-- [ ] verify different seeds retain recognizable identity
-- [ ] remove primitives that encourage bad/random output
-- [ ] improve defaults instead of compensating with more configuration
-- [ ] listen outside development/debugging sessions
-
-### Sound and documentation
-
-- [ ] Audit the current sound palette against all three Studies.
-- [ ] Fix sound defaults and mix problems before expanding the catalog.
-- [ ] Record concrete musical gaps discovered by the Studies.
-- [ ] Turn the Three Studies into focused tutorials/examples once their musical
-      behavior is stable.
-
-### Hard gate
-
-- [ ] At least one study is something we would voluntarily use as background listening.
-- [ ] All three demonstrate a distinct strength of the engine.
-
-If not:
-
-- [ ] stop feature expansion
-- [ ] revise sounds
-- [ ] revise pattern primitives
-- [ ] revise stochastic constraints
-- [ ] revise composition workflow
+- [ ] Listen to Phase, Drone, and Pattern outside a development session across at
+      least three seeds each.
+- [ ] Confirm that at least one Study works as voluntary background listening.
+- [ ] Confirm that phase relationships, sparse sustained texture, and transformed
+      metric material are distinct musical strengths.
+- [ ] If any Study fails, revise its sounds, authored material, probabilities, or
+      composition workflow before starting M8.
 
 ## M8 — Listen mode
 

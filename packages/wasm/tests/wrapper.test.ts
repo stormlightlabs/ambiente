@@ -62,6 +62,10 @@ describe('WASM application', () => {
 		const created = await WasmApplication.createNew('Fresh piece');
 		expect(created.inspect()).toMatchObject({ materialCount: 0, tempo: '120/1', title: 'Fresh piece', voiceCount: 0 });
 
+		const study = await WasmApplication.createStudy('pattern');
+		expect(study.inspect()).toMatchObject({ materialCount: 2, title: 'Pattern Study', voiceCount: 4 });
+		expect(study.queryEvents({ clock: 'metric', start: '0/1', end: '8/1' }).length).toBeGreaterThan(10);
+
 		const beforeInvalidLoad = application.serialize();
 		expect(application.load('{}')).toEqual([expect.objectContaining({ code: 'document.load', severity: 'error' })]);
 		expect(application.serialize()).toBe(beforeInvalidLoad);

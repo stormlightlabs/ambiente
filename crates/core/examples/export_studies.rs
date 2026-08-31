@@ -1,6 +1,6 @@
 use std::{env, error::Error, fs, path::PathBuf};
 
-use ambiente_core::prelude::{drone_study, phase_study};
+use ambiente_core::prelude::{drone_study, pattern_study, phase_study};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let output = env::args_os()
@@ -8,7 +8,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         .map(PathBuf::from)
         .ok_or("usage: cargo run -p ambiente-core --example export_studies -- <directory>")?;
     fs::create_dir_all(&output)?;
-    for (name, document) in [("phase", phase_study()?), ("drone", drone_study()?)] {
+    for (name, document) in [
+        ("phase", phase_study()?),
+        ("drone", drone_study()?),
+        ("pattern", pattern_study()?),
+    ] {
         fs::write(
             output.join(format!("{name}.ambiente.json")),
             document.to_json()?,

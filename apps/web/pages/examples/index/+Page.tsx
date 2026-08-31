@@ -11,9 +11,14 @@ export default function Page() {
 				Hear focused Phrase, Matrix, piano, voice, and sound examples built with the same Rust and browser audio runtime
 				as Studio.
 			</p>
-			<a class="button button--primary" href="/docs/solid-components">
-				Open playable examples
-			</a>
+			<div class="button-row">
+				<a class="button button--primary" href="/docs/three-studies">
+					Hear the Three Studies
+				</a>
+				<a class="button" href="/docs/solid-components">
+					Open instrument examples
+				</a>
+			</div>
 		</section>
 	);
 }

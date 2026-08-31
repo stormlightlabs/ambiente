@@ -16,7 +16,10 @@ describe('browser sounds', () => {
 				pan: { type: 'integer', value: -25 },
 				reverb: { type: 'integer', value: 130 }
 			})
-		).toEqual({ filterHz: 20_000, gain: 0.4, motion: 0, pan: -0.25, reverb: 1 });
+		).toEqual({ filterHz: 20_000, gain: expect.any(Number), motion: 0, pan: -0.25, reverb: 1 });
+		expect(soundControls({ gain: { type: 'integer', value: 40 } }).gain).toBeCloseTo(0.083, 3);
+		expect(soundControls({ gain: { type: 'integer', value: 0 } }).gain).toBe(0);
+		expect(soundControls({ gain: { type: 'integer', value: 100 } }).gain).toBe(1);
 	});
 
 	test('maps slow motion and chromatic pitches at the audio boundary', () => {

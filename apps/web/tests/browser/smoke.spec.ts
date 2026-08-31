@@ -32,6 +32,16 @@ test('documentation renders canonical Markdown', async ({ page }) => {
 	await expect(page.getByRole('button', { name: 'Stop' })).toBeVisible();
 });
 
+test('Three Studies load canonical pieces and change seed', async ({ page }) => {
+	await page.goto('/docs/three-studies');
+	const pattern = page.getByRole('region', { name: 'Pattern Study study player' });
+	await expect(
+		pattern.getByText('One metric cell transformed across direction, register, density, and pace.')
+	).toBeVisible();
+	await pattern.getByRole('button', { name: 'Next variation' }).click();
+	await expect(pattern.getByText('Seed 5041545445520002')).toBeVisible();
+});
+
 test('documentation search uses the generated Pagefind index', async ({ page }) => {
 	await page.goto('/docs');
 	await page.getByRole('searchbox', { name: 'Search documentation' }).fill('event engine');
