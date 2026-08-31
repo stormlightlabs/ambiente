@@ -41,8 +41,11 @@ test('Listen mode browses first-party pieces without composition controls', asyn
 	await expect(page.getByRole('button', { name: '30 min' })).toHaveAttribute('aria-pressed', 'true');
 	await page.getByRole('button', { name: 'Play', exact: true }).click();
 	await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
-	await expect(page.getByRole('img', { name: /Artwork responding/ })).toHaveClass(/is-playing/);
-	await expect(page.locator('.listener-artwork__event').first()).toBeVisible();
+	const artwork = page.getByRole('img', { name: /Process artwork showing/ });
+	await expect(artwork).toHaveClass(/is-playing/);
+	await expect(artwork.locator('.listener-artwork__cycle')).toHaveCount(3);
+	await expect(artwork.locator('.listener-artwork__event').first()).toBeVisible();
+	await expect(artwork.locator('.listener-artwork__event.is-active').first()).toBeVisible();
 	await page.getByRole('button', { name: 'New variation' }).click();
 	await expect(page.getByText(/Seed|BPM|material|voice/i)).toHaveCount(0);
 	await expect(page.getByRole('complementary', { name: 'Site music player' })).toHaveCount(0);

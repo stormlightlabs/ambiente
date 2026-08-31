@@ -122,9 +122,12 @@ export default function Page() {
 
 				<section class="listen-stage" aria-labelledby="listen-piece-title">
 					<ListenerArtwork
-						events={player.activeEvents()}
+						events={player.processEvents()}
 						playing={player.state() === 'playing'}
-						profile={player.selectedPiece().id}
+						position={player.position()}
+						profile={player.selectedPiece().id as keyof typeof visualProfiles}
+						seed={player.seed()}
+						tempo={player.tempo()}
 					/>
 					<div class="listen-now-playing">
 						<p>{player.state() === 'playing' ? 'Now playing' : 'Ready to play'}</p>
@@ -230,37 +233,116 @@ export default function Page() {
 	);
 }
 
-type ListenerArtworkProps = Readonly<{ events: readonly ApplicationEvent[]; playing: boolean; profile: string }>;
+type VisualProfile = Readonly<{ cycles: readonly number[]; pitchRange: readonly [number, number] }>;
 
-/** Event-driven artwork that reflects the notes active in the current piece. */
+/** Restrained profiles matched to the authored repeat lengths and pitch fields of the Three Studies. */
+const visualProfiles: Readonly<Record<'drone' | 'pattern' | 'phase', VisualProfile>> = {
+	drone: { cycles: [90, 85, 110], pitchRange: [30, 74] },
+	pattern: { cycles: [10 / 3, 20 / 3, 10 / 3], pitchRange: [34, 86] },
+	phase: { cycles: [17.2, 23.8, 31.1], pitchRange: [56, 84] }
+};
+
+const artworkWindow = { future: 18, past: 12 } as const;
+
+type ListenerArtworkProps = Readonly<{
+	events: readonly ApplicationEvent[];
+	playing: boolean;
+	position: number;
+	profile: keyof typeof visualProfiles;
+	seed: string;
+	tempo: number;
+}>;
+
+/** Process artwork derived from canonical event spans, pitch, voices, seed, and playback time. */
 function ListenerArtwork(props: ListenerArtworkProps) {
+	const profile = () => visualProfiles[props.profile];
 	const notes = () => props.events.filter((event) => event.kind.type === 'note');
+	const activeNotes = () => notes().filter((event) => eventIsActive(event, props.position, props.tempo));
+	const activeVoices = () =>
+		new Set(activeNotes().flatMap((event) => (event.target.type === 'voice' ? [event.target.id] : []))).size;
+	const density = () => Math.min(1, notes().length / (props.profile === 'pattern' ? 48 : 16));
+	const description = () => {
+		if (!props.playing) return 'Process artwork waiting for playback.';
+		const voiceCount = activeVoices();
+		if (voiceCount === 0) return 'Process artwork showing a quiet passage.';
+		return `Process artwork showing ${voiceCount} ${voiceCount === 1 ? 'voice' : 'voices'} sounding.`;
+	};
+
 	return (
 		<figure
 			class={`listener-artwork listener-artwork--${props.profile}`}
-			classList={{ 'is-playing': props.playing }}
+			classList={{ 'is-playing': props.playing, 'is-silent': props.playing && activeVoices() === 0 }}
 			role="img"
-			aria-label="Artwork responding to the notes currently sounding">
-			<div class="listener-artwork__field" aria-hidden="true">
-				<i class="listener-artwork__cycle listener-artwork__cycle--one" />
-				<i class="listener-artwork__cycle listener-artwork__cycle--two" />
-				<i class="listener-artwork__cycle listener-artwork__cycle--three" />
+			aria-label={description()}>
+			<div class="listener-artwork__field" style={`--artwork-density:${density()}`} aria-hidden="true">
+				<For each={profile().cycles}>
+					{(duration, index) => (
+						<i
+							class={`listener-artwork__cycle listener-artwork__cycle--${index() + 1}`}
+							style={cycleStyle(duration, props.position, props.seed, index())}
+						/>
+					)}
+				</For>
 				<For each={notes()}>
-					{(event, index) => <i class="listener-artwork__event" style={eventStyle(event, index())} />}
+					{(event, index) => (
+						<i
+							class="listener-artwork__event"
+							classList={{ 'is-active': eventIsActive(event, props.position, props.tempo) }}
+							style={eventStyle(event, index(), props.position, props.tempo, props.seed, profile())}
+						/>
+					)}
 				</For>
 			</div>
 		</figure>
 	);
 }
 
-function eventStyle(event: ApplicationEvent, index: number): string {
+function cycleStyle(duration: number, position: number, seed: string, index: number): string {
+	const seedOffset = (hash(`${seed}:${index}`) % 360) / 360;
+	const phase = ((position / duration + seedOffset) % 1) * 360;
+	return `--cycle-phase:${phase}deg`;
+}
+
+function eventStyle(
+	event: ApplicationEvent,
+	index: number,
+	position: number,
+	tempo: number,
+	seed: string,
+	profile: VisualProfile
+): string {
 	const pitch = event.kind.type === 'note' ? event.kind.note.pitch : 60;
 	const velocity = event.kind.type === 'note' ? event.kind.note.velocity : 64;
-	const identity = event.target.type === 'voice' ? hash(event.target.id) : index;
-	const x = 12 + ((pitch * 13 + identity) % 76);
-	const y = 12 + ((pitch * 7 + identity * 3) % 76);
-	const size = 0.6 + (velocity / 127) * 1.4;
-	return `--event-x:${x}%;--event-y:${y}%;--event-size:${size}rem;--event-delay:${-(identity % 20) / 10}s`;
+	const start = eventTimeInSeconds(event.span.start, tempo);
+	const end = eventTimeInSeconds(event.span.end, tempo);
+	const windowDuration = artworkWindow.past + artworkWindow.future;
+	const x = clamp(((start - position + artworkWindow.past) / windowDuration) * 100, 0, 100);
+	const width = clamp(((end - start) / windowDuration) * 100, 0.8, 100 - x);
+	const register = clamp((pitch - profile.pitchRange[0]) / (profile.pitchRange[1] - profile.pitchRange[0]), 0, 1);
+	const identity = event.target.type === 'voice' ? hash(`${seed}:${event.target.id}`) : index;
+	const drift = (identity % 9) - 4;
+	const color = ['var(--gold)', 'var(--moss)', 'var(--inverse-paper)'][identity % 3];
+	return `--event-x:${x}%;--event-y:${88 - register * 76}%;--event-width:${width}%;--event-height:${0.24 + (velocity / 127) * 0.55}rem;--event-drift:${drift}px;--event-color:${color}`;
+}
+
+function eventIsActive(event: ApplicationEvent, position: number, tempo: number): boolean {
+	return (
+		eventTimeInSeconds(event.span.start, tempo) <= position && eventTimeInSeconds(event.span.end, tempo) > position
+	);
+}
+
+function eventTimeInSeconds(point: ApplicationEvent['span']['start'], tempo: number): number {
+	const value = exactToNumber(point.value);
+	return point.clock === 'absolute' ? value : (value * 60) / tempo;
+}
+
+function exactToNumber(value: string): number {
+	const [numerator, denominator] = value.split('/').map(Number);
+	return denominator ? numerator! / denominator : Number.NaN;
+}
+
+function clamp(value: number, minimum: number, maximum: number): number {
+	return Math.min(maximum, Math.max(minimum, value));
 }
 
 function hash(value: string): number {

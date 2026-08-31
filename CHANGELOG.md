@@ -78,8 +78,9 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   controls and the site shell, with playback that continues during client-side
   navigation.
 - Added a dedicated Listen mode with a first-party piece browser, endless and
-  timed sessions, seed variations, listener-focused controls, and event-driven
-  artwork.
+  timed sessions, seed variations, listener-focused controls, and process artwork
+  that shows cycle phase, event spans, register, voice activity, density, and
+  silence through restrained profiles for each Study.
 - Added canonical composer-published macros, multi-target voice and process
   mappings, and authored Focus, Create, and Rest presets for the Three Studies.
 - Added semantic sound-family metadata, a broad pad, and curated drive,

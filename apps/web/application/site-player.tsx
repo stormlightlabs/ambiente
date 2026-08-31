@@ -15,8 +15,8 @@ export type PlayablePiece = Readonly<{
 
 /** Shared state and controls for persistent piece playback across the site shell. */
 export type SitePlayer = Readonly<{
-	activeEvents: Accessor<readonly ApplicationEvent[]>;
 	activePurposePreset: Accessor<string | undefined>;
+	processEvents: Accessor<readonly ApplicationEvent[]>;
 	applyPurposePreset: (presetId: string) => Promise<void>;
 	download: (piece: PlayablePiece) => Promise<void>;
 	error: Accessor<string | undefined>;
@@ -27,6 +27,7 @@ export type SitePlayer = Readonly<{
 	prepare: () => Promise<void>;
 	position: Accessor<number>;
 	purposePresets: Accessor<readonly ApplicationPurposePreset[]>;
+	tempo: Accessor<number>;
 	seed: Accessor<string>;
 	selectedPiece: Accessor<PlayablePiece>;
 	selectPiece: (piece: PlayablePiece) => void;
@@ -54,8 +55,9 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 	const [activePurposePreset, setActivePurposePreset] = createSignal<string>();
 	const [state, setState] = createSignal<TransportState>('stopped');
 	const [position, setPosition] = createSignal(0);
-	const [activeEvents, setActiveEvents] = createSignal<readonly ApplicationEvent[]>([]);
+	const [processEvents, setProcessEvents] = createSignal<readonly ApplicationEvent[]>([]);
 	const [seed, setSeed] = createSignal('');
+	const [tempo, setTempo] = createSignal(120);
 	const [volume, setVolumeSignal] = createSignal(0.8);
 	const [error, setError] = createSignal<string>();
 	let application: WasmApplication | undefined;
@@ -72,7 +74,7 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 		application = undefined;
 		initialization = undefined;
 		activityTick = -1;
-		setActiveEvents([]);
+		setProcessEvents([]);
 		setMacros([]);
 		setPurposePresets([]);
 		setActivePurposePreset(undefined);
@@ -90,6 +92,7 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 			application = nextApplication;
 			const inspection = application.inspect();
 			setSeed(inspection.seed);
+			setTempo(exactToNumber(inspection.tempo));
 			setMacros(inspection.macros);
 			setPurposePresets(inspection.purposePresets);
 			audio = createBrowserAudio(application);
@@ -100,10 +103,10 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 				const nextTick = Math.floor(nextPosition * 10);
 				if (nextState !== 'playing') {
 					activityTick = -1;
-					setActiveEvents([]);
+					setProcessEvents([]);
 				} else if (nextTick !== activityTick && application) {
 					activityTick = nextTick;
-					setActiveEvents(queryActiveEvents(application, nextPosition));
+					setProcessEvents(queryProcessEvents(application, nextPosition));
 				}
 			});
 		})();
@@ -224,8 +227,8 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 	}
 
 	const player: SitePlayer = {
-		activeEvents,
 		activePurposePreset,
+		processEvents,
 		applyPurposePreset,
 		download,
 		error,
@@ -243,6 +246,7 @@ export function SitePlayerProvider(props: SitePlayerProviderProps) {
 		setVolume,
 		state,
 		stop,
+		tempo,
 		togglePlayback,
 		volume
 	};
@@ -257,11 +261,11 @@ export function useSitePlayer(): SitePlayer {
 	return player;
 }
 
-function queryActiveEvents(application: WasmApplication, position: number): readonly ApplicationEvent[] {
-	const inspection = application.inspect();
-	const tempo = exactToNumber(inspection.tempo);
-	const start = Math.max(0, position - 0.05);
-	const end = position + 0.35;
+/** Queries a small past-and-future window for event-driven listener artwork. */
+function queryProcessEvents(application: WasmApplication, position: number): readonly ApplicationEvent[] {
+	const tempo = exactToNumber(application.inspect().tempo);
+	const start = Math.max(0, position - 12);
+	const end = position + 18;
 	return [
 		...application.queryEvents({ clock: 'absolute', start: numberToExact(start), end: numberToExact(end) }),
 		...application.queryEvents({

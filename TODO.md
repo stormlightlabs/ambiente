@@ -20,23 +20,14 @@ listening pass.
 - [ ] If any Study fails, revise its sounds, authored material, probabilities, or
       composition workflow before starting M8.
 
-## M8 — Listen mode
+## M8 — Listen mode listening sign-off
 
-### Process visualization
+The listener view, first-party browser, sessions, seed exploration, published
+controls, purpose presets, curated sounds, interactive Studies guide, and process
+artwork are complete.
 
-- [ ] Visualize independent cycles and phase.
-- [ ] Visualize event spans, voice activity, density, and silence.
-- [ ] Visualize pitch/register movement and process decisions where useful.
-- [ ] Define restrained visual profiles for first-party pieces.
-- [ ] Derive motion from piece, event, and seed state where possible.
-- [ ] Keep waveform and spectrum views diagnostic rather than primary.
-
-### Done when
-
-- [ ] A user can open Ambiente solely to listen.
-- [ ] Composition knowledge is unnecessary in Listen mode.
-- [ ] At least one first-party piece works credibly as extended work/reading/creative
-      background audio.
+- [ ] Confirm that at least one first-party piece works as extended background audio
+      for work, reading, creative activity, or rest.
 
 ## M9 — Generative Create
 

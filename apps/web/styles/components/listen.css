@@ -149,13 +149,32 @@
 		width: min(100%, 35rem);
 	}
 	.listener-artwork__field {
-		background: #1d2421;
+		background:
+			radial-gradient(
+				circle at 50% 50%,
+				color-mix(in oklch, var(--gold) calc(var(--artwork-density) * 10%), transparent),
+				transparent 58%
+			),
+			#1d2421;
 		border: 1px solid color-mix(in oklch, var(--inverse-paper) 16%, #1d2421);
 		border-radius: 50%;
 		height: 100%;
 		overflow: hidden;
 		position: relative;
+		transition: background-color 600ms ease;
 		width: 100%;
+	}
+	.listener-artwork__field::after {
+		background: linear-gradient(
+			90deg,
+			transparent 39.5%,
+			color-mix(in oklch, var(--inverse-paper) 22%, transparent) 40%,
+			transparent 40.5%
+		);
+		content: '';
+		inset: 0;
+		pointer-events: none;
+		position: absolute;
 	}
 	.listener-artwork__cycle,
 	.listener-artwork__event {
@@ -166,23 +185,41 @@
 		border: 1px solid color-mix(in oklch, var(--inverse-paper) 18%, transparent);
 		border-radius: 50%;
 		inset: 18%;
+		rotate: var(--cycle-phase);
+		transition: rotate 120ms linear;
 	}
-	.listener-artwork__cycle--two {
+	.listener-artwork__cycle::after {
+		background: var(--inverse-paper);
+		border-radius: 50%;
+		box-shadow: 0 0 0.7rem color-mix(in oklch, var(--inverse-paper) 45%, transparent);
+		content: '';
+		height: 0.38rem;
+		left: 50%;
+		position: absolute;
+		top: -0.2rem;
+		translate: -50% -50%;
+		width: 0.38rem;
+	}
+	.listener-artwork__cycle--2 {
 		border-color: color-mix(in oklch, var(--moss) 45%, transparent);
 		inset: 29%;
-		rotate: 42deg;
 	}
-	.listener-artwork__cycle--three {
+	.listener-artwork__cycle--2::after {
+		background: var(--moss);
+	}
+	.listener-artwork__cycle--3 {
 		border-color: color-mix(in oklch, var(--gold) 45%, transparent);
 		inset: 39%;
-		rotate: -24deg;
+	}
+	.listener-artwork__cycle--3::after {
+		background: var(--gold);
 	}
 	.listener-artwork--phase .listener-artwork__cycle {
 		border-radius: 46% 54% 58% 42%;
 	}
 	.listener-artwork--drone .listener-artwork__cycle {
 		border-width: 2px;
-		filter: blur(2px);
+		filter: blur(0.5px);
 		inset-block: 25%;
 	}
 	.listener-artwork--pattern .listener-artwork__field {
@@ -195,37 +232,37 @@
 	}
 	.listener-artwork--pattern .listener-artwork__cycle {
 		border-radius: 8%;
-		rotate: 12deg;
 	}
 	.listener-artwork__event {
-		background: var(--gold);
-		border-radius: 50%;
-		box-shadow: 0 0 1.25rem color-mix(in oklch, var(--gold) 45%, transparent);
-		height: var(--event-size);
+		background: var(--event-color);
+		border-radius: 999px;
+		box-shadow: 0 0 0.8rem color-mix(in oklch, var(--gold) 30%, transparent);
+		height: var(--event-height);
 		left: var(--event-x);
-		opacity: 0.82;
+		opacity: 0.28;
 		top: var(--event-y);
-		translate: -50% -50%;
-		width: var(--event-size);
+		transform: translateY(var(--event-drift));
+		transition:
+			opacity 300ms ease,
+			scale 300ms ease;
+		width: var(--event-width);
+	}
+	.listener-artwork__event.is-active {
+		opacity: 0.92;
+		scale: 1 1.7;
 	}
 	.listener-artwork--drone .listener-artwork__event {
-		background: var(--moss);
-		box-shadow: 0 0 2rem color-mix(in oklch, var(--moss) 55%, transparent);
+		box-shadow: 0 0 1.5rem color-mix(in oklch, var(--moss) 38%, transparent);
+		filter: blur(0.4px);
 	}
 	.listener-artwork--pattern .listener-artwork__event {
-		border-radius: 0.15rem;
+		border-radius: 0.1rem;
 	}
-	.listener-artwork.is-playing .listener-artwork__cycle--one {
-		animation: listen-turn 31s linear infinite;
+	.listener-artwork.is-silent .listener-artwork__field {
+		background-color: #191d1b;
 	}
-	.listener-artwork.is-playing .listener-artwork__cycle--two {
-		animation: listen-turn 23s linear infinite reverse;
-	}
-	.listener-artwork.is-playing .listener-artwork__cycle--three {
-		animation: listen-turn 17s linear infinite;
-	}
-	.listener-artwork.is-playing .listener-artwork__event {
-		animation: listen-event 2.4s ease-in-out var(--event-delay) infinite alternate;
+	.listener-artwork.is-silent .listener-artwork__cycle::after {
+		opacity: 0.45;
 	}
 	.listen-now-playing {
 		margin-top: clamp(1.5rem, 4vh, 2.5rem);
@@ -329,19 +366,6 @@
 	}
 }
 
-@keyframes listen-turn {
-	to {
-		rotate: 360deg;
-	}
-}
-
-@keyframes listen-event {
-	to {
-		opacity: 0.35;
-		scale: 0.72;
-	}
-}
-
 @media (max-width: 68rem) {
 	.listen-layout {
 		grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr);
@@ -406,8 +430,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.listener-artwork.is-playing .listener-artwork__cycle,
-	.listener-artwork.is-playing .listener-artwork__event {
-		animation: none;
+	.listener-artwork__cycle,
+	.listener-artwork__event,
+	.listener-artwork__field {
+		transition: none;
 	}
 }
