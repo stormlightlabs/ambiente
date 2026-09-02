@@ -7,6 +7,8 @@ format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Added a Nix development shell with Rust, Node.js, pnpm, and the Linux
+  libraries required for Tauri development, plus optional direnv loading.
 - Rebooted the repository around Cargo and pnpm workspaces with `ambiente-core`
   and `ambiente-cli`, shared formatting/linting/testing commands, CI, and pinned
   development toolchains.
